@@ -33,7 +33,7 @@ jobs:
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
       - run: cargo fmt --all --check
-      - name: Clippy (Temporary diagnostics: echo errors as annotations)
+      - name: Clippy with diagnostics
         run: |
           set +e
           cargo clippy --workspace --all-targets -- -D warnings > /tmp/clippy.log 2>&1
