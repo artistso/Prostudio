@@ -72,10 +72,10 @@ private val BarHeight = 96.dp
 private val HeldFrame = Color(0xFFA3A3A3)
 private val BarGap = 25.dp
 private val FrameHeight = 40.dp
-private val BarFill get() = if (Ps.light) Color(0xFFE4E4E4) else Color(0xFF2A2A2A)
-private val TrackFill get() = if (Ps.light) Color(0xFFD0D0D0) else Color(0xFF474747)
+private val BarFill get() = if (Ps.light) Color(0xFFE4E4E4) else Color(0xFF272430)
+private val TrackFill get() = if (Ps.light) Color(0xFFD0CCC2) else Color(0xFF403B4B)
 private val TrackEdge get() = if (Ps.light) Color(0xFFBDBDBD) else Color(0xFF5C5C5C)
-private val BarInk get() = if (Ps.light) Color(0xFF393939) else Color(0xFFC5C5C5)
+private val BarInk get() = if (Ps.light) Color(0xFF332F3B) else Color(0xFFC4BFB2)
 private const val MAX_ONION = 12
 
 /** Play's and Add Frame's inset from the bar's ends. */
@@ -254,7 +254,7 @@ private fun Timeline(vm: CanvasViewModel, width: Dp, modifier: Modifier) {
             if (x > -frameWidth && x < width) {
                 Box(
                     Modifier.offset(x = x, y = 2.dp).size(frameWidth, FrameHeight).clip(RoundedCornerShape(6.dp)).background(if (held) HeldFrame else Color.White)
-                        .border(1.dp, Color(0xFF9A9A9A), RoundedCornerShape(6.dp)).clickable { vm.tapFrame(i) },
+                        .border(1.dp, Color(0xFF98928A), RoundedCornerShape(6.dp)).clickable { vm.tapFrame(i) },
                 ) {
                     if (!held) vm.animationFrames.getOrNull(frame)?.let { vm.frameThumbnails[it] }?.let { Image(it, contentDescription = "Frame ${i + 1}", contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize().padding(2.dp)) }
                 }

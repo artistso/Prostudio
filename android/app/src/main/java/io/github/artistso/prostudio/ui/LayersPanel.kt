@@ -115,13 +115,13 @@ private val MaskOwnerRow = Color(0xFF2C5281)
 private val SwipeButton = 82.dp
 private val SwipeGap = 2.dp
 private val SwipeFill = Color(0xFF3F3F3F)
-private val SwipeInk = Color(0xFFC1C1C1)
+private val SwipeInk = Color(0xFFC4BFB2)
 private val SwipeDelete = Color(0xFFFF473D)
 /** How far right a row slides to be picked. */
 private val PickReach = 72.dp
 /** A picked row (the current one stays blue). */
 private val PickedRow = Color(0xFF2C5281)
-private val LockedLetter = Color(0xFF808080)
+private val LockedLetter = Color(0xFF7A766E)
 /** The options never go higher than this from the window's top (the top bar and a gap). */
 private val OptionsTop = 57.dp
 
@@ -945,7 +945,7 @@ private fun BlendEditor(vm: CanvasViewModel, l: LayerInfo) {
 /** The layer's blend list: nine rows of [BlendRow] showing; its glyphs a darker grey than its names. */
 private val BlendRow = 38.8.dp
 private val BlendListHeight = 349.dp
-private val BlendGlyphInk = Color(0xFF808080)
+private val BlendGlyphInk = Color(0xFF7A766E)
 
 /** A thin blue slider with a white knob, set by dragging anywhere along it. */
 @Composable

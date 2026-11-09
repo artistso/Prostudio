@@ -59,14 +59,14 @@ import kotlin.math.sin
 // light over the dark surround; dark with the light interface
 private val FrameLine get() = if (Ps.light) Color(0xCC303030) else Color(0xCCFFFFFF)
 private val GridLine get() = if (Ps.light) Color(0x99606060) else Color(0x66C8C8C8)
-private val Mark get() = if (Ps.light) Color(0xFF3A3A3A) else Color(0xFFD0D0D0)
+private val Mark get() = if (Ps.light) Color(0xFF46413A) else Color(0xFFD0CCC2)
 // Settings: dark, or with the light interface #dbdedf behind #e4e4e6 groups, #d3d3d5 fields, dark words
 private val PopoverFill get() = if (Ps.light) Color(0xF2DBDEDF) else Color(0xF21F1F1F)
 private val FieldFill get() = if (Ps.light) Color(0xFFD3D3D5) else Color(0xFF242424)
-private val GroupFill get() = if (Ps.light) Color(0xFFE4E4E6) else Color(0xFF2A2A2A)
-private val RowLine get() = if (Ps.light) Color(0xFFD6D6D8) else Color(0xFF3A3A3A)
-private val SettingsInk get() = if (Ps.light) Color(0xFF3B3B3B) else Color(0xFFD2D2D2)
-private val Muted = Color(0xFF8E8E93)
+private val GroupFill get() = if (Ps.light) Color(0xFFE4E4E6) else Color(0xFF272430)
+private val RowLine get() = if (Ps.light) Color(0xFFD6D6D8) else Color(0xFF46413A)
+private val SettingsInk get() = if (Ps.light) Color(0xFF4C463D) else Color(0xFFD2D2D2)
+private val Muted = Color(0xFF8F897E)
 
 /** Which part of the crop's frame a drag takes. */
 

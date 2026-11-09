@@ -266,7 +266,7 @@ private val SliderPanelGap = 8.dp
 private val SliderPanelRise = 10.dp
 // dark glass over the canvas (what is behind it blurred), or light
 private val SliderPanelFill get() = if (Ps.light) Color(0xFFE7E7E7) else Color(0xC93E3E3E)
-private val SliderPanelInk get() = if (Ps.light) Color(0xFF393939) else Color(0xFFF0F0F0)
+private val SliderPanelInk get() = if (Ps.light) Color(0xFF332F3B) else Color(0xFFF0F0F0)
 // the dot is drawn in the interface's ink, not the brush's colour
 private val SliderPanelDot get() = if (Ps.light) Color.Black else Color.White
 

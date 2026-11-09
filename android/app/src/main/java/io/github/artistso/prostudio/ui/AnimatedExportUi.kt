@@ -61,15 +61,15 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 
-private val ScreenFill get() = if (Ps.light) Color(0xFFF2F2F2) else Color(0xFF1F1F1F)
-private val TitleInk get() = if (Ps.light) Color(0xFF3D3D3D) else Color(0xFFAAAAAA)
-private val RowInk get() = if (Ps.light) Color(0xFF595959) else Color(0xFFC1C1C1)
-private val PanelFill get() = if (Ps.light) Color(0xFFEBEBEB) else Color(0xFF262626)
-private val PanelEdge get() = if (Ps.light) Color(0xFFDADADA) else Color(0xFF363636)
-private val SegmentTrack get() = if (Ps.light) Color(0xFFD5D5D5) else Color(0xFF3C3C3C)
-private val CapsuleFill get() = if (Ps.light) Color(0xFFFBFBFB) else Color(0xFF1A1A1A)
-private val CapsuleEdge get() = if (Ps.light) Color(0xFFE0E0E0) else Color(0xFF373737)
-private val DoneBlue = Color(0xFF0190FF)
+private val ScreenFill get() = if (Ps.light) Color(0xFFF2F2F2) else Color(0xFF1F1C26)
+private val TitleInk get() = if (Ps.light) Color(0xFF3D3D3D) else Color(0xFFABA59A)
+private val RowInk get() = if (Ps.light) Color(0xFF57534B) else Color(0xFFC4BFB2)
+private val PanelFill get() = if (Ps.light) Color(0xFFEDEAE3) else Color(0xFF242129)
+private val PanelEdge get() = if (Ps.light) Color(0xFFDAD6CD) else Color(0xFF363636)
+private val SegmentTrack get() = if (Ps.light) Color(0xFFD8D4CB) else Color(0xFF3C3C3C)
+private val CapsuleFill get() = if (Ps.light) Color(0xFFF8F6EF) else Color(0xFF1F1C26)
+private val CapsuleEdge get() = if (Ps.light) Color(0xFFE3DFD5) else Color(0xFF332F3B)
+private val DoneBlue = Color(0xFFFF6B4A)
 
 /**
  * Sharing the layers as an animation: the frames playing, the settings (the size, the frame rate,
@@ -195,7 +195,7 @@ private fun ExportScreen(
                 Modifier.height(43.dp).clip(CircleShape).background(CapsuleFill).border(1.dp, CapsuleEdge, CircleShape).clickable(onClick = onCancel).padding(horizontal = 13.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("Cancel", color = Color(0xFFA5A5A5), fontSize = 17.sp)
+                Text("Cancel", color = Color(0xFFABA59A), fontSize = 17.sp)
             }
             Spacer(Modifier.width(13.dp))
             Box(
@@ -222,7 +222,7 @@ private fun ExportScreen(
 }
 
 private val PanelWidth = 400.dp
-private val SizeInk get() = if (Ps.light) Color(0xFF3F3F3F) else Color(0xFF8E8E8E)
+private val SizeInk get() = if (Ps.light) Color(0xFF3F3F3F) else Color(0xFF8F897E)
 
 /**
  * Sharing a model on a turntable: it turning as it will, the settings (the size, once round or
@@ -315,8 +315,8 @@ private fun SettingRow(label: String, on: Boolean, onChange: (Boolean) -> Unit) 
     }
 }
 
-private val ChoiceFill get() = if (Ps.light) Color(0xFFE3E3E3) else Color(0xFF2E2E2E)
-private val SliderTrack get() = if (Ps.light) Color(0xFFDDDDDD) else Color(0xFF3E3E3E)
+private val ChoiceFill get() = if (Ps.light) Color(0xFFE3E3E3) else Color(0xFF26232E)
+private val SliderTrack get() = if (Ps.light) Color(0xFFDDDAD1) else Color(0xFF38343F)
 
 
 /**
@@ -378,7 +378,7 @@ private val FpsValueRight = 22.dp
 private val FpsLabelY = 18.dp
 private val FpsTrackY = 50.dp
 private val FpsRowHeight = 72.5.dp
-private val FpsTrack get() = if (Ps.light) Color(0xFFDDDDDD) else Color(0xFF333333)
+private val FpsTrack get() = if (Ps.light) Color(0xFFDDDAD1) else Color(0xFF35313E)
 
 /** One of two choices in a group, 40 tall: the chosen one blue with a tick. */
 @Composable

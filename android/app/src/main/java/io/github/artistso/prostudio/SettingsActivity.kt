@@ -46,7 +46,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.artistso.prostudio.canvas.CanvasViewModel
 import io.github.artistso.prostudio.canvas.keptPlugins
+import io.github.artistso.prostudio.ui.Ps
 import io.github.artistso.prostudio.ui.Switch
+import androidx.compose.ui.text.TextStyle
 import io.github.artistso.prostudio.ui.fittedInterfaceSize
 
 /**
@@ -68,12 +70,13 @@ class SettingsActivity : ComponentActivity() {
     }
 }
 
-private val Back = Color(0xFF000000)
-private val Group = Color(0xFF1C1C1E)
-private val Ink = Color(0xFFFFFFFF)
-private val Dim = Color(0xFF8E8E93)
-private val Line = Color(0xFF38383A)
-private val Blue = Color(0xFF0A84FF)
+// the app's warm ink, its words and its one accent
+private val Back = Color(0xFF17141C)
+private val Group = Color(0xFF201D27)
+private val Ink = Color(0xFFF5F1E8)
+private val Dim = Color(0xFF8F897E)
+private val Line = Color(0xFF322F3B)
+private val Ember = Color(0xFFFF6B4A)
 
 /** A row of the page. */
 private sealed class Setting
@@ -122,8 +125,8 @@ private fun SettingsScreen(prefs: android.content.SharedPreferences, onDone: () 
     Box(Modifier.fillMaxSize().background(Back).safeDrawingPadding(), contentAlignment = Alignment.TopCenter) {
         Column(Modifier.widthIn(max = 640.dp).fillMaxWidth().verticalScroll(rememberScrollState()).padding(24.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("ProStudio", color = Ink, fontSize = 30.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                Text("Done", color = Blue, fontSize = 17.sp, modifier = Modifier.clickable(onClick = onDone).padding(8.dp))
+                Text("ProStudio", style = TextStyle(brush = Ps.Brand, fontSize = 30.sp, fontWeight = FontWeight.Bold), modifier = Modifier.weight(1f))
+                Text("Done", color = Ember, fontSize = 17.sp, modifier = Modifier.clickable(onClick = onDone).padding(8.dp))
             }
             for ((heading, rows) in Groups) {
                 Text(heading.uppercase(), color = Dim, fontSize = 13.sp, modifier = Modifier.padding(start = 16.dp, top = 24.dp, bottom = 6.dp))
@@ -192,7 +195,7 @@ private fun AmountRow(prefs: android.content.SharedPreferences, s: Amount) {
             val y = size.height / 2
             val x = r + (size.width - 2 * r) * (value - s.min) / (s.max - s.min)
             drawLine(Line, Offset(r, y), Offset(size.width - r, y), 4.dp.toPx(), StrokeCap.Round)
-            drawLine(Blue, Offset(r, y), Offset(x, y), 4.dp.toPx(), StrokeCap.Round)
+            drawLine(Ember, Offset(r, y), Offset(x, y), 4.dp.toPx(), StrokeCap.Round)
             drawCircle(Ink, r, Offset(x, y))
         }
         Text(s.detail, color = Dim, fontSize = 13.sp, modifier = Modifier.padding(bottom = 4.dp))
@@ -211,7 +214,7 @@ private fun ChoiceRow(prefs: android.content.SharedPreferences, s: Choice) {
             DropdownMenu(open, { open = false }, containerColor = Group) {
                 s.options.forEachIndexed { i, name ->
                     DropdownMenuItem(
-                        text = { Text(name, color = if (i == chosen) Blue else Ink, fontSize = 17.sp) },
+                        text = { Text(name, color = if (i == chosen) Ember else Ink, fontSize = 17.sp) },
                         onClick = {
                             chosen = i
                             prefs.edit().putInt(s.key, i).apply()
@@ -244,7 +247,7 @@ private fun Licences(onBack: () -> Unit) {
     Box(Modifier.fillMaxSize().background(Back).safeDrawingPadding(), contentAlignment = Alignment.TopCenter) {
         androidx.compose.foundation.lazy.LazyColumn(Modifier.widthIn(max = 640.dp).fillMaxWidth().padding(horizontal = 24.dp)) {
             item {
-                Text("‹ Settings", color = Blue, fontSize = 17.sp, modifier = Modifier.padding(top = 24.dp).clickable(onClick = onBack).padding(vertical = 8.dp))
+                Text("‹ Settings", color = Ember, fontSize = 17.sp, modifier = Modifier.padding(top = 24.dp).clickable(onClick = onBack).padding(vertical = 8.dp))
                 Text("Licenses", color = Ink, fontSize = 30.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp, bottom = 16.dp))
             }
             items(paragraphs.size) { i -> Text(paragraphs[i], color = Dim, fontSize = 13.sp, modifier = Modifier.padding(bottom = 12.dp)) }

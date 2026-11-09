@@ -55,16 +55,16 @@ import io.github.artistso.prostudio.canvas.CanvasViewModel
 import kotlin.math.roundToInt
 
 // the dark bars are glass, like the panels: what the picture has under them shows through, blurred
-private val BarFill get() = if (Ps.light) Color(0xFFEDEDED) else Color(0xDE1E1E1E)
-private val PictureFill get() = if (Ps.light) Color(0xFFF0F0F0) else Color(0xFF333333)
+private val BarFill get() = if (Ps.light) Color(0xFFF3F0E9) else Color(0xDE1E1E1E)
+private val PictureFill get() = if (Ps.light) Color(0xFFF0F0F0) else Color(0xFF35313E)
 private val GrabLine get() = if (Ps.light) Color(0xFF909090) else Color(0x80BFBFBF)
-private val TitleInk get() = if (Ps.light) Color(0xFF3A3A3A) else Color(0xFFC5C5C5)
-private val CloseFill get() = if (Ps.light) Color(0xFFFAFAFA) else Color(0x94181818)
-private val CloseEdge get() = if (Ps.light) Color(0xFFE0E0E0) else Color(0x80515151)
-private val CloseInk get() = if (Ps.light) Color(0xFF595959) else Color(0xFFA5A5A5)
+private val TitleInk get() = if (Ps.light) Color(0xFF46413A) else Color(0xFFC4BFB2)
+private val CloseFill get() = if (Ps.light) Color(0xFFF8F6EF) else Color(0x94181818)
+private val CloseEdge get() = if (Ps.light) Color(0xFFE3DFD5) else Color(0x80515151)
+private val CloseInk get() = if (Ps.light) Color(0xFF57534B) else Color(0xFFABA59A)
 private val SegmentTrack get() = if (Ps.light) Color(0xFFD7D7D7) else Color(0x17FFFFFF)
 private val ImportFill get() = if (Ps.light) Color(0xFFD7D7D7) else Color(0xFF4D4D4D)
-private val Muted get() = if (Ps.light) Color(0xFF3B3B3B) else Color(0xFFAAAAAA)
+private val Muted get() = if (Ps.light) Color(0xFF4C463D) else Color(0xFFABA59A)
 private val TopBarHeight = 64.dp
 private val BottomBarHeight = 45.dp
 private val ReferenceCorner = 24.dp

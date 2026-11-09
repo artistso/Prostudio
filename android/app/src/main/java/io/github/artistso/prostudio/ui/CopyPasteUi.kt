@@ -31,10 +31,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.artistso.prostudio.canvas.CanvasViewModel
 
-private val PanelFill get() = if (Ps.light) Color(0xFFE2E2E2) else Color(0xFF484848)
-private val PanelTitleInk get() = if (Ps.light) Color(0xFF393939) else Color(0xFFC5C5C5)
-private val ButtonInk get() = if (Ps.light) Color(0xFF4A4A4A) else Color(0xFFA8A8A8)
-private val CloseFill get() = if (Ps.light) Color(0xFFCFCFCF) else Color(0xFF2A2A2A)
+private val PanelFill get() = if (Ps.light) Color(0xFFE6E2D8) else Color(0xFF484848)
+private val PanelTitleInk get() = if (Ps.light) Color(0xFF332F3B) else Color(0xFFC4BFB2)
+private val ButtonInk get() = if (Ps.light) Color(0xFF453F4C) else Color(0xFFABA59A)
+private val CloseFill get() = if (Ps.light) Color(0xFFCFCFCF) else Color(0xFF272430)
 
 /**
  * The Copy & Paste panel (three fingers swiped down): Cut, Copy, Copy All, Duplicate, Cut & Paste

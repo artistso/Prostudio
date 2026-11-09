@@ -167,7 +167,7 @@ fun DropDot(vm: CanvasViewModel) {
 
 /**
  * ColorDrop's band under the top bar, sliding down from behind it: while a colour is dragged and
- * while filling goes on, with the threshold as a blue line across the screen under it; after a
+ * while filling goes on, with the threshold as an ember line across the screen under it; after a
  * drop, for a moment, offering to continue filling. Sliding the threshold adds a row reading it.
  */
 @Composable
@@ -182,8 +182,8 @@ fun DropBandUi(vm: CanvasViewModel) {
     }
     if (band == DropBand.NONE && shown.value <= 0f) return
     val what = kept[0]
-    val ink = if (Ps.light) Color(0xFF222222) else Color(0xFFC5C5C5)
-    val blue = if (Ps.light) Color(0xFF0A8CFD) else Color(0xFF0076FD)
+    val ink = if (Ps.light) Color(0xFF222222) else Color(0xFFC4BFB2)
+    val accent = Ps.Accent
     BoxWithConstraints(Modifier.offset(y = Ps.BarHeight).fillMaxWidth().clipToBounds()) {
         val width = maxWidth
         Column(Modifier.graphicsLayer { translationY = -(1f - shown.value) * size.height }) {
@@ -193,7 +193,7 @@ fun DropBandUi(vm: CanvasViewModel) {
                     Spacer(Modifier.width(13.dp))
                     if (what == DropBand.FILLING) {
                         // the tick ends filling
-                        Box(Modifier.size(20.dp).clip(CircleShape).background(blue).press { vm.endFilling() }) {
+                        Box(Modifier.size(20.dp).clip(CircleShape).background(accent).press { vm.endFilling() }) {
                             Canvas(Modifier.size(20.dp)) {
                                 val u = size.width / 20f
                                 val tick = Path().apply {
@@ -206,7 +206,7 @@ fun DropBandUi(vm: CanvasViewModel) {
                         }
                     } else {
                         Box(
-                            Modifier.size(101.dp, 20.dp).clip(RoundedCornerShape(10.dp)).background(blue).press { vm.continueFilling() },
+                            Modifier.size(101.dp, 20.dp).clip(RoundedCornerShape(10.dp)).background(accent).press { vm.continueFilling() },
                             contentAlignment = Alignment.Center,
                         ) {
                             Text("Continue filling", color = Color.White, fontSize = 11.7.sp, maxLines = 1)
@@ -220,7 +220,7 @@ fun DropBandUi(vm: CanvasViewModel) {
                 }
             }
             if (what == DropBand.DRAGGING || what == DropBand.FILLING) {
-                Box(Modifier.width(width * vm.dropThreshold).height(4.dp).background(blue))
+                Box(Modifier.width(width * vm.dropThreshold).height(4.dp).background(accent))
             }
         }
     }

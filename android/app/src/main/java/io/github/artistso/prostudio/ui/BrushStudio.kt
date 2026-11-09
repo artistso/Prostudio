@@ -79,43 +79,43 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.ui.platform.LocalDensity
 
-private val StudioTabs get() = if (Ps.light) Color(0xFFEBEBEB) else Color(0xFF272727)
-private val StudioBack get() = if (Ps.light) Color(0xFFF3F3F3) else Color(0xFF1F1F1F)
-private val StudioLine get() = if (Ps.light) Color(0xFFCFCFCF) else Color(0xFF303030)
+private val StudioTabs get() = if (Ps.light) Color(0xFFEDEAE3) else Color(0xFF242129)
+private val StudioBack get() = if (Ps.light) Color(0xFFF3F0E9) else Color(0xFF1F1C26)
+private val StudioLine get() = if (Ps.light) Color(0xFFCFCFCF) else Color(0xFF2C2836)
 private val StudioHeader get() = if (Ps.light) Color(0xFF818181) else Color(0xFF9C9C9C)
-private val StudioLabel get() = if (Ps.light) Color(0xFF343434) else Color(0xFFEDEDED)
-private val StudioDim get() = if (Ps.light) Color(0xFF9A9A9A) else Color(0xFF8E8E8E)
+private val StudioLabel get() = if (Ps.light) Color(0xFF343434) else Color(0xFFF3F0E9)
+private val StudioDim get() = if (Ps.light) Color(0xFF98928A) else Color(0xFF8F897E)
 // a control that can't be used now
-private val StudioOff get() = if (Ps.light) Color(0xFFD5D5D5) else Color(0xFF505050)
+private val StudioOff get() = if (Ps.light) Color(0xFFD8D4CB) else Color(0xFF505050)
 /** Landscape: the pages' card's edge and title, the pages' names, and the settings column's width. */
-private val StudioCardEdge get() = if (Ps.light) Color(0xFFDADADA) else Color(0xFF373737)
-private val StudioCardTitle get() = if (Ps.light) Color(0xFF4A4A4A) else Color(0xFFC1C1C1)
-private val StudioPageInk get() = if (Ps.light) Color(0xFF3E3E3E) else Color(0xFF797979)
+private val StudioCardEdge get() = if (Ps.light) Color(0xFFDAD6CD) else Color(0xFF332F3B)
+private val StudioCardTitle get() = if (Ps.light) Color(0xFF453F4C) else Color(0xFFC4BFB2)
+private val StudioPageInk get() = if (Ps.light) Color(0xFF38343F) else Color(0xFF57544F)
 private val SettingsWidth = 323.dp
 /** A switch that can't be changed here: the usual one, faded. */
 private val StudioSwitchFixed = Color(0xFF515153)
 private val StudioSwitchFixedKnob = Color(0xFF9B9B9B)
 /** A slider that can't be changed here: its value and knob faded into the panel. */
-private val StudioPillOff get() = if (Ps.light) Color(0xFFEDEDED) else Color(0xFF222222)
+private val StudioPillOff get() = if (Ps.light) Color(0xFFF3F0E9) else Color(0xFF222222)
 private val StudioValueOff get() = if (Ps.light) Color(0xFFA0A0A0) else Color(0xFF646464)
-private val StudioKnobOff get() = if (Ps.light) Color(0xFFD0D0D0) else Color(0xFF353535)
+private val StudioKnobOff get() = if (Ps.light) Color(0xFFD0CCC2) else Color(0xFF35313E)
 private val StudioList get() = if (Ps.light) Color(0xFFFFFFFF) else Color(0xFF242424)
-private val StudioListLine get() = if (Ps.light) Color(0xFFE5E5E5) else Color(0xFF202020)
+private val StudioListLine get() = if (Ps.light) Color(0xFFEDEAE3) else Color(0xFF202020)
 private val StudioSegments get() = if (Ps.light) Color(0xFFDCDCDC) else Color(0xFF3C3C3C)
 private val StudioMaterial get() = if (Ps.light) Color(0xFFECECEC) else Color(0xFF232323)
-private val StudioMaterialInk get() = if (Ps.light) Color(0xFF4A4A4A) else Color(0xFFB1B1B1)
-private val StudioPill get() = if (Ps.light) Color(0xFFE5E5E5) else Color(0xFF292929)
-private val StudioTrack get() = if (Ps.light) Color(0xFFE5E5E5) else Color(0xFF333333)
-private val StudioTabIcon get() = if (Ps.light) Color(0xFF3D3D3D) else Color(0xFFAAAAAA)
-private val StudioButton get() = if (Ps.light) Color(0xFFFBFBFB) else Color(0xFF1C1C1C)
-private val StudioButtonEdge get() = if (Ps.light) Color(0xFFE0E0E0) else Color(0xFF383838)
+private val StudioMaterialInk get() = if (Ps.light) Color(0xFF453F4C) else Color(0xFFB1B1B1)
+private val StudioPill get() = if (Ps.light) Color(0xFFEDEAE3) else Color(0xFF292929)
+private val StudioTrack get() = if (Ps.light) Color(0xFFEDEAE3) else Color(0xFF35313E)
+private val StudioTabIcon get() = if (Ps.light) Color(0xFF3D3D3D) else Color(0xFFABA59A)
+private val StudioButton get() = if (Ps.light) Color(0xFFF8F6EF) else Color(0xFF1C1C1C)
+private val StudioButtonEdge get() = if (Ps.light) Color(0xFFE3DFD5) else Color(0xFF332F3B)
 // the pad's buttons' text and icon: grey, not the labels' white
-private val StudioButtonInk get() = if (Ps.light) Color(0xFF585858) else Color(0xFFAAAAAA)
-private val StudioCard get() = if (Ps.light) Color(0xFFE5E5E5) else Color(0xFF313131)
-private val PreviewCardFill get() = if (Ps.light) Color(0xFFE8E8E8) else Color(0xFF2A2A2A)
-private val PreviewCardEdge get() = if (Ps.light) Color(0xFFD0D0D0) else Color(0xFF4A4A4A)
-private val PreviewCardName get() = if (Ps.light) Color(0xFF3A3A3A) else Color(0xFFC5C5C5)
-private val StudioDone = Color(0xFF0190FF)
+private val StudioButtonInk get() = if (Ps.light) Color(0xFF57534B) else Color(0xFFABA59A)
+private val StudioCard get() = if (Ps.light) Color(0xFFEDEAE3) else Color(0xFF313131)
+private val PreviewCardFill get() = if (Ps.light) Color(0xFFE8E8E8) else Color(0xFF272430)
+private val PreviewCardEdge get() = if (Ps.light) Color(0xFFD0CCC2) else Color(0xFF453F4C)
+private val PreviewCardName get() = if (Ps.light) Color(0xFF46413A) else Color(0xFFC4BFB2)
+private val StudioDone = Color(0xFFFF6B4A)
 
 /** Where the settings start below the drawing pad (points from the top). */
 private val PadHeight = 510.dp
@@ -533,7 +533,7 @@ private fun BlendModeList(modes: List<io.github.artistso.prostudio.core.BlendMod
 
 private val ModeListFill = Color(0xFFE1E1E1)
 private val ModeListLine = Color(0xFFCDCDCD)
-private val ModeListInk = Color(0xFF393939)
+private val ModeListInk = Color(0xFF332F3B)
 private val ModeListGlyph = Color(0xFF7F7F7F)
 
 /** A slider's value as it reads. */
@@ -575,7 +575,7 @@ private fun shownValue(v: Float, shown: Shown, most: Float = 16f): String {
     }
 }
 
-private val PadBehind get() = if (Ps.light) Color(0xFFF3F3F3) else Color(0xFF1F1F1F)
+private val PadBehind get() = if (Ps.light) Color(0xFFF3F0E9) else Color(0xFF1F1C26)
 
 /**
  * The brush studio: tabs down the left, the drawing pad above, the tab's settings below. It slides up
@@ -977,15 +977,15 @@ private fun SourceBox(vm: CanvasViewModel, c: StudioControl.Source) {
     }
 }
 
-private val AboutCard get() = if (Ps.light) Color(0xFFEBEBEB) else Color(0xFF252525)
-private val AboutFace get() = if (Ps.light) Color(0xFFD8D8D8) else Color(0xFF3A3A3A)
-private val AboutName get() = if (Ps.light) Color(0xFF2A2A2A) else Color(0xFFE0E0E0)
-private val AboutRowInk get() = if (Ps.light) Color(0xFF4A4A4A) else Color(0xFFBBBBBB)
-private val AboutSignature get() = if (Ps.light) Color(0xFFA8A8A8) else Color(0xFF595959)
+private val AboutCard get() = if (Ps.light) Color(0xFFEDEAE3) else Color(0xFF252525)
+private val AboutFace get() = if (Ps.light) Color(0xFFDDDAD1) else Color(0xFF46413A)
+private val AboutName get() = if (Ps.light) Color(0xFF272430) else Color(0xFFE3DFD5)
+private val AboutRowInk get() = if (Ps.light) Color(0xFF453F4C) else Color(0xFFBBBBBB)
+private val AboutSignature get() = if (Ps.light) Color(0xFFABA59A) else Color(0xFF57534B)
 
-private val PadMenuFill = Color(0xFFC1C1C1)
+private val PadMenuFill = Color(0xFFC4BFB2)
 private val PadMenuGroup = Color(0xFFD3D3D3)
-private val PadMenuText = Color(0xFF393939)
+private val PadMenuText = Color(0xFF332F3B)
 private val PadMenuLine = Color(0xFFBDBDBD)
 
 /**
@@ -1011,7 +1011,7 @@ fun PadMenu(vm: CanvasViewModel, width: Dp) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             CanvasViewModel.PAD_COLORS.forEachIndexed { i, c ->
                 val chosen = vm.padColor == i
-                Box(Modifier.size(37.dp).clip(CircleShape).background(if (chosen) Color(0xFFEBEBEB) else Color.Transparent).tap { vm.choosePadColor(i) }, contentAlignment = Alignment.Center) {
+                Box(Modifier.size(37.dp).clip(CircleShape).background(if (chosen) Color(0xFFEDEAE3) else Color.Transparent).tap { vm.choosePadColor(i) }, contentAlignment = Alignment.Center) {
                     Box(Modifier.size(19.dp).clip(CircleShape).background(CanvasSpace.color(c)))
                 }
             }
@@ -1195,9 +1195,9 @@ private fun typedNumber(shown: Shown, most: Float): Typed = when (shown) {
     Shown.SIZE -> Typed((most * 100f).roundToInt(), false) { n -> ((n / 100f) / most.coerceAtLeast(1e-3f)).coerceIn(0f, 1f).toDouble().pow(1.0 / 2.2).toFloat() }
 }
 
-private val KeypadFill = Color(0xFFD5D5D5)
+private val KeypadFill = Color(0xFFD8D4CB)
 private val KeypadKey = Color(0xFFE6E6E6)
-private val KeypadInk = Color(0xFF1D1D1D)
+private val KeypadInk = Color(0xFF1F1C26)
 private val KeypadWidth = 275.dp
 private val KeypadHeight = 360.dp
 /**
@@ -1210,12 +1210,12 @@ private fun keypadHeight(tabs: Int) = when (tabs) {
     else -> 386.dp
 }
 private fun keypadKeyHeight(tabs: Int) = if (tabs > 1) 64.dp else 66.dp
-private val KeypadTabs = Color(0xFFC1C1C1)
-private val KeypadTabChosen = Color(0xFF0A8CFD)
-private val KeypadTabInk = Color(0xFF393939)
-private val KeypadGraph = Color(0xFFE2E2E2)
+private val KeypadTabs = Color(0xFFC4BFB2)
+private val KeypadTabChosen = Color(0xFFFF6B4A)
+private val KeypadTabInk = Color(0xFF332F3B)
+private val KeypadGraph = Color(0xFFE6E2D8)
 private val KeypadGraphEdge = Color(0xFF999999)
-private val KeypadGraphGrid = Color(0xFFD0D0D0)
+private val KeypadGraphGrid = Color(0xFFD0CCC2)
 private val KeypadSwitchOff = Color(0xFFC2C1C5)
 
 /** A slider keypad's pages: typing the value, the slider's own pressure curve, its own tilt. */
@@ -1469,11 +1469,11 @@ private fun TaperBar(start: Float, end: Float, onStart: (Float) -> Unit, onEnd: 
 
 /** How far in from the row's ends the taper handles stop: where the sliders' knobs do. */
 private val TAPER_TRAVEL = 15.dp
-private val TaperBox get() = if (Ps.light) Color(0xFFEBEBEB) else Color(0xFF212121)
+private val TaperBox get() = if (Ps.light) Color(0xFFEDEAE3) else Color(0xFF212121)
 /** The studio's pressure curve: a darker box with a light edge, a grey curve, small handles. */
-private val StudioCurveFill get() = if (Ps.light) Color(0xFFFFFFFF) else Color(0xFF1B1B1B)
-private val StudioCurveEdge get() = if (Ps.light) Color(0xFFD8D8D8) else Color(0xFF353535)
-private val StudioCurveLine get() = if (Ps.light) Color(0xFF3A3A3A) else Color(0xFFD5D5D5)
+private val StudioCurveFill get() = if (Ps.light) Color(0xFFFFFFFF) else Color(0xFF1B1822)
+private val StudioCurveEdge get() = if (Ps.light) Color(0xFFDDDAD1) else Color(0xFF35313E)
+private val StudioCurveLine get() = if (Ps.light) Color(0xFF46413A) else Color(0xFFD8D4CB)
 private val TaperBarFill get() = if (Ps.light) Color(0xFFDCDCDC) else Color(0xFF363636)
 
 /**
@@ -1482,9 +1482,9 @@ private val TaperBarFill get() = if (Ps.light) Color(0xFFDCDCDC) else Color(0xFF
  */
 internal class TiltLook(val box: Color, val quarter: Color, val arc: Color, val line: Color, val label: Color, val off: Color, val fill: Boolean = true)
 
-private val DarkTilt = TiltLook(Color(0xFF1B1B1B), Color(0xFF262626), Color(0xFF4A4A4A), Color(0xFF6E6E6E), Color(0xFF8E8E8E), Color(0xFF6E6E6E))
+private val DarkTilt = TiltLook(Color(0xFF1B1822), Color(0xFF242129), Color(0xFF453F4C), Color(0xFF6E6E6E), Color(0xFF8F897E), Color(0xFF6E6E6E))
 /** In the keypads: the disc darker than the box round it, as measured. */
-private val LightTilt = TiltLook(Color(0xFFE6E6E6), Color(0xFFDADADA), Color(0xFFABABAB), Color(0xFF797979), Color(0xFFAAAAAA), Color(0xFFAAAAAA), fill = false)
+private val LightTilt = TiltLook(Color(0xFFE6E6E6), Color(0xFFDAD6CD), Color(0xFFABABAB), Color(0xFF57544F), Color(0xFFABA59A), Color(0xFFABA59A), fill = false)
 
 /**
  * The tilt angle: a quarter disc from the bottom-left corner with a line at the angle (0 flat, 1
@@ -1608,14 +1608,14 @@ private val RoundnessGreen = Color(0xFF42E347)
 private val RoundnessCross get() = if (Ps.light) Color(0xFFC0C0C0) else Color(0xFF4C4C4C)
 private val RoundnessFill get() = if (Ps.light) Color(0xD6F0F0F0) else Color(0xD6232323)
 private val RoundnessEdge get() = if (Ps.light) Color(0xFFC8C8C8) else Color(0xFF565656)
-private val TiltBox get() = if (Ps.light) Color(0xFFFFFFFF) else Color(0xFF1B1B1B)
-private val TiltLabel get() = if (Ps.light) Color(0xFF808080) else Color(0xFF8E8E8E)
+private val TiltBox get() = if (Ps.light) Color(0xFFFFFFFF) else Color(0xFF1B1822)
+private val TiltLabel get() = if (Ps.light) Color(0xFF7A766E) else Color(0xFF8F897E)
 
 @Composable
 internal fun PressureCurve(
     points: List<Offset>,
     modifier: Modifier = Modifier.padding(horizontal = 8.dp).fillMaxWidth().aspectRatio(1f),
-    grid: Color = Color(0xFF3A3A3A),
+    grid: Color = Color(0xFF46413A),
     edge: Color = grid,
     /** The box's own fill and corners, the curve's colour and width, and its handles' radii (ring, middle). */
     fill: Color = Color.Transparent,

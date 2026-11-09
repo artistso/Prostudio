@@ -1272,10 +1272,10 @@ private fun HexKey(modifier: Modifier, onClick: () -> Unit, label: @Composable (
 }
 
 private val HexPadFill = Color(0xFF616161)
-private val HexPadEdge = Color(0xFF262626)
+private val HexPadEdge = Color(0xFF242129)
 private val HexKeyFill = Color(0xFF6C6C6C)
 private val HexKeyHeld = Color(0xFF8A8A8A)
-private val HexKeyInk = Color(0xFFEEEEEE)
+private val HexKeyInk = Color(0xFFEDEAE3)
 private val HexBackInk = Color(0xFFBABABA)
 
 /** The colour at [t] (0..1) along evenly spaced [colours]. */

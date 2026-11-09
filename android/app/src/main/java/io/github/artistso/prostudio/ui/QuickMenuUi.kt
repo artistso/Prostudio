@@ -516,9 +516,9 @@ private val PickerHeight = PickerHeader + PickerRowPitch * 6 - PickerRowGap + 6.
 private val PickerMargin = 8.dp
 /** How far below the list's top the chosen row shows. */
 private val PickerChosenAt = 89.dp
-private val PickerFill = Color(0xFF373737)
-private val PickerRowFill = Color(0xFF2E2E2E)
-private val PickerRowInk = Color(0xFFC5C5C5)
+private val PickerFill = Color(0xFF332F3B)
+private val PickerRowFill = Color(0xFF26232E)
+private val PickerRowInk = Color(0xFFC4BFB2)
 private val PickerTitleInk = Color(0xFFC4C4C4)
 
 /** Layer Select's list: the layers drawn under the point, top first, the current one blue. */

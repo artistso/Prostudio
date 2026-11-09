@@ -50,15 +50,15 @@ import io.github.artistso.prostudio.core.SymmetryType
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
-private val GuideTop get() = if (Ps.light) Color(0xFFE1E1E3) else Color(0xFF1F1F1F)
+private val GuideTop get() = if (Ps.light) Color(0xFFE1E1E3) else Color(0xFF1F1C26)
 private val GuideButton get() = if (Ps.light) Color(0xFFF5F8F9) else Color(0xFF1C1C1C)
-private val GuideButtonEdge get() = if (Ps.light) Color(0xFFDCDEDF) else Color(0xFF383838)
-private val GuideTitle get() = if (Ps.light) Color(0xFF3A3A3A) else Color(0xFFD8D8D8)
-private val GuideDone = Color(0xFF0190FF)
-private val GuideNote get() = if (Ps.light) Color(0xFFB5B5B5) else Color(0xFF4A4A4A)
+private val GuideButtonEdge get() = if (Ps.light) Color(0xFFDCDEDF) else Color(0xFF332F3B)
+private val GuideTitle get() = if (Ps.light) Color(0xFF46413A) else Color(0xFFDDDAD1)
+private val GuideDone = Color(0xFFFF6B4A)
+private val GuideNote get() = if (Ps.light) Color(0xFFB7B2A6) else Color(0xFF453F4C)
 /** The toolbar's words: light, or dark grey with the light interface. */
-private val GuideLabel get() = if (Ps.light) Color(0xFF414141) else Color(0xFFD0D0D0)
-private val GuideNodeCentre = Color(0xFF0A84FF)
+private val GuideLabel get() = if (Ps.light) Color(0xFF46413A) else Color(0xFFD0CCC2)
+private val GuideNodeCentre = Color(0xFFFF6B4A)
 private val GuideNodeTurn = Color(0xFF30D158)
 
 /**
@@ -67,12 +67,12 @@ private val GuideNodeTurn = Color(0xFF30D158)
  * the digits #525252; over the white canvas #2E2E30, #38383A, #59595B). Light, as Custom Canvas's,
  * and opaque.
  */
-private val SheetFill get() = if (Ps.light) Color(0xFFD1D3D8) else Color(0xE91A1A1A)
+private val SheetFill get() = if (Ps.light) Color(0xFFD8D4CB) else Color(0xE91A1A1A)
 private val SheetKey get() = if (Ps.light) Color(0xFFABB2BB) else Color(0x514E4E4E)
 private val SheetDigit get() = if (Ps.light) Color(0xFFFFFFFF) else Color(0x9A757575)
 private val SheetUnit get() = if (Ps.light) Color(0xFF818C96) else Color(0xFFA0A0A1)
 private val SheetUnitInk get() = if (Ps.light) Color.White else Color(0xFF141414)
-private val SheetInk get() = if (Ps.light) Color(0xFF3E3E3E) else Color(0xFFAAAAAA)
+private val SheetInk get() = if (Ps.light) Color(0xFF38343F) else Color(0xFFABA59A)
 
 /** The keypad's keys, 79.5 tall, 9 apart; 30 between the units, the digits and the right-hand keys. */
 private val KeyHeight = 79.5.dp
@@ -164,7 +164,7 @@ fun GuideEditor(vm: CanvasViewModel) {
             Row(Modifier.align(Alignment.TopEnd).padding(top = 20.dp, end = 20.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(73.dp, 43.dp).clip(CircleShape).background(GuideButton).border(1.dp, GuideButtonEdge, CircleShape).tap { vm.closeGuideEditor(keep = false) },
                     contentAlignment = Alignment.Center) {
-                    Text("Cancel", color = if (Ps.light) Color(0xFF585858) else GuideTitle, fontSize = 17.sp, maxLines = 1)
+                    Text("Cancel", color = if (Ps.light) Color(0xFF57534B) else GuideTitle, fontSize = 17.sp, maxLines = 1)
                 }
                 Spacer(Modifier.width(13.dp))
                 Box(Modifier.size(44.dp).clip(CircleShape).background(GuideDone).tap { vm.closeGuideEditor(keep = true) }, contentAlignment = Alignment.Center) {
@@ -324,7 +324,7 @@ private fun GuideToolbar(vm: CanvasViewModel, modifier: Modifier, onChip: () -> 
                     GuideType.GRID, GuideType.ISOMETRIC ->
                         OptionSlider("Grid size", sizeToSlider(g.size), g.sizeLabel, slider, chip = true, onChip = onChip) { vm.setGuideLook(size = sliderToSize(it)) }
                     GuideType.SYMMETRY -> Box(
-                        Modifier.size(slider, 40.dp).clip(RoundedCornerShape(20.dp)).background(Color(0xFF303030)).tap { vm.symmetryOptionsOpen = !vm.symmetryOptionsOpen },
+                        Modifier.size(slider, 40.dp).clip(RoundedCornerShape(20.dp)).background(Color(0xFF2C2836)).tap { vm.symmetryOptionsOpen = !vm.symmetryOptionsOpen },
                         contentAlignment = Alignment.Center,
                     ) {
                         Text("Options", color = GuideLabel, fontSize = 15.sp, maxLines = 1)
@@ -356,7 +356,7 @@ private fun GuideToolbar(vm: CanvasViewModel, modifier: Modifier, onChip: () -> 
                 }
                 GuideType.PERSPECTIVE -> AssistedSwitch(vm, g.assisted)
                 GuideType.SYMMETRY -> Box(
-                    Modifier.size(300.dp, 40.dp).clip(RoundedCornerShape(20.dp)).background(Color(0xFF303030)).tap { vm.symmetryOptionsOpen = !vm.symmetryOptionsOpen },
+                    Modifier.size(300.dp, 40.dp).clip(RoundedCornerShape(20.dp)).background(Color(0xFF2C2836)).tap { vm.symmetryOptionsOpen = !vm.symmetryOptionsOpen },
                     contentAlignment = Alignment.Center,
                 ) {
                     Text("Options", color = GuideLabel, fontSize = 15.sp, maxLines = 1)

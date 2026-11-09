@@ -38,10 +38,10 @@ import io.github.artistso.prostudio.core.TransformKind
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-private val FieldIdle = Color(0xFF383838)
-private val TopKey = Color(0xFF2E2E2E)
-private val DigitKey = Color(0xFF414141)
-private val KeyInk = Color(0xFFDADADA)
+private val FieldIdle = Color(0xFF332F3B)
+private val TopKey = Color(0xFF26232E)
+private val DigitKey = Color(0xFF46413A)
+private val KeyInk = Color(0xFFDAD6CD)
 private val LinkOn = Color(0xFF1F436B)
 private const val NUMERIC_WIDTH = 248
 /** How far the arrow's tip stands from the node's middle (the panel's edge 17 from it). */

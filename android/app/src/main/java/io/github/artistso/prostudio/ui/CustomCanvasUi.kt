@@ -50,20 +50,20 @@ import io.github.artistso.prostudio.gallery.CanvasPreset
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
-private val ScreenFill get() = if (Ps.light) Color(0xFFF2F2F2) else Color(0xFF1F1F1F)
+private val ScreenFill get() = if (Ps.light) Color(0xFFF2F2F2) else Color(0xFF1F1C26)
 private val PanelFill get() = if (Ps.light) Color(0xFFDFDFDF) else Color(0xFF282828)
-private val Ink get() = if (Ps.light) Color(0xFF3E3E3E) else Color(0xFFAAAAAA)
-private val IdleInk get() = if (Ps.light) Color(0xFF3E3E3E) else Color(0xFF797979)
+private val Ink get() = if (Ps.light) Color(0xFF38343F) else Color(0xFFABA59A)
+private val IdleInk get() = if (Ps.light) Color(0xFF38343F) else Color(0xFF57544F)
 private val Editing = Color(0xFF436BF0)
-private val KeypadFill get() = if (Ps.light) Color(0xFFD1D3D8) else Color(0xFF1A1A1A)
+private val KeypadFill get() = if (Ps.light) Color(0xFFD8D4CB) else Color(0xFF1F1C26)
 private val DigitFill get() = if (Ps.light) Color(0xFFFFFFFF) else Color(0xFF525252)
 private val KeyFill get() = if (Ps.light) Color(0xFFABB2BB) else Color(0xFF2B2B2B)
 private val UnitChosen get() = if (Ps.light) Color(0xFF818C96) else Color(0xFFA1A1A1)
-private val SwitchTrack get() = if (Ps.light) Color(0xFFD5D5D5) else Color(0xFF353535)
-private val SwitchIdle get() = if (Ps.light) Color(0xFF3B3B3B) else Color(0xFFC1C1C1)
-private val CapsuleFill get() = if (Ps.light) Color(0xFFFBFBFB) else Color(0xFF1A1A1A)
-private val CapsuleEdge get() = if (Ps.light) Color(0xFFE0E0E0) else Color(0xFF373737)
-private val DoneBlue = Color(0xFF0190FF)
+private val SwitchTrack get() = if (Ps.light) Color(0xFFD8D4CB) else Color(0xFF35313E)
+private val SwitchIdle get() = if (Ps.light) Color(0xFF4C463D) else Color(0xFFC4BFB2)
+private val CapsuleFill get() = if (Ps.light) Color(0xFFF8F6EF) else Color(0xFF1F1C26)
+private val CapsuleEdge get() = if (Ps.light) Color(0xFFE3DFD5) else Color(0xFF332F3B)
+private val DoneBlue = Color(0xFFFF6B4A)
 
 /** Where the last row the keypad types into (DPI) ends, down from the top: the page's 120, two
  * rows and their line, 24 between the groups, one row. */
@@ -304,7 +304,7 @@ fun CustomCanvasScreen(vm: CanvasViewModel, onMade: () -> Unit) {
 @Composable
 private fun CapsuleText(label: String, onClick: () -> Unit) {
     Box(Modifier.fillMaxHeight().clickable(onClick = onClick).padding(horizontal = 13.dp), contentAlignment = Alignment.Center) {
-        Text(label, color = Color(0xFFA5A5A5), fontSize = 17.sp)
+        Text(label, color = Color(0xFFABA59A), fontSize = 17.sp)
     }
 }
 
@@ -387,7 +387,7 @@ private fun Keypad(modifier: Modifier, wide: Boolean, room: Dp, unit: SizeUnit, 
         Row(horizontalArrangement = Arrangement.spacedBy(30.dp)) {
             Column(verticalArrangement = Arrangement.spacedBy(down)) {
                 for (u in listOf(SizeUnit.MILLIMETERS, SizeUnit.CENTIMETERS, SizeUnit.INCHES, SizeUnit.PIXELS)) {
-                    Key(u.label, if (u == unit) UnitChosen else KeyFill, if (u != unit) Ink else if (Ps.light) Color.White else Color(0xFF1F1F1F), 15.sp, w, h) { onUnit(u) }
+                    Key(u.label, if (u == unit) UnitChosen else KeyFill, if (u != unit) Ink else if (Ps.light) Color.White else Color(0xFF1F1C26), 15.sp, w, h) { onUnit(u) }
                 }
             }
             Column(verticalArrangement = Arrangement.spacedBy(down)) {

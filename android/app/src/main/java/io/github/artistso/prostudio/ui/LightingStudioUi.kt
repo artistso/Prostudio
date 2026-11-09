@@ -53,12 +53,12 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 private val StudioBar = Color(0xFF26292A)
-private val StudioTitle = Color(0xFFD8D8D8)
+private val StudioTitle = Color(0xFFDDDAD1)
 private val PillFill = Color(0xFF1D2021)
-private val PillEdge = Color(0xFF3B3E3F)
-private val PillLit = Color(0xFF474747)
-private val PillInk = Color(0xFFC1C1C1)
-private val DoneBlue = Color(0xFF0190FF)
+private val PillEdge = Color(0xFF332F3B)
+private val PillLit = Color(0xFF403B4B)
+private val PillInk = Color(0xFFC4BFB2)
+private val DoneBlue = Color(0xFFFF6B4A)
 private val PopoverFill = Color(0xFF282A2D)
 private val GroupFill = Color(0xFF232528)
 private val RowLine = Color(0xFF2C2E31)
@@ -89,7 +89,7 @@ private val Environments by lazy {
 
 /** The hue bar's colours, evenly spaced along it (as the lights take them). */
 private val HueStops = listOf(0xFFFF0000, 0xFFFF6E00, 0xFFFFDC00, 0xFF35FF00, 0xFF00FFEC, 0xFF0034FF, 0xFFAA00FF, 0xFFFF0000).map { Color(it) }
-private val SaturationStart = Color(0xFF808080)
+private val SaturationStart = Color(0xFF7A766E)
 private val SettingsFill = Color(0xFF29292B)
 private val SettingsGroup = Color(0xFF222427)
 

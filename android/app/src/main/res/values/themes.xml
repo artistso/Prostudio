@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- dark, so nothing flashes before the first frame -->
-    <color name="window_background">#FF000000</color>
-    <color name="ic_launcher_background">#FF0B0B0C</color>
+    <!-- the app's warm ink, so nothing flashes before the first frame -->
+    <color name="window_background">#FF17141C</color>
+    <color name="ic_launcher_background">#FF17141C</color>
 
     <style name="Base.Theme.ProStudio" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowBackground">@color/window_background</item>

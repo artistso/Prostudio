@@ -95,12 +95,12 @@ private class Slide(val label: String, val value: String, val fraction: Float, v
 /** The pages the panel shows: its tabs, or a page of settings reached from one of them. */
 private enum class ActionsPage { TABS, PRESSURE, CURSOR, PLUGINS }
 
-private val CurveFill get() = if (Ps.light) Color(0xFFE7E7E9) else Color(0xFF262626)
+private val CurveFill get() = if (Ps.light) Color(0xFFE7E7E9) else Color(0xFF242129)
 
 /** Advanced cursor's section headings: bold, as large as the rows, lighter than the tabs' names. */
-private val CursorHeading get() = if (Ps.light) Ps.TabIdle else Color(0xFFB5B5B5)
-private val CurveEdge get() = if (Ps.light) Color(0xFF999999) else Color(0xFF666666)
-private val CurveGrid get() = if (Ps.light) Color(0xFFCACACA) else Color(0xFF353535)
+private val CursorHeading get() = if (Ps.light) Ps.TabIdle else Color(0xFFB7B2A6)
+private val CurveEdge get() = if (Ps.light) Color(0xFF999999) else Color(0xFF5B5764)
+private val CurveGrid get() = if (Ps.light) Color(0xFFCACACA) else Color(0xFF35313E)
 private val CurveLine get() = if (Ps.light) Color.Black else Color.White
 
 /** A fraction shown as the panel's sliders show it: "None" at nothing, else a percentage. */
@@ -811,7 +811,7 @@ private fun SlideRow(row: Slide) {
 private val PrivateSlide = 248.dp
 private val PrivateWidth = 245.dp
 private val PrivateFill = Color(0xFF454545)
-private val PrivateInk = Color(0xFFA8A8A8)
+private val PrivateInk = Color(0xFFABA59A)
 
 /**
  * A row that a swipe to the left slides open, its private action's button coming in from the

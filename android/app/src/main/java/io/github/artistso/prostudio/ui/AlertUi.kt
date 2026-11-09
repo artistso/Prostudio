@@ -54,7 +54,7 @@ private val AlertMostWidth get() = AlertButtonWidth * 3 + AlertButtonGap * 2 + A
 private val AlertSide = 15.dp
 // dark glass, or light with the light interface
 private val AlertFill get() = if (Ps.light) Color(0xF2E3E3E3) else Color(0xF21E1E1E)
-private val AlertInk get() = if (Ps.light) Color(0xFF222222) else Color(0xFFC5C5C5)
+private val AlertInk get() = if (Ps.light) Color(0xFF222222) else Color(0xFFC4BFB2)
 private val AlertCancelFill get() = if (Ps.light) Color(0xFFD9D9D9) else Color(0xFF2D2D2D)
 private val AlertCancelInk get() = if (Ps.light) Color.Black else Color.White
 private val AlertDestroyFill get() = if (Ps.light) Color(0xFFFD0100) else Color(0xFFFE2D2E)

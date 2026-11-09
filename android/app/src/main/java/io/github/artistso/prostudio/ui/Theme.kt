@@ -3,38 +3,49 @@ package io.github.artistso.prostudio.ui
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-/** Interface colours and sizes. Sizes in dp equal the measured points. */
+/**
+ * ProStudio's interface colours and sizes. Sizes in dp equal the measured points.
+ *
+ * The identity: a darkroom at night. Warm ink panels lifted on a violet-charcoal black, paper-warm
+ * words, and one accent doing all the talking — ember, the brand's warm end, reached for whenever
+ * something is chosen or possible. The light interface (Prefs) is the same room with the lamps on:
+ * warm paper and deep ink, the same ember a shade deeper so it still reads.
+ */
 object Ps {
-    /** The light interface (Prefs) is on: panels and bars go light grey with dark text. */
+    /** The light interface (Prefs) is on: the same room with the lamps on, not a grey theme. */
     var light by mutableStateOf(false)
 
     /** A colour for the interface as it is now: [dark], or [light] when the light interface is on. */
     private fun pick(dark: Long, light: Long) = Color(if (this.light) light else dark)
 
-    val Panel: Color get() = pick(0xF7262626, 0xF7E6E6E6)
-    val Row: Color get() = pick(0xFF303030, 0xFFD8D8D8)
-    val RowSelected = Color(0xFF0076FD)
-    val Accent = Color(0xFF0076FD)
-    val Text: Color get() = pick(0xFFFFFFFF, 0xFF222222)
-    val TextDim: Color get() = pick(0x99FFFFFF, 0x99000000)
-    val Disabled: Color get() = pick(0x4DFFFFFF, 0x4D000000)
-    val Divider: Color get() = pick(0x26FFFFFF, 0x1F000000)
-    val Surround = Color(0xFF1C1C1C)
+    val Panel: Color get() = pick(0xF226222E, 0xF7ECE9E2)
+    val Row: Color get() = pick(0xFF332F3B, 0xFFDDDAD1)
+    val RowSelected: Color get() = pick(0xFFFF6B4A, 0xFFD84A28)
+    val Ember = Color(0xFFFF6B4A)
+    val Ultraviolet = Color(0xFF8B5CF6)
+    val Accent: Color get() = pick(0xFFFF6B4A, 0xFFD84A28)
+    /** The brand blend: amber into ember into ultraviolet. For the rare stroke that says where you are. */
+    val Brand: Brush get() = Brush.linearGradient(listOf(Color(0xFFFFC43D), Ember, Color(0xFFEC4878), Ultraviolet))
+    val Text: Color get() = pick(0xFFF5F1E8, 0xFF26221F)
+    val TextDim: Color get() = pick(0x99F5F1E8, 0x9926221F)
+    val Disabled: Color get() = pick(0x4DF5F1E8, 0x4D26221F)
+    val Divider: Color get() = pick(0x26F5F1E8, 0x1F26221F)
+    val Surround = Color(0xFF17141C)
 
     // the bar across the top of the canvas
-    /** Translucent: #333333 over white, as the bar measures. */
-    // light, see-through enough to read 226 over the light surround and 235 over white
-    val Bar: Color get() = pick(0xE61C1C1C, 0xCFE6E6E6)
-    val BarText: Color get() = pick(0xFFAAAAAA, 0xFF3B3B3B)
-    val BarGlyph: Color get() = pick(0xFFC7C7C7, 0xFF373737)
-    val BarGlyphSelected = Color(0xFF0076FD)
-    val ActionDisc: Color get() = pick(0xFF141414, 0xFFEDEDED)
-    val ActionGlyph: Color get() = pick(0xFF969696, 0xFF646464)
-    val ColorRing: Color get() = pick(0xFF969696, 0xFF696969)
+    /** The bar's ink, translucent, so the canvas shows through. */
+    val Bar: Color get() = pick(0xE61B1822, 0xCFECE9E2)
+    val BarText: Color get() = pick(0xFFA8A294, 0xFF4C463D)
+    val BarGlyph: Color get() = pick(0xFFCFC9BC, 0xFF3E3931)
+    val BarGlyphSelected: Color get() = pick(0xFFFF6B4A, 0xFFD84A28)
+    val ActionDisc: Color get() = pick(0xFF1F1C26, 0xFFF3F0E9)
+    val ActionGlyph: Color get() = pick(0xFF98928A, 0xFF5B564D)
+    val ColorRing: Color get() = pick(0xFF8F897E, 0xFF6E6A61)
     val BarHeight = 44.dp
     val BarMargin = 40.dp
     val BarButtonWidth = 44.dp
@@ -44,76 +55,76 @@ object Ps {
     val ColorDot = 31.dp
 
     // the panels hanging from the top bar
-    val PopoverFill: Color get() = pick(0xFF383838, 0xFFE6E6E6)
+    val PopoverFill: Color get() = pick(0xFF37333F, 0xFFECE9E2)
     /** A panel's own material over the canvas: what is behind it shows through, blurred. */
-    val PopoverFrost: Color get() = pick(0xDE1E1E1E, 0xFFE6E6E6)
+    val PopoverFrost: Color get() = pick(0xDE242129, 0xFFECE9E2)
     /**
      * The gallery's popovers: their glass as it shows over the gallery's dark (nothing blurs what
      * is behind them there, and unblurred it shows through too sharply).
      */
-    val GalleryPopover: Color get() = pick(0xFF212121, 0xFFE6E6E6)
+    val GalleryPopover: Color get() = pick(0xFF201D26, 0xFFECE9E2)
     val PopoverShadow: Color get() = pick(0x38000000, 0x24000000)
     val PopoverShadowRadius = 51.dp
     val PopoverCorner = 35.dp
     val PopoverGap = 12.dp
     val ArrowHeight = 12.dp
     val ArrowShift = 2.dp
-    val PanelTitle: Color get() = pick(0xFFC7C7C7, 0xFF393939)
-    val PanelGlyph: Color get() = pick(0xFFC8C8C8, 0xFF393939)
-    val ChevronDisc: Color get() = pick(0xFF4C4C4C, 0xFFCFCFCF)
-    val ChevronGlyph: Color get() = pick(0xFF2E2E2E, 0xFFE6E6E6)
+    val PanelTitle: Color get() = pick(0xFFCFC9BC, 0xFF3E3931)
+    val PanelGlyph: Color get() = pick(0xFFD2CCBF, 0xFF3E3931)
+    val ChevronDisc: Color get() = pick(0xFF453F4C, 0xFFD0CCC2)
+    val ChevronGlyph: Color get() = pick(0xFF242028, 0xFFEFEDE6)
     // a little white over the panel, so they follow its frosting
-    val LayerRow: Color get() = pick(0x0DFFFFFF, 0xFFD8D8D8)
-    val BackgroundRow: Color get() = pick(0x0DFFFFFF, 0xFFD8D8D8)
-    val CheckFill: Color get() = pick(0xFFC7C7C7, 0xFF575757)
-    val ThumbBackground: Color get() = pick(0xFF4F4F4F, 0xFFC8C8C8)
+    val LayerRow: Color get() = pick(0x0DF5F1E8, 0xFFDDDAD1)
+    val BackgroundRow: Color get() = pick(0x0DF5F1E8, 0xFFDDDAD1)
+    val CheckFill: Color get() = pick(0xFFCFC9BC, 0xFF57534B)
+    val ThumbBackground: Color get() = pick(0xFF48444F, 0xFFCBC7BC)
     /** A text layer's glyph on its thumbnail. */
-    val TextLayerGlyph: Color get() = pick(0xFFB8B8B8, 0xFF000000)
+    val TextLayerGlyph: Color get() = pick(0xFFC0BBB0, 0xFF1F1C19)
     // the brush library is glass like the other panels: the sets on the panel's own frost, the
     // brushes a shade darker, the set cells a little lighter (measured over white and over the
     // dark surround: 58 / 31, 52 / 26, 64 / 42)
-    val SetColumn: Color get() = pick(0x00000000, 0xFFE6E6E6)
-    val SetCell: Color get() = pick(0x2E5B5B5B, 0xFFD7D7D7)
-    val BrushColumn: Color get() = pick(0x26000000, 0xFFE0E0E0)
-    val Grabber: Color get() = pick(0x7AC6C6C6, 0xFFB0B0B0)
-    val SwatchEdge: Color get() = pick(0xFF5A5A5A, 0xFFC0C0C0)
+    val SetColumn: Color get() = pick(0x00000000, 0xFFECE9E2)
+    val SetCell: Color get() = pick(0x2E3A3644, 0xFFD9D5CC)
+    val BrushColumn: Color get() = pick(0x26000000, 0xFFE3DFD5)
+    val Grabber: Color get() = pick(0x7AC9C4B8, 0xFFB4B0A4)
+    val SwatchEdge: Color get() = pick(0xFF4E4A55, 0xFFC2BDB1)
     val SaturationGrey = Color(0xFF7F7F7F)
-    val ClearText: Color get() = pick(0xFFB5B5B5, 0xFF4A4A4A)
-    val EmptySwatch: Color get() = pick(0xFF2A2A2A, 0xFFD9D9D9)
-    val ValueGroup: Color get() = pick(0xFF434343, 0xFFD5D5D5)
-    val HexRow: Color get() = pick(0xFF414141, 0xFFD8D8D8)
-    val HexField: Color get() = pick(0xFF4B4B4B, 0xFFCFCFCF)
-    val MenuFill: Color get() = pick(0xFF5A5C5B, 0xFFF0F0F0)
-    /** A menu's words: white, black on the light interface's menus. */
-    val MenuInk: Color get() = pick(0xFFFFFFFF, 0xFF000000)
+    val ClearText: Color get() = pick(0xFFB7B2A6, 0xFF4E4941)
+    val EmptySwatch: Color get() = pick(0xFF272430, 0xFFDAD6CD)
+    val ValueGroup: Color get() = pick(0xFF38343F, 0xFFD8D4CB)
+    val HexRow: Color get() = pick(0xFF33303B, 0xFFDDDAD1)
+    val HexField: Color get() = pick(0xFF3F3B47, 0xFFCFCBC1)
+    val MenuFill: Color get() = pick(0xFF4E4A56, 0xFFF1EEE7)
+    /** A menu's words: paper on ink, ink on paper. */
+    val MenuInk: Color get() = pick(0xFFF5F1E8, 0xFF26221F)
     /** The small frosted menus: over the canvas what is behind shows through, blurred. */
-    val GlassMenu: Color get() = pick(0xCF313135, 0xFAF0F0F0)
+    val GlassMenu: Color get() = pick(0xCF302C39, 0xFAF1EEE7)
     /** A small menu over a panel: the panel can't show through blurred, so it is nearly solid, grey. */
-    val GlassMenuOverPanel: Color get() = pick(0xFA222222, 0xFAF0F0F0)
-    val GlassMenuEdge: Color get() = pick(0x24FFFFFF, 0x14000000)
-    val RadioRing: Color get() = pick(0xFF606060, 0xFFB0B0B0)
-    val MenuDanger: Color get() = pick(0xFFE84F51, 0xFFD93A3D)
-    val MenuLine: Color get() = pick(0x33FFFFFF, 0x26000000)
-    val MenuDisabled: Color get() = pick(0x66FFFFFF, 0x66000000)
-    val SliderRest: Color get() = pick(0xFF5A5A5A, 0xFFBEBEBE)
-    val EmptySlot: Color get() = pick(0xFF555555, 0xFFC8C8C8)
+    val GlassMenuOverPanel: Color get() = pick(0xFA221F29, 0xFAF1EEE7)
+    val GlassMenuEdge: Color get() = pick(0x24F5F1E8, 0x1426221F)
+    val RadioRing: Color get() = pick(0xFF54505E, 0xFFB2AEA2)
+    val MenuDanger: Color get() = pick(0xFFEC5B4C, 0xFFC8482E)
+    val MenuLine: Color get() = pick(0x33F5F1E8, 0x2626221F)
+    val MenuDisabled: Color get() = pick(0x66F5F1E8, 0x6626221F)
+    val SliderRest: Color get() = pick(0xFF4C4756, 0xFFC2BDB1)
+    val EmptySlot: Color get() = pick(0xFF4A4654, 0xFFC9C5BB)
     // a dark wash on the panel's glass (26 over the dark surround, 44 over white)
-    val ActionsGroup: Color get() = pick(0x420C0C0C, 0xFFE8E8E8)
+    val ActionsGroup: Color get() = pick(0x421D1A24, 0xFFE9E5DC)
     // a faint lightening of whatever the glass shows (+5 over the dark surround, +8 over white)
-    val ActionsSeparator: Color get() = pick(0x06FFFFFF, 0xFFE2E2E2)
-    /** An Actions row's text: dimmer than the panel's title (#a8a8a8 against #c7c7c7). */
-    val ActionsRow: Color get() = pick(0xFFA8A8A8, 0xFF393939)
-    val ActionsDisabled: Color get() = pick(0xFF5E5E5E, 0xFFABABAB)
-    val TabIdle: Color get() = pick(0xFFA3A3A3, 0xFF404040)
-    val SwitchOff: Color get() = pick(0xFF747377, 0xFFA9A8AC)
-    val MessageBar: Color get() = pick(0xFF606060, 0xFFD0D0D0)
-    val MessageText: Color get() = pick(0xFFB5B5B5, 0xFF3B3B3B)
-    val LoupeEdge = Color(0xFF808080)
-    val SlideLabel: Color get() = pick(0xFFC1C1C1, 0xFF3D3D3D)
-    val SlideValue: Color get() = pick(0xFFEDEDED, 0xFF3D3D3D)
-    val SlideTrack: Color get() = pick(0xFF414141, 0xFFBEBEBE)
-    val SwitchFixed: Color get() = pick(0xFF404040, 0xFFD2D2D2)
-    val SwitchFixedKnob: Color get() = pick(0xFF525252, 0xFFE9E9E9)
+    val ActionsSeparator: Color get() = pick(0x06F5F1E8, 0xFFE3DFD6)
+    /** An Actions row's text: dimmer than the panel's title. */
+    val ActionsRow: Color get() = pick(0xFFABA59A, 0xFF3E3931)
+    val ActionsDisabled: Color get() = pick(0xFF57544F, 0xFFABA69B)
+    val TabIdle: Color get() = pick(0xFFA49F94, 0xFF46413A)
+    val SwitchOff: Color get() = pick(0xFF6E6A78, 0xFFA9A69E)
+    val MessageBar: Color get() = pick(0xFF57535F, 0xFFD2CEC4)
+    val MessageText: Color get() = pick(0xFFB7B2A6, 0xFF3E3931)
+    val LoupeEdge = Color(0xFF7A766E)
+    val SlideLabel: Color get() = pick(0xFFC4BFB2, 0xFF3E3931)
+    val SlideValue: Color get() = pick(0xFFF0EDE4, 0xFF3E3931)
+    val SlideTrack: Color get() = pick(0xFF332F3B, 0xFFC2BDB1)
+    val SwitchFixed: Color get() = pick(0xFF35313E, 0xFFD5D1C8)
+    val SwitchFixedKnob: Color get() = pick(0xFF464252, 0xFFEDEAE3)
 
     /** The centre of tool button [index] (0 is the colour button, counting leftwards), from the bar's right edge. */
     fun toolCentreFromRight(index: Int, barWidth: Dp): Dp {
@@ -128,31 +139,30 @@ object Ps {
     }
 
     // the gallery; light, near white with dark grey inks and a frosted white capsule
-    val GalleryBackground: Color get() = pick(0xFF212121, 0xFFF0F0F0)
-    val GalleryTitle: Color get() = pick(0xFFF0F0F0, 0xFF3C3C3C)
-    val GalleryText: Color get() = pick(0xFFAAAAAA, 0xFF595959)
-    val GallerySize: Color get() = pick(0xFF666666, 0xFF6A6A6A)
-    val Capsule: Color get() = pick(0xFF1C1C1C, 0xF0F7F7F7)
-    val CapsuleEdge: Color get() = pick(0xFF393939, 0x0F000000)
-    val LightPanel = Color(0xFFD5D5D5)
-    val LightText = Color(0xFF393939)
-    val LightRowStrong = Color(0xFFE1E1E1)
-    val LightRow = Color(0xFFDEDEDE)
-    val LightSeparator = Color(0xFFD2D2D2)
-    val LightChip = Color(0xFFD6D6D6)
+    val GalleryBackground: Color get() = pick(0xFF17141C, 0xFFF3F0E9)
+    val GalleryTitle: Color get() = pick(0xFFF2EEE5, 0xFF3E3931)
+    val GalleryText: Color get() = pick(0xFFA8A296, 0xFF5B564D)
+    val GallerySize: Color get() = pick(0xFF5B5764, 0xFF6E6A60)
+    val Capsule: Color get() = pick(0xFF201D27, 0xF0F8F6F0)
+    val CapsuleEdge: Color get() = pick(0xFF322F3B, 0x0F26221F)
+    val LightPanel = Color(0xFFD8D4CB)
+    val LightText = Color(0xFF33302A)
+    val LightRowStrong = Color(0xFFE4E0D7)
+    val LightRow = Color(0xFFE0DCD3)
+    val LightSeparator = Color(0xFFD0CCC3)
+    val LightChip = Color(0xFFD9D5CC)
 
     // the side bar
-    // the bar and the tracks translucent, each straight over what is behind (#2d2d2d and #676767
-    // over white); the thumbs opaque (#a6a6a6 over white and over the dark surround alike)
-    val SideBar: Color get() = pick(0xE7171717, 0xCFE5E5E5)
-    val SliderTrack: Color get() = pick(0xC93E3E3E, 0xBFF0F0F0)
-    // a lighter rim round each track, more of what is behind showing through it (#5a5a5a over the
-    // dark surround, #969696 over white)
-    val SliderRim: Color get() = pick(0xB96E6E6E, 0xFFE9E9E9)
+    // the bar and the tracks translucent, each straight over what is behind; the thumbs opaque,
+    // warm paper on both faces of the interface
+    val SideBar: Color get() = pick(0xE61B1822, 0xCFE9E6DE)
+    val SliderTrack: Color get() = pick(0xC9353140, 0xBFF2EFE7)
+    // a lighter rim round each track, more of what is behind showing through it
+    val SliderRim: Color get() = pick(0xB9565262, 0xFFEDEAE3)
     val SliderRimWidth = 0.8.dp
-    val SliderThumb: Color get() = pick(0xFFA6A6A6, 0xFFF8F8F8)
-    val SideGlyph: Color get() = pick(0xFF969696, 0xFF646464)
-    val SideGlyphDisabled: Color get() = pick(0x1AFFFFFF, 0x33000000)
+    val SliderThumb: Color get() = pick(0xFFB9B4A8, 0xFFFCFAF3)
+    val SideGlyph: Color get() = pick(0xFF98928A, 0xFF5B564D)
+    val SideGlyphDisabled: Color get() = pick(0x1AF5F1E8, 0x3326221F)
     val SideBarWidth = 51.dp
     val SideBarHeight = 519.dp
     val SideBarCorner = 20.dp

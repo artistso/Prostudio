@@ -37,7 +37,7 @@ import kotlinx.coroutines.withContext
 
 // the canvas's surround and grid, light with the light interface
 private val ReplayFill get() = if (Ps.light) Color(0xFFCED1D2) else Color(0xFF252525)
-private val GridLine get() = if (Ps.light) Color(0xFFCACDCE) else Color(0xFF2E2E2E)
+private val GridLine get() = if (Ps.light) Color(0xFFCACDCE) else Color(0xFF26232E)
 
 /**
  * The surround's grid drawn as the canvas draws it (1 1/3 pt lines every 16, fixed to the glass
@@ -108,7 +108,7 @@ fun TimeLapseReplay(vm: CanvasViewModel) {
             Image(it, contentDescription = "Time-lapse", contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
         }
         val empty = if (count == 0) "Nothing recorded yet" else "The time-lapse can't be read on this device".takeIf { unreadable && shown == null }
-        if (empty != null) Text(empty, color = Color(0xFF8E8E93), fontSize = 17.sp, modifier = Modifier.align(Alignment.Center))
+        if (empty != null) Text(empty, color = Color(0xFF8F897E), fontSize = 17.sp, modifier = Modifier.align(Alignment.Center))
         // the time into the replay, in frames past the second
         val frames = index
         val seconds = frames / TimeLapse.FPS
@@ -117,7 +117,7 @@ fun TimeLapseReplay(vm: CanvasViewModel) {
         // how far it has played
         Box(Modifier.padding(top = ToolHeaderHeight).fillMaxWidth().height(4.dp)) {
             val f = if (count > 1) index / (count - 1).toFloat() else 1f
-            Box(Modifier.fillMaxWidth(f.coerceIn(0f, 1f)).height(4.dp).background(Color(0xFF0076FD)))
+            Box(Modifier.fillMaxWidth(f.coerceIn(0f, 1f)).height(4.dp).background(Ps.Accent))
         }
     }
 }

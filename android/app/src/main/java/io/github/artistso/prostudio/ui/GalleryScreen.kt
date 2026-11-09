@@ -56,6 +56,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -751,9 +752,7 @@ private fun GalleryHeader(
             } else {
                 Text(
                     "ProStudio",
-                    color = Ps.GalleryTitle,
-                    fontSize = 36.sp,
-                    fontWeight = FontWeight.Bold,
+                    style = TextStyle(brush = Ps.Brand, fontSize = 36.sp, fontWeight = FontWeight.Bold),
                     modifier = Modifier.padding(start = 32.dp, top = 11.dp)
                         .clickable(remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, indication = null, onClick = onAbout),
                 )
@@ -828,7 +827,7 @@ private fun SelectHeader(
                     }
                 }
             }
-            Box(Modifier.padding(start = 13.dp).size(44.dp, 45.dp).clip(CircleShape).background(Color(0xFF0190FF)).clickable(onClick = onDone), contentAlignment = Alignment.Center) {
+            Box(Modifier.padding(start = 13.dp).size(44.dp, 45.dp).clip(CircleShape).background(Color(0xFFFF6B4A)).clickable(onClick = onDone), contentAlignment = Alignment.Center) {
                 Icon(PsIcons.DoneTick, contentDescription = "Done", tint = Color.White, modifier = Modifier.requiredSize(40.dp))
             }
         }
@@ -1135,9 +1134,9 @@ private fun galleryDrop(
 }
 private val SwipePillWidth = 94.dp
 private val SwipePillHeight = 56.dp
-private val SwipePillFill get() = if (Ps.light) Color(0xFFF5F5F5) else Color(0xDB1C1C1C)
-private val SwipePillInk get() = if (Ps.light) Color(0xFF575757) else Color(0xFFA9A9A9)
-private val SwipeDeleteFill = Color(0xFFFE604D)
+private val SwipePillFill get() = if (Ps.light) Color(0xFFF3F0E9) else Color(0xDB201D27)
+private val SwipePillInk get() = if (Ps.light) Color(0xFF5B564D) else Color(0xFFABA59A)
+private val SwipeDeleteFill = Color(0xFFEC5B4C)
 
 /**
  * An artwork's actions, Share, Duplicate and Delete, in a row over it: they grow in from the right
@@ -1496,8 +1495,8 @@ private fun readTurntable(s: io.github.artistso.prostudio.core.CanvasSession, si
     return PlayedFrames(pictures, pictures.indices.toList(), s.modelPreviewFps().toInt(), io.github.artistso.prostudio.core.AnimationPlayback.LOOP)
 }
 
-private val PreviewClose = Color(0xFFD7D7D7)
-private val PreviewArrowInk = Color(0xFFB4B4B4)
+private val PreviewClose = Color(0xFFE7E3D8)
+private val PreviewArrowInk = Color(0xFFABA59A)
 
 /** One of Preview's arrows: a 13.5 x 23.5 chevron 40 in from its side, in a 44 wide touch area. */
 @Composable
@@ -1553,7 +1552,7 @@ private fun ThumbnailImage(image: ImageBitmap, name: String, scale: ContentScale
 // as measured: a thumbnail's shadow dropped below it, and the rim round it
 private val ThumbShadowDrop = 5.dp
 private val ThumbShadow get() = if (Ps.light) Color(0x1D000000) else Color(0x45000000)
-private val ThumbRim get() = if (Ps.light) Color(0xFFBEBEBE) else Color(0xFF424242)
+private val ThumbRim get() = if (Ps.light) Color(0xFFC2BDB1) else Color(0xFF37333F)
 
 /** The thumbnails last decoded, by file: shown while one loads again. */
 private val ThumbnailsShown = android.util.LruCache<String, ImageBitmap>(64)
@@ -1602,7 +1601,7 @@ private fun Thumbnail(a: Artwork, version: Int, chosen: Boolean? = null, wash: B
             Box(
                 Modifier.align(Alignment.TopEnd).padding(top = 12.dp, end = 12.dp).size(14.dp).graphicsLayer { alpha = shown }.clip(CircleShape)
                     // unpicked, a thin light ring
-                    .background(if (chosen) Color(0xFF0F7EFD) else Color.Transparent)
+                    .background(if (chosen) Color(0xFFFF6B4A) else Color.Transparent)
                     .then(if (chosen) Modifier else Modifier.border(1.dp, Color(0xFFCCCCCC), CircleShape)),
                 contentAlignment = Alignment.Center,
             ) {
@@ -1688,8 +1687,8 @@ private fun NewCanvasPanel(
 private val SwipeReveal = 159.dp
 private val SwipeBehind = Color(0xFFD6D6D6)
 private val EditFill = Color(0xFFC6C6C6)
-private val EditInk = Color(0xFF575757)
-private val DeleteFill = Color(0xFFFE604D)
+private val EditInk = Color(0xFF57534B)
+private val DeleteFill = Color(0xFFEC5B4C)
 
 /** A preset row that slides left under a finger to show Edit and Delete; a tap picks it (or closes it, open). */
 @Composable
@@ -1778,8 +1777,16 @@ private fun AboutApp(onRecover: () -> Unit, onClose: () -> Unit) {
                     modifier = Modifier.requiredSize(450.dp),
                 )
             }
-            Text("ProStudio", color = Color.White, fontSize = 64.sp, fontWeight = FontWeight.Bold, maxLines = 1, modifier = Modifier.padding(top = 12.dp))
-            Text(version, color = AboutInk, fontSize = 13.sp, maxLines = 1, modifier = Modifier.padding(top = 14.dp))
+            Text(
+                "ProStudio",
+                style = TextStyle(brush = Ps.Brand, fontSize = 64.sp, fontWeight = FontWeight.Bold),
+                maxLines = 1,
+                modifier = Modifier.padding(top = 12.dp),
+            )
+            // the brand's stroke: one line of the blend under the word
+            Box(Modifier.padding(top = 14.dp).width(132.dp).height(4.dp).clip(CircleShape).background(Ps.Brand))
+            Text("A painting studio of your own.", color = AboutInk, fontSize = 13.sp, maxLines = 1, modifier = Modifier.padding(top = 12.dp))
+            Text(version, color = AboutInkDim, fontSize = 12.sp, maxLines = 1, modifier = Modifier.padding(top = 6.dp))
         }
         Box(
             Modifier.align(Alignment.TopCenter).padding(top = AboutButtonTop).size(220.dp, 38.dp).clip(RoundedCornerShape(8.dp))
@@ -1802,15 +1809,16 @@ private fun AboutApp(onRecover: () -> Unit, onClose: () -> Unit) {
     }
 }
 
-// as measured: the gallery under a near-black veil, the light round close button
-private val AboutVeil = Color(0xD90B0B0B)
-private val AboutIconField = Color(0xFF0B0B0C)
-private val AboutInk = Color(0xFFBDBDBD)
-private val AboutClose = Color(0xFFE3E3E3)
-private val AboutCloseInk = Color(0xFF1C1C1C)
+// the gallery under the brand's own ink, the light round close button
+private val AboutVeil = Color(0xD917141C)
+private val AboutIconField = Color(0xFF17141C)
+private val AboutInk = Color(0xFFCFC9BC)
+private val AboutInkDim = Color(0xFF8F897E)
+private val AboutClose = Color(0xFFF0EDE4)
+private val AboutCloseInk = Color(0xFF26221F)
 // the button 520 under the icon's top, 220 x 38
 private val AboutButtonTop = 615.dp
-private val AboutButtonFill = Color(0xFF1A1A1A)
-private val AboutButtonInk = Color(0xFFC4C4C4)
+private val AboutButtonFill = Color(0xFF1F1C26)
+private val AboutButtonInk = Color(0xFFCFC9BC)
 private const val RECOVERY_SEARCH_MS = 700
 private const val RECOVERY_DONE_MS = 900L

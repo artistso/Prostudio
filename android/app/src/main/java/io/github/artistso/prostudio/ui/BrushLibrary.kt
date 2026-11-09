@@ -105,7 +105,7 @@ private val MenuTop = 57.dp
 /** A brush swiped left shows three buttons filling its place, this far apart. */
 private val SwipeGap = 5.5.dp
 private val SwipeFill = Color(0xFF3F3F3F)
-private val SwipeInk = Color(0xFFC5C5C5)
+private val SwipeInk = Color(0xFFC4BFB2)
 private val SwipeDelete = Color(0xFFFF3A46)
 /** A brush swiped right is picked, this fill over its row; it follows the finger this far. */
 private val PickedBrush = Color(0xFF2C5281)

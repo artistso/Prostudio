@@ -60,23 +60,23 @@ import io.github.artistso.prostudio.core.SourceKind
 import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 
-private val EditorPage get() = if (Ps.light) Color(0xFFE5E5E5) else Color(0xFF2A2A2A)
-private val EditorView get() = if (Ps.light) Color(0xFFE5E5E5) else Color(0xFF262626)
-private val EditorTitle get() = if (Ps.light) Color(0xFF333333) else Color(0xFFEEEEEE)
+private val EditorPage get() = if (Ps.light) Color(0xFFEDEAE3) else Color(0xFF272430)
+private val EditorView get() = if (Ps.light) Color(0xFFEDEAE3) else Color(0xFF242129)
+private val EditorTitle get() = if (Ps.light) Color(0xFF35313E) else Color(0xFFEDEAE3)
 private val CapsuleFill get() = if (Ps.light) Color(0xFFFFFFFF) else Color(0xFF1C1C1C)
-private val CapsuleEdge get() = if (Ps.light) Color(0xFFE0E0E0) else Color(0xFF383838)
-private val CapsuleInk get() = if (Ps.light) Color(0xFF585858) else Color(0xFFAAAAAA)
-private val DoneBlue = Color(0xFF0190FF)
-private val RepeatLabel get() = if (Ps.light) Color(0xFF808080) else Color(0xFF808080)
+private val CapsuleEdge get() = if (Ps.light) Color(0xFFE3DFD5) else Color(0xFF332F3B)
+private val CapsuleInk get() = if (Ps.light) Color(0xFF57534B) else Color(0xFFABA59A)
+private val DoneBlue = Color(0xFFFF6B4A)
+private val RepeatLabel get() = if (Ps.light) Color(0xFF7A766E) else Color(0xFF7A766E)
 private val LibraryVeil = Color(0x80000000)
-private val LibrarySheet get() = if (Ps.light) Color(0xFFF2F2F7) else Color(0xFF1C1C1E)
-private val LibraryTitle get() = if (Ps.light) Color(0xFF3A3A3A) else Color(0xFFC1C1C1)
+private val LibrarySheet get() = if (Ps.light) Color(0xFFF2F2F7) else Color(0xFF201D27)
+private val LibraryTitle get() = if (Ps.light) Color(0xFF46413A) else Color(0xFFC4BFB2)
 private val LibraryDim get() = if (Ps.light) Color(0xFF868686) else Color(0xFF868686)
-private val LibraryEdge get() = if (Ps.light) Color(0xFFC8C8C8) else Color(0xFF5A5A5A)
-private val LibrarySearchFill get() = if (Ps.light) Color(0xFFE6E6EA) else Color(0xFF1B1B1B)
+private val LibraryEdge get() = if (Ps.light) Color(0xFFC8C8C8) else Color(0xFF4E4A55)
+private val LibrarySearchFill get() = if (Ps.light) Color(0xFFE6E6EA) else Color(0xFF1B1822)
 private val LibrarySearchEdge get() = if (Ps.light) Color(0xFFD8D8DC) else Color(0xFF363636)
 private val LibraryHint get() = if (Ps.light) Color(0xFF8A8A8E) else Color(0xFF787878)
-private val MenuBlue = Color(0xFF0A84FF)
+private val MenuBlue = Color(0xFFFF6B4A)
 
 /**
  * The brush studio's editor for the source [CanvasViewModel.sourceEditing] says (the shape, the
@@ -331,7 +331,7 @@ private fun SimpleSlider(value: Float, onChange: (Float) -> Unit, modifier: Modi
         contentAlignment = Alignment.CenterStart,
     ) {
         val w = maxWidth
-        Box(Modifier.fillMaxWidth().height(3.dp).clip(CircleShape).background(Color(0xFF3E3E3E)))
+        Box(Modifier.fillMaxWidth().height(3.dp).clip(CircleShape).background(Color(0xFF38343F)))
         Box(Modifier.width(w * value).height(3.dp).clip(CircleShape).background(Ps.Accent))
         Box(Modifier.offset(x = (w - 16.dp) * value).size(16.dp, 10.dp).clip(CircleShape).background(Color.White))
     }

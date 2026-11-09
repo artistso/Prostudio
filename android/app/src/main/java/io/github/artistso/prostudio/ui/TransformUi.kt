@@ -111,10 +111,10 @@ private val ToolbarCorner = 33.dp
 private val ToolbarTop get() = if (Ps.light) Color(0xF7F2F2F2) else Color(0xF7212121)
 private val ToolbarFill get() = if (Ps.light) Color(0xF7F2F2F2) else Color(0xF71E1E1E)
 private val SegmentTrack get() = if (Ps.light) Color(0xFFFFFFFF) else Color(0xFF535353)
-private val SegmentEdge get() = if (Ps.light) Color(0xFFEBEBEB) else Color(0xFF7E7E7E)
-private val SegmentText get() = if (Ps.light) Color(0xFF3B3B3B) else Color(0xFFC1C1C1)
-private val ButtonText get() = if (Ps.light) Color(0xFF414141) else Color(0xFFA3A3A3)
-private val ButtonDimmed get() = if (Ps.light) Color(0xFF989898) else Color(0xFF575757)
+private val SegmentEdge get() = if (Ps.light) Color(0xFFEDEAE3) else Color(0xFF7E7E7E)
+private val SegmentText get() = if (Ps.light) Color(0xFF4C463D) else Color(0xFFC4BFB2)
+private val ButtonText get() = if (Ps.light) Color(0xFF46413A) else Color(0xFFA3A3A3)
+private val ButtonDimmed get() = if (Ps.light) Color(0xFF989898) else Color(0xFF57534B)
 private val SegmentGap = 11.33.dp
 /** The transform toolbar's buttons with room for all of it (landscape), its widest icon, and its ways' pill. */
 private val TransformButtonRoomy = 89.dp
@@ -137,8 +137,8 @@ private val MenuArrow = 15.dp
 private val MenuCorner = 26.dp
 private val MenuFill get() = if (Ps.light) Color(0xEBF0F0F0) else Color(0xEB2A2A2A)
 internal val MenuGroup get() = if (Ps.light) Color(0xFFFFFFFF) else Color(0xFF313131)
-internal val MenuLine get() = if (Ps.light) Color(0xFFE2E2E2) else Color(0xFF373737)
-internal val MenuText: Color get() = if (Ps.light) Color(0xFF393939) else Color(0xFFC5C5C5)
+internal val MenuLine get() = if (Ps.light) Color(0xFFE6E2D8) else Color(0xFF332F3B)
+internal val MenuText: Color get() = if (Ps.light) Color(0xFF332F3B) else Color(0xFFC4BFB2)
 internal val MenuGroupCorner = 13.dp
 
 /** The transform box over the canvas: dashed edges, its nodes, the rotate node and the box-turning node. */
@@ -648,4 +648,4 @@ private fun MenuSlider(value: Float, onChange: (Float) -> Unit, modifier: Modifi
 /** Where the slider's knob centre runs, from the row's left edge and from its right. */
 private val SliderStart = 21.5.dp
 private val SliderEnd = 15.dp
-private val SliderRest get() = if (Ps.light) Color(0xFFDDDDDD) else Color(0xFF5A5A5A)
+private val SliderRest get() = if (Ps.light) Color(0xFFDDDAD1) else Color(0xFF4E4A55)

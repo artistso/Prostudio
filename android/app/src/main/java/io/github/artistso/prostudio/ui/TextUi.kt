@@ -82,16 +82,16 @@ import kotlin.math.roundToInt
 
 private val SheetFill get() = if (Ps.light) Color(0xFFF3F6F7) else Color(0xFF535353)
 private val SheetBar get() = if (Ps.light) Color(0xFFF3F6F7) else Color(0xFF4F4F4F)
-private val SheetCapsule get() = if (Ps.light) Color(0xFFFBFBFB) else Color(0xFF3E3E3E)
-private val CardFill get() = if (Ps.light) Color(0xFFFAFAFA) else Color(0xFF373737)
+private val SheetCapsule get() = if (Ps.light) Color(0xFFF8F6EF) else Color(0xFF38343F)
+private val CardFill get() = if (Ps.light) Color(0xFFF8F6EF) else Color(0xFF332F3B)
 private val CardCorner = 22.dp
-private val ButtonFill get() = if (Ps.light) Color(0xFFE6E6E6) else Color(0xFF474747)
+private val ButtonFill get() = if (Ps.light) Color(0xFFE6E6E6) else Color(0xFF403B4B)
 private val SegmentTrack get() = if (Ps.light) Color(0xFFE3E3E3) else Color(0xFF646464)
-private val CapsuleInk get() = if (Ps.light) Color(0xFF565656) else Color(0xFFC5C5C5)
-private val KeyboardDisc get() = if (Ps.light) Color(0xFFFBFBFB) else Color(0xFF393939)
+private val CapsuleInk get() = if (Ps.light) Color(0xFF565656) else Color(0xFFC4BFB2)
+private val KeyboardDisc get() = if (Ps.light) Color(0xFFF8F6EF) else Color(0xFF332F3B)
 private val KeyboardBar get() = if (Ps.light) Color(0xFFE9ECED) else Color(0xFF2B2B2B)
-private val DoneBlue = Color(0xFF0190FF)
-private val BoxLine = Color(0xFF0076FD)
+private val DoneBlue = Color(0xFFFF6B4A)
+private val BoxLine = Ps.Accent
 /** The box's outline and the dots on its sides (as measured, a lighter blue than the caret's). */
 private val BoxOutline = Color(0xFF0184FF)
 /** A side's dot: how wide it is, and how near a finger takes it. */
@@ -101,7 +101,7 @@ private val SideReach = 20.dp
 private const val EditTapMs = 300L
 /** The sheet's words: white, black on the light interface. */
 // a design row's track and the middle tick of one that runs both ways
-private val DesignTrack get() = if (Ps.light) Color(0xFFE3E3E3) else Color(0xFF5A5A5A)
+private val DesignTrack get() = if (Ps.light) Color(0xFFE3E3E3) else Color(0xFF4E4A55)
 private val DesignTick get() = if (Ps.light) Color(0xFFC8C8C8) else Color(0xFF8A8A8A)
 private val SheetInk get() = if (Ps.light) Color.Black else Color.White
 
