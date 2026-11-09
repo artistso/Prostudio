@@ -273,7 +273,38 @@ fun GalleryScreen(vm: CanvasViewModel) {
                 val leaving = transition.targetState == androidx.compose.animation.EnterExitState.PostExit
                 if (entries.isEmpty()) {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("Tap + to start a new canvas", color = Ps.GalleryText, fontSize = 17.sp)
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            androidx.compose.foundation.Image(
+                                androidx.compose.ui.res.painterResource(io.github.artistso.prostudio.R.drawable.prostudio_mark),
+                                contentDescription = null,
+                                alpha = 0.92f,
+                                modifier = Modifier.size(150.dp),
+                            )
+                            Text(
+                                "ProStudio",
+                                style = TextStyle(brush = Ps.Brand, fontSize = 32.sp, fontWeight = FontWeight.Bold),
+                                modifier = Modifier.padding(top = 2.dp),
+                            )
+                            Text(
+                                "A quiet studio, waiting for your first stroke.",
+                                color = Ps.GalleryText,
+                                fontSize = 14.sp,
+                                modifier = Modifier.padding(top = 6.dp),
+                            )
+                            Box(
+                                Modifier.padding(top = 18.dp).height(42.dp).clip(RoundedCornerShape(21.dp))
+                                    .background(Ps.Accent).clickable { newCanvas = true }.padding(horizontal = 28.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    "New canvas",
+                                    color = Color(0xFF26221F),
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                )
+                            }
+                        }
                     }
                 } else {
                     val columns = if (screenWidth > screenHeight) 4 else 3
