@@ -49,6 +49,7 @@ mod stock_tones;
 pub mod stroke;
 pub mod studio;
 pub mod textures;
+pub mod timeline;
 pub mod tone;
 pub mod transform;
 pub mod usd;

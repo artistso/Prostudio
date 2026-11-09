@@ -6461,7 +6461,7 @@ fn a_moving_gif_comes_in_as_held_frames() {
     assert_eq!(done, crate::clipboard::FramesInserted { added: 2, full: false });
     assert_eq!(s.shared.lock().doc.layers().len(), before + 2);
     // Animation Assist is on; at 15 frames a second, 0.2 s is three frames: held two more
-    let animation = s.shared.lock().doc.animation.clone().unwrap();
+    let animation = s.shared.lock().doc.active_animation().cloned().unwrap();
     assert!(!animation.pages);
     let holds: Vec<u32> = animation.holds.iter().map(|h| h.1).collect();
     assert_eq!(holds, [2, 1]);

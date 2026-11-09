@@ -406,9 +406,10 @@ impl CanvasSession {
             if !d.has_room(1) {
                 return None;
             }
-            let pages = d.animation.as_ref().is_some_and(|a| a.pages);
+            let pages = d.active_animation().is_some_and(|a| a.pages);
             let id = d.add_layer();
-            let n = prostudio_engine::animation::frames(d).len();
+            d.adopt_frame(id);
+            let n = d.active_frames().len();
             d.rename(id, &format!("{} {n}", if pages { "Page" } else { "Frame" }));
             Some(id.0)
         })
@@ -435,7 +436,7 @@ impl CanvasSession {
         let mut guard = self.shared.lock();
         let st = &mut *guard;
         if ok
-            && st.doc.animation.is_some()
+            && st.doc.active_animation().is_some()
             && let Some(c) = st.canvas.as_mut()
         {
             c.invalidate();

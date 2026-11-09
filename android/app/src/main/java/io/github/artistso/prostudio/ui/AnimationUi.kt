@@ -7,6 +7,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -24,11 +27,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -58,11 +65,13 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.artistso.prostudio.canvas.CanvasViewModel
 import io.github.artistso.prostudio.core.AnimationPlayback
+import io.github.artistso.prostudio.core.TimelineInfo
 import kotlin.math.floor
 import kotlin.math.roundToInt
 import kotlinx.coroutines.Job
@@ -153,6 +162,8 @@ fun BoxScope.AnimationBar(vm: CanvasViewModel) {
             } else if (vm.frameOptionsOpen) {
                 DownPopover(260.dp, 130.dp, Modifier.offset(x = barWidth / 2 - 130.dp)) { FrameOptionsPage(vm) }
             }
+            // the timeline lanes: one per timeline (a scene), the one in play in ember; tap to switch, long-press to rename or delete
+            TimelineLanes(vm, barWidth, Modifier.padding(bottom = 6.dp))
             // the whole bar takes its touches: none reach the canvas under it (a swipe would paint)
             Box(Modifier.padding(bottom = BarGap).size(barWidth, BarHeight).clip(RoundedCornerShape(30.dp)).background(BarFill).pointerInput(Unit) { detectTapGestures { } }) {
                 val pages = vm.animation?.pages == true
@@ -177,6 +188,86 @@ fun BoxScope.AnimationBar(vm: CanvasViewModel) {
             }
         }
     }
+}
+
+/**
+ * The timeline lanes: one pill per timeline in the artwork (ink and paper, the one in play in
+ * ember), each naming itself and how many frames it has; a + starts a fresh timeline. Tap a
+ * lane to bring its frames into play; long-press to rename it or delete it (its layers stay in
+ * the artwork — only the timeline goes).
+ */
+@Composable
+private fun TimelineLanes(vm: CanvasViewModel, width: Dp, modifier: Modifier = Modifier) {
+    if (vm.timelines.isEmpty()) return
+    var editing by remember { mutableStateOf<TimelineInfo?>(null) }
+    Row(
+        modifier.width(width).height(36.dp).clip(RoundedCornerShape(18.dp))
+            .background(BarFill)
+            .border(1.dp, TrackEdge, RoundedCornerShape(18.dp))
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        for (timeline in vm.timelines) {
+            val active = timeline.active
+            Box(
+                Modifier.height(28.dp).defaultMinSize(minWidth = 56.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(if (active) Ps.Accent else Color.Transparent)
+                    .border(if (active) 0.dp else 1.dp, TrackEdge, RoundedCornerShape(14.dp))
+                    .combinedClickable(
+                        onClick = { vm.switchTimeline(timeline.id) },
+                        onLongClick = { editing = timeline },
+                    )
+                    .padding(horizontal = 10.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    "${timeline.name} · ${timeline.frames}",
+                    color = if (active) Color.White else BarInk,
+                    fontSize = 12.sp,
+                    fontWeight = if (active) FontWeight.Bold else FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+        Box(
+            Modifier.size(28.dp).clip(CircleShape).border(1.dp, TrackEdge, CircleShape).clickable { vm.addTimeline() },
+            contentAlignment = Alignment.Center,
+        ) {
+            Text("+", color = BarInk, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+        }
+    }
+    editing?.let { timeline -> TimelineEditDialog(vm, timeline) { editing = null } }
+}
+
+/** Long-pressing a lane: rename it, or delete it (the drawing layers stay). */
+@Composable
+private fun TimelineEditDialog(vm: CanvasViewModel, timeline: TimelineInfo, onClose: () -> Unit) {
+    var name by remember(timeline.id) { mutableStateOf(timeline.name) }
+    AlertDialog(
+        onDismissRequest = onClose,
+        title = { Text("Timeline", fontSize = 19.sp, fontWeight = FontWeight.Bold) },
+        text = {
+            Column {
+                OutlinedTextField(value = name, onValueChange = { name = it }, singleLine = true, label = { Text("Name") })
+                if (vm.timelines.size > 1) {
+                    Spacer(Modifier.height(10.dp))
+                    TextButton(onClick = { vm.deleteTimeline(timeline.id); onClose() }) {
+                        Text("Delete timeline (the layers stay)", color = Ps.Accent)
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { vm.renameTimeline(timeline.id, name); onClose() }) { Text("Rename") }
+        },
+        dismissButton = {
+            TextButton(onClick = onClose) { Text("Close") }
+        },
+    )
 }
 
 @Composable

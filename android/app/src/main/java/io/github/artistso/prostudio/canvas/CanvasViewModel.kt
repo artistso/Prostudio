@@ -7066,11 +7066,49 @@ class CanvasViewModel(app: Application) : AndroidViewModel(app) {
         refresh()
     }
 
+    // ---- Timelines (scenes): several Animation Assist timelines, one artwork ----
+
+    /** The artwork's timelines in the order they show (empty while Animation Assist never turned on). */
+    var timelines by mutableStateOf<List<io.github.artistso.prostudio.core.TimelineInfo>>(emptyList())
+        private set
+
+    /** Adds a fresh timeline ("Timeline N") and switches to it. */
+    fun addTimeline(name: String? = null) {
+        val s = session ?: return
+        stopPlaying()
+        s.addTimeline(name)
+        refresh()
+    }
+
+    /** Makes timeline [id] the active one. */
+    fun switchTimeline(id: ULong) {
+        val s = session ?: return
+        if (timelines.firstOrNull { it.id == id }?.active == true) return
+        stopPlaying()
+        s.switchTimeline(id)
+        refresh()
+    }
+
+    /** Renames timeline [id]. */
+    fun renameTimeline(id: ULong, name: String) {
+        val s = session ?: return
+        s.renameTimeline(id, name)
+        timelines = s.timelines()
+    }
+
+    /** Deletes timeline [id] — never the last one. */
+    fun deleteTimeline(id: ULong) {
+        val s = session ?: return
+        stopPlaying()
+        if (s.deleteTimeline(id)) refresh() else timelines = s.timelines()
+    }
+
     /** Re-reads Animation Assist from the session (after any change to the layers). */
     private fun refreshAnimation() {
         val s = session ?: return
         val settings = s.animationSettings()
         animation = settings
+        timelines = s.timelines()
         if (settings == null) {
             animationFrames = emptyList()
             frameSlots = emptyList()

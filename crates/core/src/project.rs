@@ -42,7 +42,11 @@ const VERSION: u32 = 1;
 pub fn artwork_plays(dir: String) -> bool {
     let text = fs::read_to_string(Path::new(&dir).join("artwork.json"));
     let file = text.ok().and_then(|t| serde_json::from_str::<ArtworkFile>(&t).ok());
-    file.is_some_and(|f| f.document.animation.is_some() || f.model.is_some())
+    file.is_some_and(|f| {
+        f.document.animation.is_some()
+            || !f.document.timelines.items.is_empty() && f.document.timelines.enabled
+            || f.model.is_some()
+    })
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -1504,7 +1508,7 @@ pub fn import_pages(
     if dpi.is_finite() && dpi > 0.0 {
         doc.dpi = dpi.clamp(1.0, 9999.0);
     }
-    doc.animation = Some(prostudio_engine::animation::Animation { pages: true, ..Default::default() });
+    doc.set_animation(Some(prostudio_engine::animation::Animation { pages: true, ..Default::default() }));
     let name =
         if name.trim().is_empty() { "Untitled Artwork".to_owned() } else { name.trim().chars().take(256).collect() };
     // the first page is the gallery's thumbnail until the artwork is opened

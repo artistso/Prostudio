@@ -72,6 +72,7 @@ mod tests;
 mod text;
 mod text_draw;
 mod timelapse;
+mod timelines;
 mod touch;
 mod transform;
 #[cfg(target_os = "android")]

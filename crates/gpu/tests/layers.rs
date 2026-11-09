@@ -760,7 +760,7 @@ fn an_animation_keeps_only_the_frames_shown() {
                 StrokeTool::Paint,
             );
         }
-        doc.animation = Some(prostudio_engine::animation::Animation { onion_frames: 1, ..Default::default() });
+        doc.set_animation(Some(prostudio_engine::animation::Animation { onion_frames: 1, ..Default::default() }));
         canvas.invalidate();
     });
     t.same(&gpu, 2, "the last frame");
@@ -956,7 +956,7 @@ fn a_render_reads_back_only_a_few_layers_to_park() {
     // then room for three, and Animation Assist on: the frames not shown are parked, a few a render
     t.canvases[0].set_resident_budget(3 * u64::from(W * W * 4));
     t.each(|doc, canvas| {
-        doc.animation = Some(prostudio_engine::animation::Animation { onion_frames: 1, ..Default::default() });
+        doc.set_animation(Some(prostudio_engine::animation::Animation { onion_frames: 1, ..Default::default() }));
         canvas.invalidate();
     });
     let (doc, canvas) = (&mut t.docs[0], &mut t.canvases[0]);

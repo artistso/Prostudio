@@ -6124,7 +6124,7 @@ impl Canvas {
     /// is below the run), with every layer in them; none while something else is under way
     /// (Animation Assist's frames, an adjustment, liquify, a transform, a stroke elsewhere).
     fn live_items(&self, doc: &Document) -> Option<(Vec<LayerId>, std::ops::Range<usize>)> {
-        if doc.animation.is_some() {
+        if doc.active_animation().is_some() {
             return None;
         }
         let tops = doc.members(None);
@@ -6358,13 +6358,13 @@ impl Canvas {
     /// With Animation Assist on (and nothing else under way), the layers of the frames shown: the
     /// current (or played) one, its onion skins, and a background or foreground frame.
     fn shown_frames(&self, doc: &Document) -> Option<HashSet<LayerId>> {
-        let a = doc.animation.as_ref()?;
+        let a = doc.active_animation()?;
         let busy =
             self.transforming.is_some() || self.liquify.is_some() || self.pencil.is_some() || self.held.is_some();
         if busy || self.smudge.is_some() {
             return None;
         }
-        let frames = animation::frames(doc);
+        let frames = doc.active_frames();
         let focus = self.play_frame.or_else(|| animation::current_frame(doc))?;
         let shown: HashSet<LayerId> = frames
             .iter()
@@ -6720,8 +6720,8 @@ impl Canvas {
         current: &mut usize,
     ) {
         // Animation Assist: the top level's frames show around the current (or played) one
-        let animation = if top { doc.animation.as_ref() } else { None };
-        let frames = animation.map(|_| animation::frames(doc)).unwrap_or_default();
+        let animation = if top { doc.active_animation() } else { None };
+        let frames = animation.map(|_| doc.active_frames()).unwrap_or_default();
         let focus = animation.and_then(|_| self.play_frame.or_else(|| animation::current_frame(doc)));
         for &id in items {
             let Some(layer) = doc.layer(id) else { continue };
@@ -9177,7 +9177,7 @@ struct Remake {
 /// How many levels of group textures compositing `doc` takes: down to the deepest group
 /// composited on its own (with Animation Assist any group, its frame's onion skin tinted whole).
 fn group_levels(doc: &Document) -> usize {
-    if doc.animation.is_some() {
+    if doc.active_animation().is_some() {
         return doc.max_depth();
     }
     let alone = doc.layers().iter().filter(|l| l.kind == LayerKind::Group && !l.passes_through());

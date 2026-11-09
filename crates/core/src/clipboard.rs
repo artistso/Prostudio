@@ -248,17 +248,25 @@ impl CanvasSession {
         if held.is_empty() {
             return Some(FramesInserted { added: 0, full });
         }
-        let assisted = self.shared.lock().doc.animation.as_ref().is_some_and(|a| !a.pages);
+        let assisted = self.shared.lock().doc.active_animation().is_some_and(|a| !a.pages);
         if !assisted {
             self.set_animation_assist(true);
         }
         // each shown for as many of the animation's frames as its time takes, at the rate it has
-        // now (turned on from Page Assist, its own)
-        if let Some(a) = self.shared.lock().doc.animation.as_mut() {
-            let fps = f64::from(a.fps.max(1));
-            for &(id, ms) in &held {
-                let shown = ((f64::from(ms) * fps / 1000.0).round() as u32).max(1);
-                a.set_hold(id, shown - 1);
+        // now (turned on from Page Assist, its own); and into the timeline (the seed captures
+        // them while it is made; one that was already there takes them appended)
+        {
+            let mut guard = self.shared.lock();
+            let st = &mut *guard;
+            if let Some(a) = st.doc.active_animation_mut() {
+                let fps = f64::from(a.fps.max(1));
+                for &(id, ms) in &held {
+                    let shown = ((f64::from(ms) * fps / 1000.0).round() as u32).max(1);
+                    a.set_hold(id, shown - 1);
+                }
+            }
+            for &(id, _) in &held {
+                st.doc.adopt_frame(id);
             }
         }
         Some(FramesInserted { added: held.len() as u32, full })
