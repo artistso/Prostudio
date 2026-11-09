@@ -300,10 +300,8 @@ impl crate::State {
                         continue;
                     }
                     let read = canvas.start_reading_layer(gpu, id).map_err(|e| file_error("reading a layer", e))?;
-                    let after: usize = reading
-                        .iter()
-                        .map(|(_, r): &(LayerId, prostudio_gpu::Readback)| r.bytes())
-                        .sum();
+                    let after: usize =
+                        reading.iter().map(|(_, r): &(LayerId, prostudio_gpu::Readback)| r.bytes()).sum();
                     if after + read.bytes() <= READ_AFTER_LOCK {
                         reading.push((id, read));
                     } else {

@@ -322,8 +322,8 @@ mod tests {
             reference: Some(&window),
             reference_picture: Some(png.get_ref()),
         });
-        let package = std::env::temp_dir()
-            .join(format!("prostudio-reference-package-{}.prostudio", std::process::id()));
+        let package =
+            std::env::temp_dir().join(format!("prostudio-reference-package-{}.prostudio", std::process::id()));
         std::fs::write(&package, &bytes).unwrap();
         let s = CanvasSession::open_package(package.to_string_lossy().into_owned()).unwrap();
         assert_eq!(
