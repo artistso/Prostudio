@@ -387,13 +387,12 @@ pub fn import_profile() -> Option<String> {
     name
 }
 
+/// What a plugin's name may end with: the new kinds, and the same files from before the rename.
+const PLUGIN_EXTENSIONS: [&str; 4] = ["prostudio-plugin", "prostudioplugin", "procraft-plugin", "procraftplugin"];
+
 /// Whether the file at `path` is a plugin, by its name.
 pub fn is_plugin_file(path: &Path) -> bool {
-    // (the old name too, from before the hyphen)
-    path.extension()
-        .is_some_and(|e| ["prostudio-plugin", "prostudioplugin", "procraft-plugin", "procraftplugin"]
-            .iter()
-            .any(|kind| e.eq_ignore_ascii_case(kind)))
+    path.extension().is_some_and(|e| PLUGIN_EXTENSIONS.iter().any(|kind| e.eq_ignore_ascii_case(kind)))
 }
 
 /// A plugin file the user picks.

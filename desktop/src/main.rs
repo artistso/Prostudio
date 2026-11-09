@@ -1132,7 +1132,10 @@ impl App {
                 startup::stopped("the graphics device stopped, and it couldn't start itself again");
             }
         } else {
-            files::tell("The graphics device stopped", "ProStudio starts again, with the artwork as it was last saved.");
+            files::tell(
+                "The graphics device stopped",
+                "ProStudio starts again, with the artwork as it was last saved.",
+            );
             startup::start_again(None);
         }
         event_loop.exit();

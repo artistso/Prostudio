@@ -3251,7 +3251,9 @@ mod tests {
     #[test]
     fn recolor_s_touch_drags_its_reticle_or_taps_it_elsewhere_and_paints_nothing() {
         let s = session();
-        s.shared.lock().view = Some(prostudio_engine::view::View::from_affine(prostudio_engine::geom::Affine::IDENTITY));
+        s.shared.lock().view = Some(prostudio_engine::view::View::from_affine(
+            prostudio_engine::geom::Affine::IDENTITY,
+        ));
         s.recolor_start(32.0, 32.0, 0.0, 0.0, 1.0, 0.0);
         // the app moves the reticle where the touches say
         let obey = |out: Vec<TouchCommand>| {
@@ -3282,7 +3284,9 @@ mod tests {
     #[test]
     fn the_companion_s_move_takes_a_lone_press_and_moves_the_view_without_painting() {
         let s = session();
-        s.shared.lock().view = Some(prostudio_engine::view::View::from_affine(prostudio_engine::geom::Affine::IDENTITY));
+        s.shared.lock().view = Some(prostudio_engine::view::View::from_affine(
+            prostudio_engine::geom::Affine::IDENTITY,
+        ));
         s.set_touch_companion(Some(CompanionMode::Move));
         s.touch_down(1, PointerKind::Finger, at(100.0, 100.0, 0.0));
         let out = s.touch_move(1, at(130.0, 120.0, 16.0));
@@ -3305,7 +3309,9 @@ mod tests {
     #[test]
     fn one_finger_set_to_move_the_canvas_moves_it_and_the_pen_still_paints() {
         let s = session();
-        s.shared.lock().view = Some(prostudio_engine::view::View::from_affine(prostudio_engine::geom::Affine::IDENTITY));
+        s.shared.lock().view = Some(prostudio_engine::view::View::from_affine(
+            prostudio_engine::geom::Affine::IDENTITY,
+        ));
         let g = crate::gestures::GestureSettings::new(crate::gestures::KeptGestures::default());
         let changed = g.set(crate::gestures::GesturePurpose::General, "ONE_FINGER_PAN".into(), true);
         // painting with a finger goes off with it, and back on turns it off again

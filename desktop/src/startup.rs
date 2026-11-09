@@ -804,7 +804,8 @@ fn stopped_text(what: &str, stop: Stop) -> String {
 /// What the app says when no backend could draw the window, `why` each failed.
 pub fn no_gpu_text(why: &str) -> String {
     format!(
-        "No graphics backend could draw the window.\n\n{why}\n\nUpdating the graphics driver may help. ProStudio's log is {}",
+        "No graphics backend could draw the window.\n\n{why}\n\nUpdating the graphics driver may help. ProStudio's \
+         log is {}",
         files::app_dir().join(LOG).display()
     )
 }
