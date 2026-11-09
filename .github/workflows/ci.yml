@@ -33,18 +33,7 @@ jobs:
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
       - run: cargo fmt --all --check
-      - name: Clippy with diagnostics
-        run: |
-          set +e
-          cargo clippy --workspace --all-targets -- -D warnings > /tmp/clippy.log 2>&1
-          code=$?
-          if [ $code -ne 0 ]; then
-            sed -E 's/\x1b\[[0-9;]*m//g' /tmp/clippy.log > /tmp/clippy.clean.log
-            grep -aE '^(error|warning)(\[|:)|-->|implied by' /tmp/clippy.clean.log | head -80 | while IFS= read -r line; do
-              printf '::error title=clippy::%s\n' "$line"
-            done
-            exit $code
-          fi
+      - run: cargo clippy --workspace --all-targets -- -D warnings
       # the code only Apple's systems build (the Mac's pen, Finder, video, PDF and fonts; the iPad
       # app's layer and render thread), checked without linking: no Mac needed
       - name: Clippy for macOS and iPadOS
@@ -52,18 +41,7 @@ jobs:
           cargo clippy --target aarch64-apple-darwin -p prostudio-desktop -- -D warnings
           cargo clippy --target aarch64-apple-ios -p prostudio-core --lib -- -D warnings
       # the GPU tests skip themselves: the runner has no GPU
-      - name: Tests with diagnostics
-        run: |
-          set +e
-          cargo test --workspace > /tmp/test.log 2>&1
-          code=$?
-          if [ $code -ne 0 ]; then
-            sed -E 's/\x1b\[[0-9;]*m//g' /tmp/test.log > /tmp/test.clean.log
-            grep -aE '^failures:|FAILED|panicked|^error' /tmp/test.clean.log | head -80 | while IFS= read -r line; do
-              printf '::error title=tests::%s\n' "$line"
-            done
-            exit $code
-          fi
+      - run: cargo test --workspace
 
   android:
     name: Android (clippy, lint, unit tests, release APK)
@@ -89,17 +67,7 @@ jobs:
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
       # the code only Android builds (the surface and the render thread)
       - name: Clippy for Android
-        run: |
-          set +e
-          cargo ndk -t arm64-v8a --platform 29 clippy -p prostudio-core --lib -- -D warnings > /tmp/clippy-android.log 2>&1
-          code=$?
-          if [ $code -ne 0 ]; then
-            sed -E 's/\x1b\[[0-9;]*m//g' /tmp/clippy-android.log > /tmp/clippy-android.clean.log
-            grep -aE '^(error|warning)(\[|:)|-->|implied by' /tmp/clippy-android.clean.log | head -80 | while IFS= read -r line; do
-              printf '::error title=android-clippy::%s\n' "$line"
-            done
-            exit $code
-          fi
+        run: cargo ndk -t arm64-v8a --platform 29 clippy -p prostudio-core --lib -- -D warnings
       - uses: gradle/actions/setup-gradle@v4
       - name: Release APK and lint
         working-directory: android
