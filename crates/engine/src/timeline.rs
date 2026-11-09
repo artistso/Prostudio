@@ -288,7 +288,6 @@ fn clean_name(name: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::document::Document;
 
     fn doc_with_paint_layers(count: usize) -> Document {
         let mut doc = Document::new(64, 64);
