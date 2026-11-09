@@ -32,6 +32,9 @@ const AUTOSAVE_AGAIN: std::time::Duration = std::time::Duration::from_millis(if 
 /// A package's preview's longest side, pixels.
 const PACKAGE_PREVIEW_SIDE: u32 = 1024;
 const FORMAT: &str = "prostudio-artwork";
+/// As ProCraft wrote it before the rename: read all the same, so an artwork saved before the
+/// rename still opens; a new one writes `prostudio-artwork`.
+const LEGACY_FORMAT: &str = "procraft-artwork";
 const VERSION: u32 = 1;
 
 /// Whether the artwork in `dir` plays: a model, which turns, or Animation Assist or Page Assist on, from its file alone.
