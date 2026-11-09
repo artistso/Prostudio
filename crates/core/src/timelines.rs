@@ -2,6 +2,8 @@
 //! listing, adding, renaming, deleting and switching them. Animation Assist's bar shows
 //! them as lanes above the frames; each timeline carries its own settings and its own frames.
 
+use prostudio_engine::{document::Document, timeline::Timeline};
+
 use crate::CanvasSession;
 
 /// One timeline, as the timeline bar shows them.
@@ -17,22 +19,22 @@ pub struct TimelineInfo {
     pub active: bool,
 }
 
+fn timeline_info(doc: &Document, t: &Timeline) -> TimelineInfo {
+    TimelineInfo {
+        id: t.id,
+        name: t.name.clone(),
+        frames: u32::try_from(doc.timeline_frames(t.id).len()).unwrap_or(u32::MAX),
+        active: doc.timelines().active == Some(t.id),
+    }
+}
+
 #[uniffi::export]
 impl CanvasSession {
     /// The artwork's timelines, in the order they show. Empty while Animation Assist or
     /// Page Assist has never been on.
     pub fn timelines(&self) -> Vec<TimelineInfo> {
         let doc = &self.shared.lock().doc;
-        doc.timelines()
-            .items
-            .iter()
-            .map(|t| TimelineInfo {
-                id: t.id,
-                name: t.name.clone(),
-                frames: u32::try_from(doc.timeline_frames(t.id).len()).unwrap_or(u32::MAX),
-                active: doc.timelines().active == Some(t.id),
-            })
-            .collect()
+        doc.timelines().items.iter().map(|t| timeline_info(doc, t)).collect()
     }
 
     /// A fresh timeline ("Timeline N", or `name`), made active. The artwork's first one is

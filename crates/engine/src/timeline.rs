@@ -45,7 +45,7 @@ pub struct Timelines {
     pub enabled: bool,
 }
 
-fn on() -> bool {
+const fn on() -> bool {
     true
 }
 
@@ -198,12 +198,7 @@ impl Document {
         }
         let id = self.timelines.next_id();
         let name = name.and_then(|n| clean_name(&n)).unwrap_or_else(|| format!("Timeline {id}"));
-        self.timelines.items.push(Timeline {
-            id,
-            name,
-            settings: Animation::default(),
-            frames: Vec::new(),
-        });
+        self.timelines.items.push(Timeline { id, name, settings: Animation::default(), frames: Vec::new() });
         self.timelines.active = Some(id);
         self.timelines.enabled = true;
         id
@@ -215,12 +210,7 @@ impl Document {
         let id = self.timelines.next_id();
         let name = name.and_then(|n| clean_name(&n)).unwrap_or_else(|| format!("Timeline {id}"));
         let frames = crate::animation::frames(self);
-        self.timelines.items.push(Timeline {
-            id,
-            name,
-            settings: settings.unwrap_or_default(),
-            frames,
-        });
+        self.timelines.items.push(Timeline { id, name, settings: settings.unwrap_or_default(), frames });
         self.timelines.active = Some(id);
         self.timelines.enabled = true;
         id
@@ -269,12 +259,7 @@ impl Document {
         if self.timelines.items.is_empty() {
             if let Some(a) = self.animation.take() {
                 let frames = crate::animation::frames(self);
-                self.timelines.items.push(Timeline {
-                    id: 1,
-                    name: "Timeline 1".to_owned(),
-                    settings: a,
-                    frames,
-                });
+                self.timelines.items.push(Timeline { id: 1, name: "Timeline 1".to_owned(), settings: a, frames });
                 self.timelines.active = Some(1);
             }
         }
