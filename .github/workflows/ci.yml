@@ -52,7 +52,18 @@ jobs:
           cargo clippy --target aarch64-apple-darwin -p prostudio-desktop -- -D warnings
           cargo clippy --target aarch64-apple-ios -p prostudio-core --lib -- -D warnings
       # the GPU tests skip themselves: the runner has no GPU
-      - run: cargo test --workspace
+      - name: Tests with diagnostics
+        run: |
+          set +e
+          cargo test --workspace > /tmp/test.log 2>&1
+          code=$?
+          if [ $code -ne 0 ]; then
+            sed -E 's/\x1b\[[0-9;]*m//g' /tmp/test.log > /tmp/test.clean.log
+            grep -aE '^failures:|FAILED|panicked|^error' /tmp/test.clean.log | head -80 | while IFS= read -r line; do
+              printf '::error title=tests::%s\n' "$line"
+            done
+            exit $code
+          fi
 
   android:
     name: Android (clippy, lint, unit tests, release APK)
