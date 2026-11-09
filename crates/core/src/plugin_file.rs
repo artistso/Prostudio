@@ -431,7 +431,7 @@ fn read_manifest(text: &[u8]) -> Result<Manifest, Refusal> {
     }
     let id = raw.id;
     let controls = raw.controls.into_iter().map(|c| checked_control(&id, c)).collect::<Result<Vec<_>, _>>()?;
-    if id.starts_with(OWN_PREFIX) {
+    if id.starts_with(OWN_PREFIX) || id.starts_with(LEGACY_OWN_PREFIX) {
         return Err(Refusal::Described);
     }
     let distinct: HashSet<_> = holds.iter().collect();
