@@ -390,7 +390,7 @@ mod tests {
         doc.adopt_frame(LayerId(1));
         let text = serde_json::to_string(&doc).expect("serializes");
         assert!(!text.contains("\"animation\""), "timelines carry the settings; the legacy object is gone");
-        let back: Document = serde_json::from_str(&text).expect("reads").repaired();
+        let back: Document = serde_json::from_str::<Document>(&text).expect("reads").repaired();
         assert_eq!(back.timelines().items.len(), 2);
         assert_eq!(back.timelines().active, Some(second));
         assert_eq!(back.timelines().items[1].name, "Extra");
@@ -399,7 +399,7 @@ mod tests {
         legacy.animation = Some(Animation { fps: 18, ..Animation::default() });
         let text = serde_json::to_string(&legacy).expect("serializes");
         assert!(text.contains("\"animation\""));
-        let from_legacy: Document = serde_json::from_str(&text).expect("legacy reads").repaired();
+        let from_legacy: Document = serde_json::from_str::<Document>(&text).expect("legacy reads").repaired();
         assert_eq!(from_legacy.timelines().items.len(), 1);
         assert_eq!(from_legacy.active_animation().map(|a| a.fps), Some(18));
     }
@@ -411,7 +411,7 @@ mod tests {
         doc.adopt_frame(LayerId(1));
         doc.adopt_frame(LayerId(9999));
         let text = serde_json::to_string(&doc).expect("serializes");
-        let back: Document = serde_json::from_str(&text).expect("reads").repaired();
+        let back: Document = serde_json::from_str::<Document>(&text).expect("reads").repaired();
         assert_eq!(back.active_frames(), vec![LayerId(1), LayerId(2)]);
         let adopted: Vec<LayerId> = back.timelines().items[0].frames.clone();
         assert!(adopted.contains(&LayerId(1)));
