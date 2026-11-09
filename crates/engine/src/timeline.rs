@@ -265,7 +265,8 @@ impl Document {
         }
         let ids: Vec<LayerId> = self.layers().iter().map(|l| l.id).collect();
         for t in &mut self.timelines.items {
-            t.settings = t.settings.repaired();
+            let settings = std::mem::take(&mut t.settings);
+            t.settings = settings.repaired();
             let name = t.name.trim();
             t.name = if name.is_empty() { "Timeline".to_owned() } else { name.chars().take(64).collect() };
             t.frames.retain(|id| ids.contains(id));
