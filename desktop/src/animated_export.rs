@@ -13,7 +13,7 @@ use std::sync::mpsc::{Receiver, channel};
 use std::time::{Duration, Instant};
 
 use egui::{Align2, Color32, Id, Order, Rect, Sense, Stroke, TextureHandle, pos2, vec2};
-use procraft_core::{CanvasSession, Turntable};
+use prostudio_core::{CanvasSession, Turntable};
 
 use crate::icons;
 use crate::look::{Look, Themed, Weight, argb, pc, text};
@@ -90,7 +90,7 @@ type Making = (Settings, Receiver<Option<(PathBuf, u64)>>);
 /// model how its turntable goes.
 type Framing = (bool, u32, Option<Turntable>);
 /// The preview's frames being read, and the frames, once read.
-type Reading = (Framing, Receiver<Vec<procraft_core::ThumbnailImage>>);
+type Reading = (Framing, Receiver<Vec<prostudio_core::ThumbnailImage>>);
 
 pub struct AnimatedExport {
     format: Animated,
@@ -178,7 +178,7 @@ impl AnimatedExport {
 
     /// The frames a second the file is made at, as the slider shows them.
     fn fps(&self) -> f32 {
-        self.fps_at.map_or(ANIMATION_FPS as f32, procraft_core::export_fps_at)
+        self.fps_at.map_or(ANIMATION_FPS as f32, prostudio_core::export_fps_at)
     }
 
     /// The file made for the settings now, made again (off the window's thread) when they
@@ -212,8 +212,8 @@ impl AnimatedExport {
         // among the files being written (the app waits for them as it ends; the panel over the
         // canvas keeps presses off it meanwhile)
         crate::files::write_meanwhile(false, move || {
-            let dir = std::env::temp_dir().join("procraft-exports");
-            let base = procraft_core::export_file_name(session.name(), false);
+            let dir = std::env::temp_dir().join("prostudio-exports");
+            let base = prostudio_core::export_file_name(session.name(), false);
             let path = dir.join(format!("{base}.{}", format.extension()));
             let side = if web_ready { WEB_READY_SIDE } else { 0 };
             let file = path.to_string_lossy().into_owned();
@@ -336,7 +336,7 @@ impl AnimatedExport {
         // the frame rate starts as the artwork's own: Animation Assist's, else 15
         if self.fps_at.is_none() {
             let fps = session.animation_settings().map_or(ANIMATION_FPS, |a| a.fps) as f32;
-            self.fps_at = Some(procraft_core::export_fps_fraction(fps));
+            self.fps_at = Some(prostudio_core::export_fps_fraction(fps));
         }
         let screen = ctx.content_rect();
         let wide = screen.width() > screen.height();
@@ -528,7 +528,7 @@ impl AnimatedExport {
         // the name's and the value's caps at y 132.5, the value's ink 24 in from the panel's right
         let label_at = pos2(panel.left() + FPS_LABEL_X, top + FPS_LABEL_Y);
         text(ui.painter(), label_at, Align2::LEFT_TOP, "Frames per second", 17.0, Weight::Regular, argb(ROW_INK));
-        let value = procraft_core::export_fps_label(self.fps());
+        let value = prostudio_core::export_fps_label(self.fps());
         let value_at = pos2(panel.right() - FPS_VALUE_RIGHT, top + FPS_LABEL_Y);
         text(ui.painter(), value_at, Align2::RIGHT_TOP, &value, 17.0, Weight::Regular, argb(ROW_INK));
         // the track 3 tall, its middle at y 160.5; the knob's middle from 22.5 in to 23 in

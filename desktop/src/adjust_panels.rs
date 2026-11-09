@@ -4,7 +4,7 @@
 //! top; their sliders change the adjustment at once (adjusting.rs).
 
 use egui::{Align2, Color32, Id, Order, Pos2, Rect, Sense, Stroke, Ui, pos2, vec2};
-use procraft_core::{AdjustShown, CanvasSession, ChromaticKind, GlitchKind, HalftoneKind, NoiseKind, PerspectiveKind};
+use prostudio_core::{AdjustShown, CanvasSession, ChromaticKind, GlitchKind, HalftoneKind, NoiseKind, PerspectiveKind};
 
 use crate::icons::{self, Icon};
 use crate::look::{Look, Shade, Themed, Weight, argb, pc, text};
@@ -227,24 +227,24 @@ impl Toolbars {
         look: &mut Look,
         session: &CanvasSession,
         shown: &AdjustShown,
-        gradients: &procraft_core::Gradients,
+        gradients: &prostudio_core::Gradients,
         colours: &crate::colours::Colours,
         backdrops: &mut Vec<f32>,
     ) {
         let screen = ctx.content_rect();
         let wide = screen.width() > screen.height();
         match shown.adjustment {
-            Some(procraft_core::Adjustment::Glitch) => glitch(ctx, look, session, shown, screen, wide),
-            Some(procraft_core::Adjustment::Noise) => self.noise(ctx, look, session, shown, screen, wide),
-            Some(procraft_core::Adjustment::Bloom) => bloom(ctx, session, shown, screen, wide),
-            Some(procraft_core::Adjustment::Halftone) => halftone(ctx, look, session, shown, screen),
-            Some(procraft_core::Adjustment::ChromaticAberration) => chromatic(ctx, look, session, shown, screen),
-            Some(procraft_core::Adjustment::PerspectiveBlur) => perspective(ctx, look, session, shown, screen),
-            Some(procraft_core::Adjustment::ColorBalance) => self.balance(ctx, look, session, shown, screen, wide),
-            Some(procraft_core::Adjustment::Curves) => self.curves(ctx, session, shown, screen),
-            Some(procraft_core::Adjustment::Liquify) => self.liquify.show(ctx, look, session, shown),
-            Some(procraft_core::Adjustment::Plugin) => plugin_filter(ctx, session, shown, screen),
-            Some(procraft_core::Adjustment::GradientMap) => {
+            Some(prostudio_core::Adjustment::Glitch) => glitch(ctx, look, session, shown, screen, wide),
+            Some(prostudio_core::Adjustment::Noise) => self.noise(ctx, look, session, shown, screen, wide),
+            Some(prostudio_core::Adjustment::Bloom) => bloom(ctx, session, shown, screen, wide),
+            Some(prostudio_core::Adjustment::Halftone) => halftone(ctx, look, session, shown, screen),
+            Some(prostudio_core::Adjustment::ChromaticAberration) => chromatic(ctx, look, session, shown, screen),
+            Some(prostudio_core::Adjustment::PerspectiveBlur) => perspective(ctx, look, session, shown, screen),
+            Some(prostudio_core::Adjustment::ColorBalance) => self.balance(ctx, look, session, shown, screen, wide),
+            Some(prostudio_core::Adjustment::Curves) => self.curves(ctx, session, shown, screen),
+            Some(prostudio_core::Adjustment::Liquify) => self.liquify.show(ctx, look, session, shown),
+            Some(prostudio_core::Adjustment::Plugin) => plugin_filter(ctx, session, shown, screen),
+            Some(prostudio_core::Adjustment::GradientMap) => {
                 self.gradient_map.show(ctx, look, session, shown, gradients, colours, backdrops);
             }
             _ => {
@@ -734,7 +734,7 @@ fn bloom(ctx: &egui::Context, session: &CanvasSession, shown: &AdjustShown, scre
 
 /// A plugin's filter's toolbar: one for all of them, its controls as the file lists them.
 fn plugin_filter(ctx: &egui::Context, session: &CanvasSession, shown: &AdjustShown, screen: Rect) {
-    use procraft_core::{PluginControl, plugin_slider_along, plugin_slider_at, plugin_slider_shown};
+    use prostudio_core::{PluginControl, plugin_slider_along, plugin_slider_at, plugin_slider_shown};
     let Some(filter) = &shown.plugin else { return };
     let rows = filter.controls.len().max(1) as f32;
     let rect = panel_rect(screen, 532.0, 41.0 + 54.0 * rows + 8.5 * (rows - 1.0));

@@ -5,7 +5,7 @@
 //! (adjusting.rs); the touches swipe its amount.
 
 use egui::{Align2, Color32, Id, LayerId, Order, Pos2, Rect, ScrollArea, Sense, Stroke, Ui, UiBuilder, pos2, vec2};
-use procraft_core::{
+use prostudio_core::{
     AdjustShown, Adjustment, CLONE_PUCK_RADIUS, CanvasSession, PerspectiveKind, PluginInfo, adjustment_groups,
     adjustment_label,
 };
@@ -191,7 +191,7 @@ impl Adjustments {
         look: &mut Look,
         session: &CanvasSession,
         bar_top: f32,
-        gradients: &procraft_core::Gradients,
+        gradients: &prostudio_core::Gradients,
         colours: &crate::colours::Colours,
         backdrops: &mut Vec<f32>,
     ) -> Option<Asked> {
@@ -210,7 +210,7 @@ impl Adjustments {
         egui::Area::new(Id::unique("adjust modes button")).fixed_pos(band.min).order(Order::Foreground).show(
             ctx,
             |ui| {
-                if ui.allocate_rect(band, Sense::click()).clicked() && procraft_core::adjustment_paintable(a) {
+                if ui.allocate_rect(band, Sense::click()).clicked() && prostudio_core::adjustment_paintable(a) {
                     self.modes_open = !self.modes_open;
                 }
             },
@@ -382,8 +382,8 @@ fn bar_in(ui: &Ui, look: &mut Look, shown: &AdjustShown, a: Adjustment, band: Re
     painter.rect_filled(band, 0, argb(MODE_BAR));
     let ink = argb(MODE_TEXT);
     let label = shown.plugin.as_ref().map_or_else(|| adjustment_label(a), |filter| filter.name.clone());
-    let swiped = procraft_core::adjustment_swiped(a);
-    let paintable = procraft_core::adjustment_paintable(a);
+    let swiped = prostudio_core::adjustment_swiped(a);
+    let paintable = prostudio_core::adjustment_paintable(a);
     let amount = format!("{}%", (shown.amount * 100.0).round() as i32);
     let measure = |s: &str, size: f32, w: Weight| painter.layout_no_wrap(s.into(), w.font(size), ink).size().x;
     let width = 33.0
@@ -587,7 +587,7 @@ fn hsb_row(ui: &Ui, row: Rect, label: &str, value: f32, track: Track) -> Option<
 
 #[cfg(test)]
 mod tests {
-    use procraft_core::{PluginPart, PluginSource};
+    use prostudio_core::{PluginPart, PluginSource};
 
     use super::*;
 

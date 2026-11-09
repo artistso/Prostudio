@@ -8,8 +8,8 @@ use std::f32::consts::PI;
 use std::time::Duration;
 use std::time::Instant;
 
-use procraft_engine::geom::{IRect, Vec2};
-use procraft_engine::view::View;
+use prostudio_engine::geom::{IRect, Vec2};
+use prostudio_engine::view::View;
 
 /// The hole at first: a circle this many points round the point the colour landed on.
 const START: f32 = 10.0;

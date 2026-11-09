@@ -2,13 +2,13 @@
 //! library, and written from it. A brush's shape and grain images go with it; an image a file only
 //! names (one that came with the app that made it) is stood in for by the nearest of ours.
 
-use procraft_engine::brush::{
+use prostudio_engine::brush::{
     Author, Brush, FULL_GRAIN_MOST, FullGrain, GrainFile, GrainMode, MaterialSource, ShapeFile, Source, StockImage,
     StockImages,
 };
-use procraft_engine::brushfile::{self, BrushFile, Pictures, Texture};
-use procraft_engine::curve::Curve;
-use procraft_engine::textures::{self, TEXTURE_SIZE, grain, shape};
+use prostudio_engine::brushfile::{self, BrushFile, Pictures, Texture};
+use prostudio_engine::curve::Curve;
+use prostudio_engine::textures::{self, TEXTURE_SIZE, grain, shape};
 
 use crate::CanvasSession;
 use crate::brush_library::LibrarySet;
@@ -58,7 +58,7 @@ impl Made {
     }
 }
 
-/// Who made `brush`, as its file is to say ("" for ProCraft's own).
+/// Who made `brush`, as its file is to say ("" for ProStudio's own).
 fn author_name(brush: &Brush) -> &str {
     brush.author.as_ref().map_or("", |a| a.name.as_str())
 }
@@ -129,7 +129,7 @@ pub const OTHER_BRUSH_EXTENSIONS: [&str; 7] = ["abr", "gbr", "gih", "vbr", "kpp"
 /// file is called: a brush or set file sent on as a plain zip.
 #[uniffi::export]
 pub fn is_brush_zip(bytes: Vec<u8>) -> bool {
-    procraft_engine::zip::ZipReader::new(&bytes).is_some_and(|zip| brush_names(zip.names()))
+    prostudio_engine::zip::ZipReader::new(&bytes).is_some_and(|zip| brush_names(zip.names()))
 }
 
 /// Whether a zip holding `names` holds brushes.
@@ -329,7 +329,7 @@ fn folder_id(seed: u64, i: usize) -> String {
 /// for.
 /// A Photoshop tip fitted into a shape's square, centred on black: each pixel the average of the
 /// tip's pixels it covers (or the nearest one, drawn up).
-fn fitted(t: &procraft_engine::abr::AbrTip) -> Vec<u8> {
+fn fitted(t: &prostudio_engine::abr::AbrTip) -> Vec<u8> {
     let n = TEXTURE_SIZE;
     let (w, h) = (t.width as usize, t.height as usize);
     let mut out = vec![0u8; n * n];
@@ -364,25 +364,25 @@ fn fitted(t: &procraft_engine::abr::AbrTip) -> Vec<u8> {
 
 /// The brushes in another app's file, with the set's name (a bundle's own, else `name`).
 fn other_brushes(bytes: &[u8], name: String) -> Option<(String, Vec<Brush>)> {
-    use procraft_engine::krita;
+    use prostudio_engine::krita;
     // each made a brush side by side (a big tip takes a while), in their order
     fn each<T: Sync>(items: &[T], f: impl Fn(&T) -> Brush + Sync) -> Vec<Brush> {
-        procraft_engine::par::side_by_side(items, f).into_iter().flatten().collect()
+        prostudio_engine::par::side_by_side(items, f).into_iter().flatten().collect()
     }
-    if let Some(brushes) = procraft_engine::abr::read_brushes(bytes) {
+    if let Some(brushes) = prostudio_engine::abr::read_brushes(bytes) {
         return Some((name, each(&brushes, abr_brush)));
     }
-    if let Some(tips) = procraft_engine::gbr::read(bytes) {
+    if let Some(tips) = prostudio_engine::gbr::read(bytes) {
         return Some((name, each(&tips, tip_brush)));
     }
-    if let Some(g) = procraft_engine::gbr::read_generated(bytes) {
+    if let Some(g) = prostudio_engine::gbr::read_generated(bytes) {
         return Some((name, vec![generated_brush(&g)]));
     }
     if let Some((title, presets)) = krita::read_bundle(bytes) {
         let name = if title.trim().is_empty() { name } else { title };
         return Some((name, each(&presets, krita_brush)));
     }
-    if let Some(brushes) = procraft_engine::csp::read(bytes) {
+    if let Some(brushes) = prostudio_engine::csp::read(bytes) {
         return Some((name, each(&brushes, csp_brush)));
     }
     // a preset alone has only the pictures it holds itself (newer ones do): one it only names (one
@@ -393,15 +393,15 @@ fn other_brushes(bytes: &[u8], name: String) -> Option<(String, Vec<Brush>)> {
 
 /// A brush of a Clip Studio sub tool: its tip (an image, else round with its edge and roundness),
 /// spacing and angle.
-fn csp_brush(c: &procraft_engine::csp::CspBrush) -> Brush {
+fn csp_brush(c: &prostudio_engine::csp::CspBrush) -> Brush {
     // the first of its pictures that paints anything: white, or else dark
-    let paints = |t: &procraft_engine::abr::AbrTip| t.pixels.iter().any(|&v| v > 0);
+    let paints = |t: &prostudio_engine::abr::AbrTip| t.pixels.iter().any(|&v| v > 0);
     let tip = c
         .tip_pngs
         .iter()
         .find_map(|png| png_tip(png, true).filter(paints).or_else(|| png_tip(png, false).filter(paints)));
     let mut b = match tip {
-        Some(t) => tip_brush(&procraft_engine::abr::AbrTip { name: c.name.clone(), ..t }),
+        Some(t) => tip_brush(&prostudio_engine::abr::AbrTip { name: c.name.clone(), ..t }),
         None => Brush { name: c.name.clone(), ..Brush::round_pen() },
     };
     if let Some(h) = c.hardness {
@@ -433,13 +433,13 @@ fn paper(b: &mut Brush, pngs: &[Vec<u8>], inverted: bool, depth: f32, scale: f32
         b.grain.image = None;
         b.grain.source = Some(source);
         b.grain.depth = depth.clamp(0.0, 1.0);
-        b.set_setting("grain_scale", width as f32 * scale / procraft_engine::studio::MAX_GRAIN_SCALE);
+        b.set_setting("grain_scale", width as f32 * scale / prostudio_engine::studio::MAX_GRAIN_SCALE);
     }
 }
 
 /// A brush of a Photoshop preset: its sampled tip, or round with its hardness; its roundness,
 /// spacing and angle; its texture as its grain.
-fn abr_brush(a: &procraft_engine::abr::AbrBrush) -> Brush {
+fn abr_brush(a: &prostudio_engine::abr::AbrBrush) -> Brush {
     let mut b = match &a.tip {
         Some(t) => tip_brush(t),
         None => {
@@ -462,7 +462,7 @@ fn abr_brush(a: &procraft_engine::abr::AbrBrush) -> Brush {
     // Photoshop turns the other way (its 129 degrees are -129 here)
     b.shape.rotation = -a.angle;
     let d = a.dynamics;
-    if d.tip && d.angle_control == procraft_engine::abr::ANGLE_BY_DIRECTION {
+    if d.tip && d.angle_control == prostudio_engine::abr::ANGLE_BY_DIRECTION {
         b.shape.follow = 1.0;
     }
     let flow = d.tool_flow.unwrap_or(1.0);
@@ -498,7 +498,7 @@ fn abr_brush(a: &procraft_engine::abr::AbrBrush) -> Brush {
         (Some(t), d) => Some(d.map_or(t.height as f32, |d| d.min(t.height as f32))),
     };
     if let Some(px) = pixels {
-        procraft_engine::brushfile::set_sizes(&mut b, px * ABR_SIZE_PER_PIXEL, Some(0.01));
+        prostudio_engine::brushfile::set_sizes(&mut b, px * ABR_SIZE_PER_PIXEL, Some(0.01));
     }
     // the shape dynamics: pressure or tilt (controls 2, 3) on the size, half of what it lets go
     // of; tilt to the full; its size jitter
@@ -518,7 +518,7 @@ fn abr_brush(a: &procraft_engine::abr::AbrBrush) -> Brush {
 
 /// The grain blend mode of a Photoshop texture's mode (its four-letter name), if we have it.
 fn texture_blend(name: &str) -> Option<u32> {
-    use procraft_engine::document::BlendMode;
+    use prostudio_engine::document::BlendMode;
     Some(match name {
         "Mltp" => BlendMode::Multiply.id(),
         "Sbtr" => BlendMode::Subtract.id(),
@@ -528,16 +528,16 @@ fn texture_blend(name: &str) -> Option<u32> {
         "CBrn" => BlendMode::ColorBurn.id(),
         "linearBurn" => BlendMode::LinearBurn.id(),
         "hardMix" => BlendMode::HardMix.id(),
-        "Hght" => procraft_engine::brush::GRAIN_HEIGHT,
-        "linearHeight" => procraft_engine::brush::GRAIN_LINEAR_HEIGHT,
+        "Hght" => prostudio_engine::brush::GRAIN_HEIGHT,
+        "linearHeight" => prostudio_engine::brush::GRAIN_LINEAR_HEIGHT,
         _ => return None,
     })
 }
 
 /// A brush of a GIMP generated brush: round with its hardness and how round it is, or its square
 /// or diamond drawn; its spacing and angle.
-fn generated_brush(g: &procraft_engine::gbr::Generated) -> Brush {
-    let mut b = match procraft_engine::gbr::generated_tip(g) {
+fn generated_brush(g: &prostudio_engine::gbr::Generated) -> Brush {
+    let mut b = match prostudio_engine::gbr::generated_tip(g) {
         Some(tip) => tip_brush(&tip),
         None => {
             let mut b = Brush { name: g.name.clone(), ..Brush::round_pen() };
@@ -552,7 +552,7 @@ fn generated_brush(g: &procraft_engine::gbr::Generated) -> Brush {
 }
 
 /// A brush of a sampled tip: its shape, with its spacing.
-fn tip_brush(t: &procraft_engine::abr::AbrTip) -> Brush {
+fn tip_brush(t: &prostudio_engine::abr::AbrTip) -> Brush {
     let mut b = Brush { name: t.name.clone(), ..Brush::round_pen() };
     b.shape.image = None;
     b.shape.source = Source::new(fitted(t));
@@ -564,8 +564,8 @@ fn tip_brush(t: &procraft_engine::abr::AbrTip) -> Brush {
 
 /// A brush of a Krita preset: its tip (round, or an image), spacing, angle, and what pressure
 /// changes.
-fn krita_brush(k: &procraft_engine::krita::KritaBrush) -> Brush {
-    use procraft_engine::krita::{KritaPicture, KritaTip};
+fn krita_brush(k: &prostudio_engine::krita::KritaBrush) -> Brush {
+    use prostudio_engine::krita::{KritaPicture, KritaTip};
     let image = match &k.tip {
         KritaTip::Round { .. } => None,
         KritaTip::Image(t) => Some(fitted(t)),
@@ -618,7 +618,7 @@ fn krita_brush(k: &procraft_engine::krita::KritaBrush) -> Brush {
         b.secondary = Some(Box::new(second));
         let mode = masking_mode(&m.op).unwrap_or_else(|| {
             log::warn!("Krita preset \"{}\": masking op {} combines as multiply", k.name, m.op);
-            procraft_engine::document::BlendMode::Multiply.id()
+            prostudio_engine::document::BlendMode::Multiply.id()
         });
         b.set_setting("dual_blend", mode as f32);
     }
@@ -631,9 +631,9 @@ fn krita_brush(k: &procraft_engine::krita::KritaBrush) -> Brush {
 /// Gives a masking brush's second how much it lays, as Krita's wash mode (the only one it masks
 /// in) has it: each stamp lays its flow, through its pressure curve, towards the most the stroke
 /// may reach, which is its opacity through its own.
-fn masking_paint(second: &mut Brush, m: &procraft_engine::krita::KritaMasking) {
-    use procraft_engine::brush::{FLOW_POWER, PressureCurve};
-    use procraft_engine::geom::Vec2;
+fn masking_paint(second: &mut Brush, m: &prostudio_engine::krita::KritaMasking) {
+    use prostudio_engine::brush::{FLOW_POWER, PressureCurve};
+    use prostudio_engine::geom::Vec2;
     second.max_opacity = 1.0;
     second.flow = m.flow;
     // a stamp lays its opacity's pressure to the power FLOW_POWER: the curve's root lays the curve
@@ -659,7 +659,7 @@ fn masking_paint(second: &mut Brush, m: &procraft_engine::krita::KritaMasking) {
 /// is one. Each takes the main brush's coverage as the backdrop and the mask's as the source, as
 /// the dual modes do; Add and Vivid Light aren't ones the studio lists, but they draw.
 fn masking_mode(op: &str) -> Option<u32> {
-    use procraft_engine::document::BlendMode as B;
+    use prostudio_engine::document::BlendMode as B;
     Some(match op {
         "normal" | "over" => B::Normal.id(),
         "multiply" => B::Multiply.id(),
@@ -679,14 +679,14 @@ fn masking_mode(op: &str) -> Option<u32> {
         "difference" => B::Difference.id(),
         "subtract" => B::Subtract.id(),
         "divide" => B::Divide.id(),
-        "height_photoshop" => procraft_engine::brush::GRAIN_HEIGHT,
-        "linear_height_photoshop" => procraft_engine::brush::GRAIN_LINEAR_HEIGHT,
+        "height_photoshop" => prostudio_engine::brush::GRAIN_HEIGHT,
+        "linear_height_photoshop" => prostudio_engine::brush::GRAIN_LINEAR_HEIGHT,
         _ => return None,
     })
 }
 
 /// A PNG tip as a grey one: its opaque pixels paint, the light ones if `white`, else the dark.
-fn png_tip(png: &[u8], white: bool) -> Option<procraft_engine::abr::AbrTip> {
+fn png_tip(png: &[u8], white: bool) -> Option<prostudio_engine::abr::AbrTip> {
     let (w, h, channels, buf) = decode_picture(png)?;
     let pixels: Vec<u8> = buf
         .chunks_exact(channels.max(1))
@@ -703,7 +703,7 @@ fn png_tip(png: &[u8], white: bool) -> Option<procraft_engine::abr::AbrTip> {
             (ink * alpha / 255) as u8
         })
         .collect();
-    (pixels.len() == w * h).then(|| procraft_engine::abr::AbrTip {
+    (pixels.len() == w * h).then(|| prostudio_engine::abr::AbrTip {
         name: String::new(),
         spacing: None,
         width: w as u32,
@@ -1240,9 +1240,9 @@ mod tests {
 
     #[test]
     fn a_masking_brush_lays_as_krita_s_wash_mode_does() {
-        use procraft_engine::brush::{FLOW_POWER, PressureCurve, Rendering};
-        use procraft_engine::geom::Vec2;
-        use procraft_engine::krita::{KritaBrush, KritaMasking, KritaTip};
+        use prostudio_engine::brush::{FLOW_POWER, PressureCurve, Rendering};
+        use prostudio_engine::geom::Vec2;
+        use prostudio_engine::krita::{KritaBrush, KritaMasking, KritaTip};
         let brush = KritaBrush {
             name: "Mask".into(),
             tip: KritaTip::Round { hardness: 1.0, roundness: 1.0 },
@@ -1361,14 +1361,14 @@ mod tests {
     fn a_sub_tools_texture_becomes_its_grain() {
         let px: Vec<u8> = (0..64 * 64).flat_map(|i| [(i % 64 * 4) as u8, 0, 0, 255]).collect();
         let paper = crate::project::rgba_png(64, 64, &px);
-        let c = procraft_engine::csp::CspBrush {
+        let c = prostudio_engine::csp::CspBrush {
             name: "Pencil".into(),
             hardness: None,
             spacing: None,
             roundness: None,
             angle: 0.0,
             tip_pngs: Vec::new(),
-            texture: Some(procraft_engine::csp::CspTexture {
+            texture: Some(prostudio_engine::csp::CspTexture {
                 pngs: vec![b"not a picture".to_vec(), crate::project::rgba_png(8, 8, &[0; 256]), paper],
                 density: Some(0.6),
                 scale: Some(2.0),
@@ -1380,13 +1380,13 @@ mod tests {
         assert!(b.grain.source.is_some() && b.grain.image.is_none());
         assert_eq!((b.grain.depth, b.grain.scale), (0.6, 128.0));
         // none: no grain
-        let plain = csp_brush(&procraft_engine::csp::CspBrush { texture: None, ..c });
+        let plain = csp_brush(&prostudio_engine::csp::CspBrush { texture: None, ..c });
         assert!(plain.grain.source.is_none());
     }
 
     #[test]
     fn a_photoshop_preset_comes_in_at_its_size_with_its_dynamics() {
-        use procraft_engine::abr::{AbrBrush, AbrDynamics, AbrTip};
+        use prostudio_engine::abr::{AbrBrush, AbrDynamics, AbrTip};
         let shown = |b: &Brush, key: &str| (b.setting(key) * 100.0).round();
         // a computed 10 px round, pressure on its size (down to 87%) and opacity
         let round = AbrBrush {
@@ -1445,7 +1445,7 @@ mod tests {
         // stylus page), size by tilt, and a still texture of its own in the Height mode
         let paper = (0..64 * 64).map(|i| (i * 7 % 251) as u8).collect();
         let kyle = abr_brush(&AbrBrush {
-            texture: Some(procraft_engine::abr::AbrTexture {
+            texture: Some(prostudio_engine::abr::AbrTexture {
                 name: "Grainy".into(),
                 width: 64,
                 height: 64,
@@ -1478,7 +1478,7 @@ mod tests {
         );
         assert_eq!((shown(&kyle, "pressure_size"), shown(&kyle, "tilt_size")), (50.0, 100.0));
         assert_eq!((shown(&kyle, "jitter_size"), shown(&kyle, "jitter_opacity")), (9.0, 10.0));
-        assert_eq!(kyle.setting("grain_blend") as u32, procraft_engine::brush::GRAIN_HEIGHT);
+        assert_eq!(kyle.setting("grain_blend") as u32, prostudio_engine::brush::GRAIN_HEIGHT);
         assert_eq!((shown(&kyle, "grain_brightness"), shown(&kyle, "grain_contrast")), (12.0, 20.0));
         assert_eq!((shown(&kyle, "grain_depth_min"), kyle.setting("grain_behavior")), (17.0, 1.0));
     }

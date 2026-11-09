@@ -1,5 +1,7 @@
-ProCraft
-Copyright (c) 2026 ArtCraft Team and the ProCraft contributors.
+ProStudio
+Copyright (c) 2026 ArtCraft Team and the ProStudio contributors.
+ProStudio was formerly known as ProCraft (https://github.com/artistso/prostudio);
+the same code, under a new name.
 Licensed under the MIT License or the Apache License, Version 2.0, at your option
 (LICENSE-MIT, LICENSE-APACHE).
 
@@ -11,7 +13,7 @@ This product bundles third-party material under its own licenses, listed below.
   Project Authors — SIL Open Font License 1.1. See Inter-OFL.txt and SOURCE.md beside the fonts.
 - Lucide icons (lucide.dev, lucide-static 1.63.0), by Lucide Icons and Contributors: ISC License; the
   icons derived from Feather also MIT (Cole Bemis). The interface icons as Lucide draws them, kept
-  in android/app/src/main/java/io/github/artcraftandroid/procraft/ui/LucideIcons.kt.
+  in android/app/src/main/java/io/github/artistso/prostudio/ui/LucideIcons.kt.
   See android/app/src/main/assets/icons/LICENSE-lucide.txt.
 - Light panoramas for the 3D view (android/app/src/main/assets/environments/*.hdr),
   from Poly Haven (https://polyhaven.com) — CC0 1.0. Authors per file in the folder's README.md.

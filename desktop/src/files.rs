@@ -1,10 +1,10 @@
-//! Artworks on disk: new, open (ProCraft packages, PSDs and PNGs), save as .procraft, export,
+//! Artworks on disk: new, open (ProStudio packages, PSDs and PNGs), save as .prostudio, export,
 //! and asking before unsaved changes are lost.
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use procraft_core::{
+use prostudio_core::{
     CanvasPreset, CanvasSession, KeptGestures, ModelFile, PagesOutcome, PsdOutcome, ThumbnailImage, export_file_name,
     import_pages, import_psd, preset_height, preset_width,
 };
@@ -15,8 +15,8 @@ use crate::ui::Interface;
 /// What an artwork is shared as (the Actions panel's Share tab): written to a file the user picks.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Format {
-    /// The layered package, as .procraft or with the other app's extension.
-    Procraft,
+    /// The layered package, as .prostudio or with the other app's extension.
+    Prostudio,
     Package,
     Psd,
     Pdf,
@@ -42,7 +42,7 @@ pub enum Format {
 impl Format {
     pub fn name(self) -> &'static str {
         match self {
-            Format::Procraft | Format::ModelArtwork => "ProCraft",
+            Format::Prostudio | Format::ModelArtwork => "ProStudio",
             Format::Package => "Procreate",
             Format::Psd => "PSD",
             Format::Pdf | Format::LayersPdf => "PDF",
@@ -58,12 +58,12 @@ impl Format {
 
     /// A layered package: its file's name has underscores for spaces.
     fn package(self) -> bool {
-        matches!(self, Format::Procraft | Format::Package | Format::ModelArtwork)
+        matches!(self, Format::Prostudio | Format::Package | Format::ModelArtwork)
     }
 
     fn extension(self) -> &'static str {
         match self {
-            Format::Procraft | Format::ModelArtwork => "procraft",
+            Format::Prostudio | Format::ModelArtwork => "prostudio",
             Format::Package => "procreate",
             Format::Psd => "psd",
             Format::Pdf | Format::LayersPdf => "pdf",
@@ -83,20 +83,20 @@ impl Format {
 pub fn app_dir() -> PathBuf {
     let home = || std::env::var_os("HOME").map(PathBuf::from).unwrap_or_default();
     if cfg!(windows) {
-        std::env::var_os("APPDATA").map(PathBuf::from).unwrap_or_else(home).join("ProCraft")
+        std::env::var_os("APPDATA").map(PathBuf::from).unwrap_or_else(home).join("ProStudio")
     } else if cfg!(target_os = "macos") {
-        home().join("Library/Application Support/ProCraft")
+        home().join("Library/Application Support/ProStudio")
     } else {
         std::env::var_os("XDG_DATA_HOME")
             .map(PathBuf::from)
             .unwrap_or_else(|| home().join(".local/share"))
-            .join("procraft")
+            .join("prostudio")
     }
 }
 
 /// Shows a passing message with an OK button.
 pub fn say(text: &str) {
-    MessageDialog::new().set_level(MessageLevel::Info).set_title("ProCraft").set_description(text).show();
+    MessageDialog::new().set_level(MessageLevel::Info).set_title("ProStudio").set_description(text).show();
 }
 
 /// Whether the file at `path` holds brushes, by its name (a zip by what it holds): ours (a brush
@@ -104,10 +104,10 @@ pub fn say(text: &str) {
 pub fn is_brush_file(path: &Path) -> bool {
     let extension = path.extension().map(|e| e.to_string_lossy().to_lowercase()).unwrap_or_default();
     ["brush", "brushset"].contains(&extension.as_str())
-        || procraft_core::OTHER_BRUSH_EXTENSIONS.contains(&extension.as_str())
+        || prostudio_core::OTHER_BRUSH_EXTENSIONS.contains(&extension.as_str())
         // a brush or a set sent on as a plain zip (told by its names, not read whole)
         || (extension == "zip"
-            && procraft_core::zip_file_kind(path.to_string_lossy().into_owned()) == procraft_core::ZipKind::Brushes)
+            && prostudio_core::zip_file_kind(path.to_string_lossy().into_owned()) == prostudio_core::ZipKind::Brushes)
 }
 
 /// Where brush files given while no canvas is open wait for one.
@@ -380,7 +380,7 @@ pub fn new_from_preset(preset: &CanvasPreset) -> Arc<CanvasSession> {
 /// none (said so) if it isn't one.
 pub fn import_profile() -> Option<String> {
     let path = FileDialog::new().set_title("Import").add_filter("Color profiles", &["icc", "icm"]).pick_file()?;
-    let name = std::fs::read(path).ok().and_then(procraft_core::import_profile);
+    let name = std::fs::read(path).ok().and_then(prostudio_core::import_profile);
     if name.is_none() {
         tell("Can't import", "This file isn't a color profile.");
     }
@@ -391,14 +391,16 @@ pub fn import_profile() -> Option<String> {
 pub fn is_plugin_file(path: &Path) -> bool {
     // (the old name too, from before the hyphen)
     path.extension()
-        .is_some_and(|e| e.eq_ignore_ascii_case("procraft-plugin") || e.eq_ignore_ascii_case("procraftplugin"))
+        .is_some_and(|e| ["prostudio-plugin", "prostudioplugin", "procraft-plugin", "procraftplugin"]
+            .iter()
+            .any(|kind| e.eq_ignore_ascii_case(kind)))
 }
 
 /// A plugin file the user picks.
 pub fn pick_plugin() -> Option<PathBuf> {
     FileDialog::new()
         .set_title("Import")
-        .add_filter("ProCraft plugins", &["procraft-plugin", "procraftplugin"])
+        .add_filter("ProStudio plugins", &["prostudio-plugin", "prostudioplugin", "procraft-plugin", "procraftplugin"])
         .pick_file()
 }
 
@@ -445,7 +447,7 @@ pub fn is_palette_file(path: &Path) -> bool {
 /// The files the gallery's Import brings in, as the user picks them: an artwork or a model (as
 /// [`pick_artwork`] takes), palettes and brushes.
 pub fn pick_import() -> Option<Vec<PathBuf>> {
-    let brushes: Vec<&str> = ["brush", "brushset"].into_iter().chain(procraft_core::OTHER_BRUSH_EXTENSIONS).collect();
+    let brushes: Vec<&str> = ["brush", "brushset"].into_iter().chain(prostudio_core::OTHER_BRUSH_EXTENSIONS).collect();
     let more: Vec<&str> = PALETTE_EXTENSIONS.into_iter().chain(brushes).collect();
     pick_artwork_files(&more)
 }
@@ -453,6 +455,7 @@ pub fn pick_import() -> Option<Vec<PathBuf>> {
 /// Artworks, models and the files with extensions `more`, as the user picks them.
 pub fn pick_artwork_files(more: &[&str]) -> Option<Vec<PathBuf>> {
     let artworks = [
+        "prostudio",
         "procraft",
         "procreate",
         "psd",
@@ -490,7 +493,7 @@ pub fn open_artwork_files(paths: Vec<PathBuf>) -> Option<(Arc<CanvasSession>, Op
     let name = path.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default();
     let extension = path.extension().map(|e| e.to_string_lossy().to_lowercase()).unwrap_or_default();
     // a model's artwork opens from where it is unpacked, and is kept as any new artwork is
-    if procraft_core::zip_file_kind(path.to_string_lossy().into_owned()) == procraft_core::ZipKind::ModelArtwork {
+    if prostudio_core::zip_file_kind(path.to_string_lossy().into_owned()) == prostudio_core::ZipKind::ModelArtwork {
         let opened = open_model_artwork(&path).map(|s| (s, None));
         return opened.map_err(|e| tell_later("Can't open the model", &e)).ok();
     }
@@ -508,16 +511,16 @@ pub fn open_artwork_files(paths: Vec<PathBuf>) -> Option<(Arc<CanvasSession>, Op
         _ => CanvasSession::open_package(path.to_string_lossy().into_owned()).map_err(|e| e.to_string()),
     };
     // a package brings its time-lapse too
-    let package = matches!(extension.as_str(), "procraft" | "procreate").then_some(path);
+    let package = matches!(extension.as_str(), "prostudio" | "procraft" | "procreate").then_some(path);
     opened.map(|s| (s, package)).map_err(|e| tell_later("Can't open the file", &e)).ok()
 }
 
 /// The model's artwork in file `path`, unpacked beside the other things opened from files.
 fn open_model_artwork(path: &Path) -> Result<Arc<CanvasSession>, String> {
-    let work = std::env::temp_dir().join(format!("procraft-model-{}", std::process::id()));
+    let work = std::env::temp_dir().join(format!("prostudio-model-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&work);
     let dir = work.to_string_lossy().into_owned();
-    if !procraft_core::unpack_model_artwork(path.to_string_lossy().into_owned(), dir.clone()) {
+    if !prostudio_core::unpack_model_artwork(path.to_string_lossy().into_owned(), dir.clone()) {
         return Err("This file can't be opened.".to_owned());
     }
     let opened = CanvasSession::open(dir).map_err(|e| e.to_string());
@@ -528,7 +531,7 @@ fn open_model_artwork(path: &Path) -> Result<Arc<CanvasSession>, String> {
 /// The PDF in file `path` as a new artwork named `name`: each page a layer ("Page 1" at the
 /// bottom), drawn on white at 300 dpi and fitted to the first page's size, with Page Assist on.
 fn open_pdf(path: &Path, name: &str) -> Result<Arc<CanvasSession>, String> {
-    let work = std::env::temp_dir().join(format!("procraft-pdf-{}", std::process::id()));
+    let work = std::env::temp_dir().join(format!("prostudio-pdf-{}", std::process::id()));
     let (pages, artwork) = (work.join("pages"), work.join("artwork"));
     let _ = std::fs::remove_dir_all(&work);
     std::fs::create_dir_all(&pages).map_err(|e| e.to_string())?;
@@ -580,7 +583,7 @@ fn open_model(path: &Path, picked: &[PathBuf]) -> Result<Arc<CanvasSession>, Str
 
 /// A PSD made an artwork in a folder of its own, then opened from there.
 fn open_psd(path: &Path, name: &str) -> Result<Arc<CanvasSession>, String> {
-    let dir = std::env::temp_dir().join(format!("procraft-psd-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("prostudio-psd-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     let outcome = import_psd(path.to_string_lossy().into_owned(), dir.to_string_lossy().into_owned(), name.to_owned());
     let opened = match outcome {
@@ -641,12 +644,12 @@ pub fn read_png(path: &Path) -> Result<ThumbnailImage, String> {
 pub fn about() {
     MessageDialog::new()
         .set_level(MessageLevel::Info)
-        .set_title("ProCraft")
-        .set_description(format!("Version {}", env!("PROCRAFT_VERSION")))
+        .set_title("ProStudio")
+        .set_description(format!("Version {}", env!("PROSTUDIO_VERSION")))
         .show();
 }
 
-/// Saves the artwork as a .procraft package, where it was last saved unless `ask` (or it never
+/// Saves the artwork as a .prostudio package, where it was last saved unless `ask` (or it never
 /// was): written on a thread of its own (a large one takes seconds), the interface told when it
 /// is ([`Interface::saved_as`]).
 pub fn save(session: &Arc<CanvasSession>, ui: &mut Interface, ask: bool) {
@@ -655,13 +658,13 @@ pub fn save(session: &Arc<CanvasSession>, ui: &mut Interface, ask: bool) {
         None => {
             let Some(p) = FileDialog::new()
                 .set_title("Save")
-                .add_filter("ProCraft artwork", &["procraft"])
-                .set_file_name(format!("{}.procraft", session.name()))
+                .add_filter("ProStudio artwork", &["prostudio"])
+                .set_file_name(format!("{}.prostudio", session.name()))
                 .save_file()
             else {
                 return;
             };
-            with_extension(p, "procraft")
+            with_extension(p, "prostudio")
         }
     };
     let edits = session.edits();
@@ -719,7 +722,7 @@ pub fn export(
         let at = part.to_string_lossy().into_owned();
         match format {
             Format::ModelArtwork => session.export_model_artwork(artwork.unwrap_or_default(), at),
-            Format::Procraft | Format::Package => session.export_package(at, seed(), time_lapse),
+            Format::Prostudio | Format::Package => session.export_package(at, seed(), time_lapse),
             Format::Psd => session.export_psd(at),
             Format::Pdf => session.export_pdf(at, false, pdf_quality),
             Format::LayersPdf => session.export_pdf(at, true, pdf_quality),
@@ -745,7 +748,7 @@ fn writing(
     session: &Arc<CanvasSession>,
     card: &mut crate::export_card::ExportCard,
     failed: &'static str,
-    write: impl FnOnce(&CanvasSession) -> Result<Vec<PathBuf>, procraft_core::MobileError> + Send + 'static,
+    write: impl FnOnce(&CanvasSession) -> Result<Vec<PathBuf>, prostudio_core::MobileError> + Send + 'static,
 ) {
     session.reset_export_progress();
     let following = Arc::clone(session);
@@ -790,7 +793,7 @@ fn place_written(files: &[PathBuf], cancelled: bool) -> Result<bool, String> {
 /// on a GPU device of its own, never shown. `card` shows them made, an artwork at a time;
 /// cancelled, none is left where it was going.
 pub fn share_artworks(
-    list: &[procraft_core::GalleryArtwork],
+    list: &[prostudio_core::GalleryArtwork],
     format: Format,
     pdf_quality: u8,
     card: &mut crate::export_card::ExportCard,
@@ -800,7 +803,7 @@ pub fn share_artworks(
     }
     let extension = format.extension();
     let file_name = |name: &str| export_file_name(name.to_owned(), false);
-    let targets: Vec<(procraft_core::GalleryArtwork, PathBuf)> = if let [one] = list {
+    let targets: Vec<(prostudio_core::GalleryArtwork, PathBuf)> = if let [one] = list {
         let Some(path) = FileDialog::new()
             .set_title(format!("Share {}", format.name()))
             .add_filter(format.name(), &[extension])
@@ -864,7 +867,7 @@ pub fn share_artworks(
 /// The artwork `a` from the gallery written as `format` at `path` (a PDF's pictures at
 /// `pdf_quality`), opened on a GPU device of its own, never shown.
 pub fn write_artwork(
-    a: &procraft_core::GalleryArtwork,
+    a: &prostudio_core::GalleryArtwork,
     format: Format,
     path: &str,
     pdf_quality: u8,
@@ -875,7 +878,7 @@ pub fn write_artwork(
         return Err("There's no GPU device to draw it with.".to_owned());
     }
     match format {
-        Format::Procraft | Format::Package => {
+        Format::Prostudio | Format::Package => {
             s.export_package(path, seed(), Some(crate::timelapse::for_package(&a.dir)))
         }
         Format::Psd => s.export_psd(path),
@@ -889,13 +892,13 @@ pub fn write_artwork(
 
 /// What an artwork dragged out of the gallery becomes, by Drag and Drop export's preferred file
 /// format ([`crate::prefs::DRAG_FORMATS`]).
-pub const DRAG_FORMATS: [Format; 5] = [Format::Procraft, Format::Psd, Format::Jpeg, Format::Png, Format::Tiff];
+pub const DRAG_FORMATS: [Format; 5] = [Format::Prostudio, Format::Psd, Format::Jpeg, Format::Png, Format::Tiff];
 
 /// An artwork lifted out of the gallery (the folder `dir`, named `name`) written as `format` into
 /// the system's temporary folder for dragging; its path.
 #[cfg_attr(not(windows), allow(dead_code))]
-pub fn drag_file(a: &procraft_core::GalleryArtwork, format: Format) -> Result<PathBuf, String> {
-    let dir = std::env::temp_dir().join("ProCraft drags");
+pub fn drag_file(a: &prostudio_core::GalleryArtwork, format: Format) -> Result<PathBuf, String> {
+    let dir = std::env::temp_dir().join("ProStudio drags");
     std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     let name = export_file_name(a.name.clone(), false);
     let path = dir.join(format!("{name}.{}", format.extension()));
@@ -943,7 +946,7 @@ mod tests {
     }
 
     fn folder(name: &str) -> PathBuf {
-        let dir = std::env::temp_dir().join(format!("procraft-place-{name}-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-place-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         dir

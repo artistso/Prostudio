@@ -2,9 +2,9 @@
 //! resampled; the canvas from before is kept, history and all, and undoing past the new canvas's
 //! first step puts it back.
 
-use procraft_engine::crop::{crop, resample};
-use procraft_engine::view::View;
-use procraft_gpu::{Canvas, Gpu};
+use prostudio_engine::crop::{crop, resample};
+use prostudio_engine::view::View;
+use prostudio_gpu::{Canvas, Gpu};
 
 use crate::{CanvasSession, State};
 
@@ -23,9 +23,9 @@ const SMUDGE_SAID: &str = "There isn't enough graphics memory to smudge on this 
 const CANVAS_LAYERS: u64 = 7;
 
 /// What the apps tell when a crop couldn't be made.
-fn crop_failure_said(e: &procraft_gpu::GpuError) -> String {
+fn crop_failure_said(e: &prostudio_gpu::GpuError) -> String {
     match e {
-        procraft_gpu::GpuError::Lost => LOST_SAID,
+        prostudio_gpu::GpuError::Lost => LOST_SAID,
         _ => "The canvas couldn't be cropped, most likely for lack of graphics memory. Nothing was changed.",
     }
     .to_owned()
@@ -75,15 +75,15 @@ impl CanvasSession {
         // not left to the system to find out
         let budget = old.resident_budget();
         let per = u64::from(c.width) * u64::from(c.height) * 4;
-        let resident = ids.len().min(procraft_gpu::most_resident(budget, c.width, c.height)) as u64;
+        let resident = ids.len().min(prostudio_gpu::most_resident(budget, c.width, c.height)) as u64;
         if crate::device::short_of_memory((resident + CANVAS_LAYERS) * per) {
             log::error!("cropping: {} layers of {per} bytes won't fit in the memory free", resident);
-            st.crop_edit.failure = Some(crop_failure_said(&procraft_gpu::GpuError::OutOfMemory(String::new())));
+            st.crop_edit.failure = Some(crop_failure_said(&prostudio_gpu::GpuError::OutOfMemory(String::new())));
             return false;
         }
         // the new canvas made beside the old, which stays as it is unless every layer went across
         // as it should: a texture the GPU had no memory for would otherwise come over empty
-        let made = gpu.checked(|| -> Result<Canvas, procraft_gpu::GpuError> {
+        let made = gpu.checked(|| -> Result<Canvas, prostudio_gpu::GpuError> {
             old.render(gpu, &mut st.doc, None);
             let mut canvas = Canvas::unfilled(gpu, &doc)?;
             canvas.set_resident_budget(budget);
@@ -197,7 +197,7 @@ impl CanvasSession {
     /// window's middle, as crop does so its frame's handles can be reached. The canvas shrinks
     /// into place over [`CROP_SHRINK_SECONDS`], slowing to a stop.
     pub fn fit_canvas_scaled(&self, scale: f32) {
-        use procraft_engine::geom::{Affine, Vec2};
+        use prostudio_engine::geom::{Affine, Vec2};
         let scale = if scale.is_finite() { scale.clamp(0.05, 1.0) } else { 1.0 };
         let mut guard = self.shared.lock();
         let st = &mut *guard;
@@ -277,8 +277,8 @@ impl CanvasSession {
 
 #[cfg(test)]
 mod tests {
-    use procraft_engine::view::View;
-    use procraft_gpu::{Gpu, wgpu};
+    use prostudio_engine::view::View;
+    use prostudio_gpu::{Gpu, wgpu};
 
     use crate::{CanvasSession, PenSample, PointerKind};
 
@@ -350,7 +350,7 @@ mod tests {
         let dpi = s.info().dpi;
         let before = contents(&s);
         assert!(before.0.iter().all(|px| px.as_chunks::<4>().0.iter().any(|p| p[3] != 0)), "every layer painted");
-        let dir = std::env::temp_dir().join(format!("procraft-crop-failed-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-crop-failed-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         let path = dir.to_string_lossy().into_owned();
         s.save(path.clone()).unwrap();
@@ -397,7 +397,7 @@ mod tests {
     fn an_artwork_opened_on_a_lost_graphics_device_stays_as_it_was_saved() {
         let Some(s) = painted(80) else { return };
         let before = contents(&s);
-        let dir = std::env::temp_dir().join(format!("procraft-open-lost-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-open-lost-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         let path = dir.to_string_lossy().into_owned();
         s.save(path.clone()).unwrap();
@@ -425,7 +425,7 @@ mod tests {
     #[test]
     fn a_failure_elsewhere_doesnt_stop_the_canvas_being_made() {
         let Some(s) = painted(120) else { return };
-        let dir = std::env::temp_dir().join(format!("procraft-open-after-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-open-after-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         let path = dir.to_string_lossy().into_owned();
         s.save(path.clone()).unwrap();
@@ -468,7 +468,7 @@ mod tests {
             }
             assert!(fits.crop_canvas(x, 10.0, 80.0, 70.0, angle, false, 0, 0));
             assert!(parks.crop_canvas(x, 10.0, 80.0, 70.0, angle, false, 0, 0));
-            assert_eq!(parks.shared.lock().canvas.as_ref().map(procraft_gpu::Canvas::parked_layers), Some(2));
+            assert_eq!(parks.shared.lock().canvas.as_ref().map(prostudio_gpu::Canvas::parked_layers), Some(2));
             assert_eq!(contents(&parks), contents(&fits));
             assert!(parks.undo().is_some());
             assert!(fits.undo().is_some());

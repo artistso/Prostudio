@@ -2,10 +2,10 @@
 //! undo (skipped where the machine has none).
 #![allow(clippy::unwrap_used, clippy::indexing_slicing)]
 
-use procraft_engine::document::{BlendMode, Document, LayerId};
-use procraft_engine::geom::Vec2;
-use procraft_engine::stroke::Stamp;
-use procraft_gpu::{Canvas, Filter, Gpu, Resample, StrokeStyle, StrokeTool};
+use prostudio_engine::document::{BlendMode, Document, LayerId};
+use prostudio_engine::geom::Vec2;
+use prostudio_engine::stroke::Stamp;
+use prostudio_gpu::{Canvas, Filter, Gpu, Resample, StrokeStyle, StrokeTool};
 
 const W: u32 = 16;
 
@@ -760,7 +760,7 @@ fn an_animation_keeps_only_the_frames_shown() {
                 StrokeTool::Paint,
             );
         }
-        doc.animation = Some(procraft_engine::animation::Animation { onion_frames: 1, ..Default::default() });
+        doc.animation = Some(prostudio_engine::animation::Animation { onion_frames: 1, ..Default::default() });
         canvas.invalidate();
     });
     t.same(&gpu, 2, "the last frame");
@@ -956,7 +956,7 @@ fn a_render_reads_back_only_a_few_layers_to_park() {
     // then room for three, and Animation Assist on: the frames not shown are parked, a few a render
     t.canvases[0].set_resident_budget(3 * u64::from(W * W * 4));
     t.each(|doc, canvas| {
-        doc.animation = Some(procraft_engine::animation::Animation { onion_frames: 1, ..Default::default() });
+        doc.animation = Some(prostudio_engine::animation::Animation { onion_frames: 1, ..Default::default() });
         canvas.invalidate();
     });
     let (doc, canvas) = (&mut t.docs[0], &mut t.canvases[0]);
@@ -1035,9 +1035,9 @@ fn layers_uploaded_with_their_copies_are_let_go_without_reading_them_back() {
     // room for 3 of 12, every one uploaded with its compressed copy (as an opening artwork's)
     t.canvases[0].set_resident_budget(3 * u64::from(W * W * 4));
     for (id, px) in ids.iter().zip(&pixels) {
-        let ready = procraft_gpu::ReadyToPark::of(px, W, W);
+        let ready = prostudio_gpu::ReadyToPark::of(px, W, W);
         t.canvases[0]
-            .upload_layer_kept(&gpu, *id, px, ready, Some(procraft_engine::geom::IRect::from_size(W, W)))
+            .upload_layer_kept(&gpu, *id, px, ready, Some(prostudio_engine::geom::IRect::from_size(W, W)))
             .unwrap();
         t.canvases[1].upload_layer(&gpu, *id, px).unwrap();
     }
@@ -1077,9 +1077,9 @@ fn a_remake_lets_go_only_what_its_parts_need_room_for() {
     // (40 needed), and of the clean textures only what the parts need room for goes
     t.canvases[0].set_resident_budget(30 * u64::from(W * W * 4));
     for (id, px) in ids.iter().zip(&pixels) {
-        let ready = procraft_gpu::ReadyToPark::of(px, W, W);
+        let ready = prostudio_gpu::ReadyToPark::of(px, W, W);
         t.canvases[0]
-            .upload_layer_kept(&gpu, *id, px, ready, Some(procraft_engine::geom::IRect::from_size(W, W)))
+            .upload_layer_kept(&gpu, *id, px, ready, Some(prostudio_engine::geom::IRect::from_size(W, W)))
             .unwrap();
         t.canvases[1].upload_layer(&gpu, *id, px).unwrap();
     }
@@ -1110,7 +1110,7 @@ fn a_canvas_makes_its_scratch_and_second_composite_only_once_wanted() {
     // the layer, the composite and the stroke (half floats), the brush images and the small ones
     let brushes = canvas.textures().iter().filter(|t| t.depth_or_array_layers() > 1).count();
     assert_eq!(brushes, 2);
-    let images = procraft_gpu::textures_bytes(
+    let images = prostudio_gpu::textures_bytes(
         &canvas.textures().into_iter().filter(|t| t.depth_or_array_layers() > 1).collect::<Vec<_>>(),
     );
     let small = 256 * 4 + 1;

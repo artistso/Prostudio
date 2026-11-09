@@ -3,7 +3,7 @@
 //! closes the list.
 
 use egui::{Align2, Color32, Id, Order, Pos2, Rect, Sense, pos2, vec2};
-use procraft_core::LayerInfo;
+use prostudio_core::LayerInfo;
 
 use crate::look::{Weight, argb, pc, text};
 use crate::panel::PANEL_TITLE;

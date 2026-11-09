@@ -11,7 +11,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use objc2::msg_send;
 use objc2::rc::Retained;
 use objc2::runtime::{AnyClass, AnyObject};
-use procraft_gpu::wgpu;
+use prostudio_gpu::wgpu;
 
 /// A `CAMetalLayer` the Swift app handed over, held (retained) until the render thread lets go.
 pub(crate) struct Layer(Retained<AnyObject>);

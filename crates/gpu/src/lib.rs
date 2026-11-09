@@ -1,4 +1,4 @@
-//! ProCraft's GPU renderer (wgpu): layer pixels, stroke rendering, compositing, and drawing the
+//! ProStudio's GPU renderer (wgpu): layer pixels, stroke rendering, compositing, and drawing the
 //! canvas to a window surface. Layers are premultiplied RGBA8 textures the size of the canvas.
 //!
 //! Every blend here uses fixed-function blending or reads from a different texture than it writes:
@@ -310,7 +310,7 @@ impl Gpu {
             log::info!("the canvas's textures kept uncompressed on this GPU");
         }
         let (device, queue) = pollster::block_on(adapter.request_device(&wgpu::DeviceDescriptor {
-            label: Some("procraft"),
+            label: Some("prostudio"),
             // where the GPU has it, for strokes that build up only to their transfer
             required_features: adapter.features() & wgpu::Features::DUAL_SOURCE_BLENDING,
             // the adapter's own limits, so large canvases fit where the GPU allows them
@@ -324,7 +324,7 @@ impl Gpu {
         .map_err(|e| GpuError::Device(e.to_string()))?;
         log::info!("the GPU's device made in {} ms", made.elapsed().as_millis());
         // new canvases and crops kept to what its textures can be
-        procraft_engine::document::set_gpu_texture_most(device.limits().max_texture_dimension_2d);
+        prostudio_engine::document::set_gpu_texture_most(device.limits().max_texture_dimension_2d);
         log::info!(
             "GPU capped strokes (dual-source blending): {}",
             device.features().contains(wgpu::Features::DUAL_SOURCE_BLENDING)
@@ -417,7 +417,7 @@ impl Gpu {
         let started = std::time::Instant::now();
         let _ = self.canvas_pipelines();
         let pipelines = started.elapsed().as_millis();
-        procraft_engine::textures::prepare();
+        prostudio_engine::textures::prepare();
         log::info!(
             "canvases prepared: their pipelines in {pipelines} ms, the brushes' shapes and grains in {} ms",
             started.elapsed().as_millis().saturating_sub(pipelines)

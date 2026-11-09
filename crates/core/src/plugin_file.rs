@@ -9,7 +9,7 @@ use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use procraft_engine::zip::ZipReader;
+use prostudio_engine::zip::ZipReader;
 use serde::Deserialize;
 use serde_json::Value;
 
@@ -22,8 +22,10 @@ const MANIFEST: &str = "craft-extension.json";
 const SCHEMA: u64 = 1;
 /// What a plugin's code is written to, see [`crate::plugin_run`]: a newer one is refused too.
 const INTERFACE: u32 = 1;
-/// What ids of our own start with: no file may claim one.
-const OWN_PREFIX: &str = "procraft.";
+/// What ids of our own start with: no file may claim one. `procraft.` is reserved too, so a file
+/// can't claim the name the app had before the rename either.
+const OWN_PREFIX: &str = "prostudio.";
+const LEGACY_OWN_PREFIX: &str = "procraft.";
 /// The file, its entries, one entry, all of them unpacked, and the manifest, in bytes.
 pub(crate) const MOST_FILE: usize = 32 << 20;
 const MOST_ENTRIES: usize = 64;
@@ -72,17 +74,17 @@ pub(crate) enum Refusal {
 impl Refusal {
     pub(crate) fn text(self) -> &'static str {
         match self {
-            Refusal::NotAPlugin => "This isn't a ProCraft plugin.",
+            Refusal::NotAPlugin => "This isn't a ProStudio plugin.",
             Refusal::TooBig => "This plugin is too big to import.",
             Refusal::Unsafe => "This plugin file isn't safe to open.",
             Refusal::Mismatch => "This plugin's files don't match its list.",
             Refusal::Damaged => "This plugin file is damaged.",
             Refusal::Described => "This plugin describes itself wrongly.",
-            Refusal::Permissions => "This plugin asks for permissions ProCraft doesn't give.",
-            Refusal::Code => "This plugin's code can't run in ProCraft.",
-            Refusal::FilterCode => "This filter's code can't run in ProCraft.",
-            Refusal::Newer => "This plugin needs a newer ProCraft.",
-            Refusal::OtherApp => "This plugin isn't for ProCraft.",
+            Refusal::Permissions => "This plugin asks for permissions ProStudio doesn't give.",
+            Refusal::Code => "This plugin's code can't run in ProStudio.",
+            Refusal::FilterCode => "This filter's code can't run in ProStudio.",
+            Refusal::Newer => "This plugin needs a newer ProStudio.",
+            Refusal::OtherApp => "This plugin isn't for ProStudio.",
             Refusal::NewerInstalled => "A newer version of this plugin is already imported.",
             Refusal::Clash => "Another plugin already holds a setting this one needs.",
             Refusal::NotKept => "This plugin couldn't be saved.",
@@ -178,6 +180,11 @@ struct RawPublisher {
 
 #[derive(Default, Deserialize)]
 struct RawCompat {
+    #[serde(default)]
+    prostudio: Option<RawAppCompat>,
+    /// As ProCraft wrote it before the rename: read all the same, so a plugin packed before it
+    /// still imports; a new manifest writes `prostudio`.
+    #[serde(default)]
     procraft: Option<RawAppCompat>,
 }
 
@@ -388,7 +395,7 @@ fn read_manifest(text: &[u8]) -> Result<Manifest, Refusal> {
     if !raw.permissions.is_empty() {
         return Err(Refusal::Permissions);
     }
-    let compat = raw.compat.procraft.ok_or(Refusal::OtherApp)?;
+    let compat = raw.compat.prostudio.or(raw.compat.procraft).ok_or(Refusal::OtherApp)?;
     // a part this app doesn't have is for a newer one
     let holds = raw.holds.iter().map(|name| PluginPart::named(name).ok_or(Refusal::Newer));
     let holds = holds.collect::<Result<Vec<_>, _>>()?;
@@ -483,7 +490,7 @@ pub(crate) fn value_names(controls: &[PluginControl]) -> Vec<String> {
 fn code_refused(manifest: &Manifest, path: &str, data: &[u8]) -> Option<Refusal> {
     if manifest.holds.contains(&PluginPart::Filter) && path == FILTER_CODE {
         let text = std::str::from_utf8(data).map_err(|e| e.to_string());
-        let read = text.and_then(|text| procraft_gpu::read_filter(text, &value_names(&manifest.controls)));
+        let read = text.and_then(|text| prostudio_gpu::read_filter(text, &value_names(&manifest.controls)));
         let refused = read.map_err(|why| log::warn!("a filter's code was refused: {why}")).is_err();
         return refused.then_some(Refusal::FilterCode);
     }
@@ -969,7 +976,7 @@ pub(crate) fn sha256(data: &[u8]) -> String {
 
 #[cfg(test)]
 pub(crate) mod tests {
-    use procraft_engine::zip::ZipWriter;
+    use prostudio_engine::zip::ZipWriter;
     use serde_json::json;
 
     use super::*;
@@ -986,7 +993,7 @@ pub(crate) mod tests {
             "holds": ["filter"],
             "publisher": { "name": "Someone" },
             "description": "Changes a layer.",
-            "compat": { "procraft": { "min_app": "0.0.1", "interface": 1 } },
+            "compat": { "prostudio": { "min_app": "0.0.1", "interface": 1 } },
             "files": [{ "path": "filter.wgsl", "sha256": sha256(SHADER), "size": SHADER.len() }],
             "permissions": [],
             "controls": [
@@ -1006,7 +1013,7 @@ pub(crate) mod tests {
             "holds": ["hooks"],
             "publisher": { "name": "Someone" },
             "description": "Changes the app.",
-            "compat": { "procraft": { "min_app": "0.0.1", "interface": 1 } },
+            "compat": { "prostudio": { "min_app": "0.0.1", "interface": 1 } },
             "files": [{ "path": MODULE, "sha256": sha256(module), "size": module.len() }],
             "permissions": [],
             "hooks": ["position"],
@@ -1310,12 +1317,23 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn a_plugin_from_before_the_rename_is_read() {
+        // the same manifest procraft packed: the old compat key, all the same
+        let old = with(a_filter(), "/compat", json!({ "procraft": { "interface": 1 } }));
+        assert!(read_package(&a_filter_file(&old)).is_ok());
+        let neither = with(a_filter(), "/compat", json!({}));
+        assert_eq!(refusal(&a_filter_file(&neither)), Refusal::OtherApp);
+    }
+
+    #[test]
     fn an_id_is_plain_and_ours_stay_ours() {
         for bad in ["nodots", "UPPER.case", "a..b", ".a.b", "a.b.", "a/b.c", "a b.c", "-a.b", "con.example", "a.b\\c"] {
             assert_eq!(refusal(&a_filter_file(&with(a_filter(), "/id", json!(bad)))), Refusal::Described, "{bad}");
         }
-        let ours = with(a_filter(), "/id", json!("procraft.sneaky"));
+        let ours = with(a_filter(), "/id", json!("prostudio.sneaky"));
         assert_eq!(refusal(&a_filter_file(&ours)), Refusal::Described);
+        let theirs = with(a_filter(), "/id", json!("procraft.sneaky"));
+        assert_eq!(refusal(&a_filter_file(&theirs)), Refusal::Described);
     }
 
     #[test]
@@ -1354,10 +1372,10 @@ pub(crate) mod tests {
         };
         // a hook or an interface this app doesn't have is for a newer one
         assert_eq!(of("/hooks", json!(["position", "layers"])), Refusal::Newer);
-        assert_eq!(of("/compat/procraft/interface", json!(2)), Refusal::Newer);
+        assert_eq!(of("/compat/prostudio/interface", json!(2)), Refusal::Newer);
         assert_eq!(of("/hooks", json!([])), Refusal::Described);
         assert_eq!(of("/hooks", json!(["position", "position"])), Refusal::Described);
-        assert_eq!(of("/compat/procraft", json!({ "min_app": "0.0.1" })), Refusal::Described);
+        assert_eq!(of("/compat/prostudio", json!({ "min_app": "0.0.1" })), Refusal::Described);
         // nor may it ask for anything
         assert_eq!(of("/permissions", json!(["files"])), Refusal::Permissions);
         // and a part that isn't one yet is for a newer one too
@@ -1523,7 +1541,7 @@ pub(crate) mod tests {
     }
 
     fn folder(name: &str) -> PathBuf {
-        let dir = std::env::temp_dir().join(format!("procraft-plugin-file-{name}-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-plugin-file-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         dir
@@ -1604,7 +1622,7 @@ pub(crate) mod tests {
         let dir = folder("plain");
         assert_eq!(read_plugin_file(&dir), None, "a folder");
         assert_eq!(read_plugin_file(&dir.join("missing")), None);
-        let file = dir.join("a.procraft-plugin");
+        let file = dir.join("a.prostudio-plugin");
         std::fs::write(&file, b"hello").unwrap();
         assert_eq!(read_plugin_file(&file).as_deref(), Some(&b"hello"[..]));
         let _ = std::fs::remove_dir_all(&dir);
@@ -1614,7 +1632,7 @@ pub(crate) mod tests {
     #[test]
     fn a_pipe_is_passed_over_rather_than_waited_on() {
         let dir = folder("pipe");
-        let pipe = dir.join("a.procraft-plugin");
+        let pipe = dir.join("a.prostudio-plugin");
         let made = std::process::Command::new("mkfifo").arg(&pipe).status();
         if made.is_ok_and(|s| s.success()) {
             assert_eq!(read_plugin_file(&pipe), None);

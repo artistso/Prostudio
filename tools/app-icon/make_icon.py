@@ -1,19 +1,19 @@
-"""Draws ProCraft's app icon, a paintbrush in a warm-to-cool blend on black, and writes every size
+"""Draws ProStudio's app icon, a paintbrush in a warm-to-cool blend on black, and writes every size
 the app and the repository use. Needs Pillow. Run from anywhere:
 
     python tools/app-icon/make_icon.py
 
 Writes:
-- assets/app-icon/procraft-1024.png, procraft-512.png, procraft-256.png: the icon on its rounded
+- assets/app-icon/prostudio-1024.png, prostudio-512.png, prostudio-256.png: the icon on its rounded
   tile (the desktop app's window and Linux menus use the 256 and 512 ones).
-- assets/app-icon/procraft.ico: the tile at every size Windows shows (the desktop app's .exe and
+- assets/app-icon/prostudio.ico: the tile at every size Windows shows (the desktop app's .exe and
   its installer).
-- assets/app-icon/hicolor/<n>x<n>/apps/procraft.png: the tile at the sizes Linux desktops look up
+- assets/app-icon/hicolor/<n>x<n>/apps/prostudio.png: the tile at the sizes Linux desktops look up
   for the app's menu entry and window (copied as it is into the packages' share/icons/).
 - the Android adaptive icon's layers (108 dp, the tile its middle 72 dp): the brush and its glow
   (drawable-*dpi/ic_launcher_foreground.png), the brush alone in white for themed icons
   (drawable-*dpi/ic_launcher_monochrome.png), and a large copy for the About screen
-  (drawable-nodpi/procraft_mark.png).
+  (drawable-nodpi/prostudio_mark.png).
 """
 
 import math
@@ -126,11 +126,11 @@ def main():
     tile.alpha_composite(picture)
     tile.putalpha(tile_mask())
     for size in (1024, 512, 256):
-        save(tile, os.path.join(ROOT, 'assets', 'app-icon', f'procraft-{size}.png'), size)
+        save(tile, os.path.join(ROOT, 'assets', 'app-icon', f'prostudio-{size}.png'), size)
     sizes = [(n, n) for n in (16, 20, 24, 32, 40, 48, 64, 128, 256)]
-    tile.resize((256, 256), Image.LANCZOS).save(os.path.join(ROOT, 'assets', 'app-icon', 'procraft.ico'), sizes=sizes)
+    tile.resize((256, 256), Image.LANCZOS).save(os.path.join(ROOT, 'assets', 'app-icon', 'prostudio.ico'), sizes=sizes)
     for size in (16, 24, 32, 48, 64, 128, 256, 512):
-        save(tile, os.path.join(ROOT, 'assets', 'app-icon', 'hicolor', f'{size}x{size}', 'apps', 'procraft.png'), size)
+        save(tile, os.path.join(ROOT, 'assets', 'app-icon', 'hicolor', f'{size}x{size}', 'apps', 'prostudio.png'), size)
 
     foreground = adaptive(picture)
     mono = Image.new('RGBA', turned.size, (255, 255, 255, 0))
@@ -141,7 +141,7 @@ def main():
         save(foreground, os.path.join(RES, f'drawable-{bucket}', 'ic_launcher_foreground.png'), size)
         save(monochrome, os.path.join(RES, f'drawable-{bucket}', 'ic_launcher_monochrome.png'), size)
     # the About screen shows it 450 dp across: sharp up to about 3 pixels a dp
-    save(foreground, os.path.join(RES, 'drawable-nodpi', 'procraft_mark.png'), 1350)
+    save(foreground, os.path.join(RES, 'drawable-nodpi', 'prostudio_mark.png'), 1350)
     print('written')
 
 

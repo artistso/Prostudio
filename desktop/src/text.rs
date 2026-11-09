@@ -12,7 +12,7 @@ use egui::{
     Align2, Color32, CornerRadius, Id, Key, KeyboardShortcut, Modifiers, Order, Pos2, Rect, Sense, Shape, Stroke,
     TextureHandle, TextureOptions, UiBuilder, Vec2, pos2, vec2,
 };
-use procraft_core::{CanvasSession, TextAlignment, TextDraw, TextDrawn, TextInfo, TextSide};
+use prostudio_core::{CanvasSession, TextAlignment, TextDraw, TextDrawn, TextInfo, TextSide};
 
 use crate::alert::{Alert, Answer, Asking};
 use crate::icons::{self, Icon};
@@ -79,17 +79,17 @@ fn fonts_ready() {
     static READY: OnceLock<()> = OnceLock::new();
     READY.get_or_init(|| {
         for &(_, bytes) in &crate::look::INTER_FACES {
-            procraft_core::add_text_font(bytes.to_vec());
+            prostudio_core::add_text_font(bytes.to_vec());
         }
         // the generic families pointed at the system's own as they are read
-        procraft_core::add_system_text_fonts();
-        procraft_core::set_text_font_folder(fonts_dir().to_string_lossy().into_owned());
+        prostudio_core::add_system_text_fonts();
+        prostudio_core::set_text_font_folder(fonts_dir().to_string_lossy().into_owned());
     });
 }
 
 /// Every typeface on offer: the core's, those imported among them.
 fn families() -> Vec<Family> {
-    procraft_core::text_typefaces().into_iter().map(|t| Family { name: t.name, family: t.family }).collect()
+    prostudio_core::text_typefaces().into_iter().map(|t| Family { name: t.name, family: t.family }).collect()
 }
 
 /// What the editor says to the app.
@@ -453,11 +453,11 @@ impl TextEditor {
         let (start, end) = (self.chosen.0.min(self.chosen.1), self.chosen.0.max(self.chosen.1));
         let key = (info.clone(), (start, end));
         if self.geometry.as_ref().is_none_or(|g| g.key != key) {
-            let b = procraft_core::text_box(info.clone());
+            let b = prostudio_core::text_box(info.clone());
             let bounds = [0, 1, 2, 3].map(|i| b.get(i).copied().unwrap_or(0.0));
-            let start_at = procraft_core::text_caret(info.clone(), start as u32);
+            let start_at = prostudio_core::text_caret(info.clone(), start as u32);
             let end_at =
-                if end == start { start_at.clone() } else { procraft_core::text_caret(info.clone(), end as u32) };
+                if end == start { start_at.clone() } else { prostudio_core::text_caret(info.clone(), end as u32) };
             self.geometry = Some(Geometry { key: key.clone(), bounds, start: start_at, end: end_at });
         }
         let g = self.geometry.as_ref()?;
@@ -471,7 +471,7 @@ impl TextEditor {
         let (from, to) = (caret(&g.start), caret(&g.end));
         if start != end && self.ring.as_ref().is_none_or(|(k, _)| *k != key) {
             let max = ctx.input(|i| i.max_texture_side) as u32;
-            let picture = procraft_core::draw_chosen_text(info.clone(), start as u32, end as u32, BOX_LINE)
+            let picture = prostudio_core::draw_chosen_text(info.clone(), start as u32, end as u32, BOX_LINE)
                 .filter(|p| p.width <= max && p.height <= max)
                 .map(|p| {
                     let image =
@@ -852,7 +852,7 @@ impl TextEditor {
         corners: CornerRadius,
     ) {
         let inside = Self::card(ui, rect, "Style", corners);
-        let rows: Vec<(String, String, String, bool)> = procraft_core::text_styles()
+        let rows: Vec<(String, String, String, bool)> = prostudio_core::text_styles()
             .into_iter()
             .map(|s| (s.clone(), info.font.clone(), s.clone(), s == info.style))
             .collect();
@@ -952,12 +952,12 @@ impl TextEditor {
                 y: 0.0,
                 width: 0.0,
             };
-            let b = procraft_core::text_box(info.clone());
+            let b = prostudio_core::text_box(info.clone());
             let (w, h) = (
                 b.get(2).copied().unwrap_or(1.0).ceil().clamp(1.0, 4096.0),
                 b.get(3).copied().unwrap_or(1.0).ceil().clamp(1.0, 1024.0),
             );
-            let rgba = procraft_core::draw_text(info, w as u32, h as u32);
+            let rgba = prostudio_core::draw_text(info, w as u32, h as u32);
             let image = egui::ColorImage::from_rgba_premultiplied([w as usize, h as usize], &rgba);
             Some((ctx.load_texture(format!("face {name}"), image, TextureOptions::LINEAR), vec2(w, h) / ppp))
         });
@@ -1155,7 +1155,7 @@ impl TextEditor {
         // kept in the fonts folder by the core (a file that isn't a font is dropped)
         let mut kept = picked.iter().filter_map(|from| {
             let name = from.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
-            procraft_core::import_text_font(std::fs::read(from).ok()?, name)
+            prostudio_core::import_text_font(std::fs::read(from).ok()?, name)
         });
         let first = kept.next()?;
         let more = kept.count() > 0;

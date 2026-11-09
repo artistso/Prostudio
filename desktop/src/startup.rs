@@ -29,13 +29,13 @@ use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Mutex, OnceLock, PoisonError};
 use std::time::{Duration, Instant};
 
-use procraft_gpu::{Gpu, wgpu};
+use prostudio_gpu::{Gpu, wgpu};
 
 use crate::files;
 
 /// The log, and the one from the run before.
-const LOG: &str = "procraft.log";
-const PREVIOUS_LOG: &str = "procraft-previous.log";
+const LOG: &str = "prostudio.log";
+const PREVIOUS_LOG: &str = "prostudio-previous.log";
 /// The backend being tried, or the one the last run used, how far it got and whether a canvas
 /// has drawn on it.
 const GPU_START: &str = "gpu-start.txt";
@@ -93,7 +93,7 @@ pub fn init() {
         before(info);
     }));
     let again = if tried > 0 { format!(", started again with {tried} graphics backends tried") } else { String::new() };
-    log::info!("ProCraft {} on {} {}{again}", env!("PROCRAFT_VERSION"), std::env::consts::OS, std::env::consts::ARCH);
+    log::info!("ProStudio {} on {} {}{again}", env!("PROSTUDIO_VERSION"), std::env::consts::OS, std::env::consts::ARCH);
     #[cfg(windows)]
     native::watch();
 }
@@ -152,7 +152,7 @@ fn spawn_again(tried: Option<usize>, with_files: bool) -> bool {
 
 /// How many graphics backends were tried before the app started itself again (on a backend's
 /// pipelines failing), so a start doesn't go round them for ever.
-const TRIED: &str = "PROCRAFT_GPU_TRIED";
+const TRIED: &str = "PROSTUDIO_GPU_TRIED";
 
 /// How many graphics backends this start tried before it started the app again (none for a new
 /// start).
@@ -163,7 +163,7 @@ pub fn gpu_tried() -> usize {
 /// Whether this run keeps which backend it uses, and says why it stopped: not a test's window,
 /// which may be ended any time (and whose message would wait for a click no one makes).
 pub fn kept() -> bool {
-    std::env::var_os("PROCRAFT_BACKGROUND").is_none()
+    std::env::var_os("PROSTUDIO_BACKGROUND").is_none()
 }
 
 /// Whether this run keeps the backend record: not a test's window, nor a run on a backend
@@ -215,7 +215,7 @@ pub fn backend_order() -> &'static [usize] {
         // as Direct3D 12 sees them: Vulkan's driver is what may crash, so it isn't asked
         let started = Instant::now();
         let seen = std::panic::catch_unwind(|| Gpu::adapters(wgpu::Backends::DX12)).unwrap_or_else(|panic| {
-            log::warn!("the GPUs couldn't be listed: {}", procraft_gpu::panic_message(panic.as_ref()));
+            log::warn!("the GPUs couldn't be listed: {}", prostudio_gpu::panic_message(panic.as_ref()));
             Vec::new()
         });
         if recorded() {
@@ -372,7 +372,7 @@ fn since_launch() -> u64 {
 /// (the window not answering: it stands "not responding") and from one cut short (a crash logs
 /// itself; with nothing, the app was ended).
 pub fn watch_start(wake: winit::event_loop::EventLoopProxy<()>) {
-    let watch = std::thread::Builder::new().name("procraft-start-watch".to_owned()).spawn(move || {
+    let watch = std::thread::Builder::new().name("prostudio-start-watch".to_owned()).spawn(move || {
         let watching = Instant::now();
         while watching.elapsed() < START_WATCH_MOST {
             let asked = since_launch();
@@ -749,14 +749,14 @@ pub fn stopped(what: &str) {
     let stop = run_if_free().map_or(Stop::Say, |run| run.stop(Gpu::backend_count(), ENDS_TOLD));
     let stop = match stop {
         // without the files it was opened with: they may have been taken in already
-        Stop::Again(tried) if apart("procraft-again", move || start_on_next(tried)) == Some(true) => {
+        Stop::Again(tried) if apart("prostudio-again", move || start_on_next(tried)) == Some(true) => {
             return;
         }
         Stop::Again(_) => Stop::SayAnother,
         stop => stop,
     };
     let text = stopped_text(what, stop);
-    apart("procraft-stopped", move || files::tell("ProCraft stopped", &text));
+    apart("prostudio-stopped", move || files::tell("ProStudio stopped", &text));
 }
 
 /// This run's part in the record as it is now, if another thread lets go of it soon: a crash may
@@ -798,13 +798,13 @@ fn stopped_text(what: &str, stop: Stop) -> String {
         Stop::SayAllTried => "\n\nEach graphics backend has been tried. Updating the graphics driver may help.",
         Stop::Say => "",
     };
-    format!("ProCraft stopped: {what}.{after}\n\nIts log is {}", files::app_dir().join(LOG).display())
+    format!("ProStudio stopped: {what}.{after}\n\nIts log is {}", files::app_dir().join(LOG).display())
 }
 
 /// What the app says when no backend could draw the window, `why` each failed.
 pub fn no_gpu_text(why: &str) -> String {
     format!(
-        "No graphics backend could draw the window.\n\n{why}\n\nUpdating the graphics driver may help. ProCraft's log is {}",
+        "No graphics backend could draw the window.\n\n{why}\n\nUpdating the graphics driver may help. ProStudio's log is {}",
         files::app_dir().join(LOG).display()
     )
 }
@@ -892,7 +892,7 @@ mod native {
             record.map_or((0, 0), |r| (r.ExceptionCode.0.cast_unsigned(), r.ExceptionAddress as usize));
         // on a stack of its own: after a stack overflow this one has next to none left, and a
         // second crash here would end the app with no word
-        if super::apart("procraft-crash", move || said(code, address)).is_none() {
+        if super::apart("prostudio-crash", move || said(code, address)).is_none() {
             said(code, address);
         }
         EXCEPTION_EXECUTE_HANDLER
@@ -970,8 +970,8 @@ mod tests {
     }
 
     use super::{INTEL, drawn_with, keeps_backend, order_for};
-    use procraft_gpu::wgpu::Backends;
-    use procraft_gpu::wgpu::DeviceType::{Cpu, DiscreteGpu, IntegratedGpu, Other};
+    use prostudio_gpu::wgpu::Backends;
+    use prostudio_gpu::wgpu::DeviceType::{Cpu, DiscreteGpu, IntegratedGpu, Other};
 
     /// Windows on x64's backends, as `Gpu::backends` lists them.
     const WINDOWS: [Backends; 3] = [Backends::VULKAN, Backends::DX12, Backends::GL];
@@ -980,7 +980,7 @@ mod tests {
     const MICROSOFT: u32 = 0x1414;
 
     /// The order for a machine whose GPUs (vendor, type) are `gpus`, as Direct3D 12 lists them.
-    fn order_with(backends: &[Backends], gpus: &[(u32, procraft_gpu::wgpu::DeviceType)]) -> Vec<usize> {
+    fn order_with(backends: &[Backends], gpus: &[(u32, prostudio_gpu::wgpu::DeviceType)]) -> Vec<usize> {
         order_for(backends, drawn_with(gpus).and_then(|i| gpus.get(i).copied()))
     }
 
@@ -1252,11 +1252,11 @@ mod tests {
     #[test]
     fn a_stop_says_what_happened_and_where_the_log_is() {
         let text = super::stopped_text("wgpu error: Validation Error.\n", Stop::Say);
-        assert!(text.starts_with("ProCraft stopped: wgpu error: Validation Error."), "{text}");
-        assert!(text.contains("procraft.log"), "{text}");
+        assert!(text.starts_with("ProStudio stopped: wgpu error: Validation Error."), "{text}");
+        assert!(text.contains("prostudio.log"), "{text}");
         assert!(!text.contains("graphics"), "{text}");
         let text = super::stopped_text("", Stop::Say);
-        assert!(text.starts_with("ProCraft stopped: something went wrong."), "{text}");
+        assert!(text.starts_with("ProStudio stopped: something went wrong."), "{text}");
         let text = super::stopped_text("it crashed in igvk64.dll (exception 0xC0000005)", Stop::SayAnother);
         assert!(text.contains("Start it again to try another graphics backend."), "{text}");
         let text = super::stopped_text("it crashed in a driver (exception 0xC0000005)", Stop::SayAllTried);

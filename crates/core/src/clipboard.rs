@@ -1,7 +1,7 @@
 //! Copy, cut and paste, the canvas flipped, and pictures brought in as layers.
 
-use procraft_engine::document::{LayerId, LayerKind};
-use procraft_engine::geom::IRect;
+use prostudio_engine::document::{LayerId, LayerKind};
+use prostudio_engine::geom::IRect;
 
 use crate::layers::ThumbnailImage;
 use crate::{CanvasSession, State};
@@ -222,14 +222,14 @@ impl CanvasSession {
     /// and each frame is held for as long as the file shows it at the animation's frame rate.
     /// None if it isn't a GIF of more than one frame (a still picture: insert it as one).
     pub fn insert_gif_frames(&self, bytes: Vec<u8>, private: bool) -> Option<FramesInserted> {
-        if procraft_engine::gif::frame_count(&bytes) < 2 {
+        if prostudio_engine::gif::frame_count(&bytes) < 2 {
             return None;
         }
-        let (width, height) = procraft_engine::gif::size(&bytes)?;
+        let (width, height) = prostudio_engine::gif::size(&bytes)?;
         // each frame's layer and how long it shows, ms
         let mut held: Vec<(LayerId, u32)> = Vec::new();
         let mut full = false;
-        procraft_engine::gif::frames(&bytes, |rgba, ms| {
+        prostudio_engine::gif::frames(&bytes, |rgba, ms| {
             let mut image = ThumbnailImage { width, height, rgba: rgba.to_vec() };
             // straight to premultiplied
             for px in image.rgba.as_chunks_mut::<4>().0 {

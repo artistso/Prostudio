@@ -333,7 +333,7 @@ mod tests {
 
     #[test]
     fn a_files_names_are_read_from_its_end() {
-        let dir = std::env::temp_dir().join(format!("procraft-zip-names-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-zip-names-{}", std::process::id()));
         let _ = std::fs::create_dir_all(&dir);
         let mut w = ZipWriter::new();
         // a big entry the names are read past

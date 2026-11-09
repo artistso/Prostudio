@@ -7,7 +7,7 @@
 use egui::{Align2, Color32, Pos2, Rect, Sense, TextureHandle, TextureOptions, Ui, UiBuilder, pos2, vec2};
 use std::sync::Arc;
 
-use procraft_core::{
+use prostudio_core::{
     CanvasSession, ColourHistory, HueControl, Palettes, SLIDER_HUES, colours_in_p3, disc_picture, disc_to_square,
     harmony_wheel, hue_at, hue_position, p3_hsv_of, p3_hsv_to_rgb, square_to_disc,
 };
@@ -1620,7 +1620,7 @@ impl Colours {
         look: &mut Look,
         session: &CanvasSession,
         i: u32,
-        p: &procraft_core::PaletteInfo,
+        p: &prostudio_core::PaletteInfo,
         filled: &[(usize, u32)],
         card: Rect,
         default: bool,
@@ -1692,7 +1692,7 @@ impl Colours {
                 let lettering = if bright { Color32::BLACK } else { Color32::WHITE };
                 let mut job = egui::text::LayoutJob::default();
                 job.append(
-                    &procraft_core::colour_name(rgb),
+                    &prostudio_core::colour_name(rgb),
                     0.0,
                     egui::TextFormat {
                         font_id: Weight::Regular.font(15.0),

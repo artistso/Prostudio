@@ -9,4 +9,4 @@ replay_pid*.log
 # the iPad app's generated files: the core and its bindings (ios/build-rust.sh), the Xcode project
 # (XcodeGen)
 /ios/Generated/
-/ios/ProCraft.xcodeproj/
+/ios/ProStudio.xcodeproj/

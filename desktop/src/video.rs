@@ -5,7 +5,7 @@
 
 use std::path::Path;
 
-use procraft_core::FrameRate;
+use prostudio_core::FrameRate;
 
 /// What is said where videos are made and read with ffmpeg and it isn't installed.
 pub const NO_FFMPEG: &str = "Making and opening videos needs ffmpeg: install it from your system's packages.";
@@ -561,7 +561,7 @@ pub fn write_mp4(
     count: usize,
     frame: impl Fn(usize, u32, u32) -> Option<Vec<u8>>,
 ) -> Result<(u32, u32), String> {
-    let rate = procraft_core::frame_rate(fps);
+    let rate = prostudio_core::frame_rate(fps);
     #[cfg(any(windows, target_os = "macos"))]
     {
         let _ = std::fs::remove_file(out);
@@ -784,10 +784,10 @@ mod ffmpeg {
         /// A tenth of a frame a second, as ffmpeg is told it (a ratio): each frame shows ten seconds.
         #[test]
         fn a_slow_video_made_by_ffmpeg_shows_each_frame_ten_seconds() {
-            let dir = std::env::temp_dir().join(format!("procraft-ffmpeg-slow-{}", std::process::id()));
+            let dir = std::env::temp_dir().join(format!("prostudio-ffmpeg-slow-{}", std::process::id()));
             let _ = std::fs::create_dir_all(&dir);
             let out = dir.join("slow.mp4");
-            let rate = procraft_core::frame_rate(0.1);
+            let rate = prostudio_core::frame_rate(0.1);
             let made = super::write(&out, 64, 48, rate, false, 1_000_000, 3, |i, w, h| {
                 Some([(i * 80) as u8, 90, 200, 255].repeat(w as usize * h as usize))
             });
@@ -807,12 +807,12 @@ mod ffmpeg {
 
         #[test]
         fn frames_made_into_a_video_by_ffmpeg_come_back() {
-            let dir = std::env::temp_dir().join(format!("procraft-ffmpeg-{}", std::process::id()));
+            let dir = std::env::temp_dir().join(format!("prostudio-ffmpeg-{}", std::process::id()));
             let _ = std::fs::create_dir_all(&dir);
             let out = dir.join("made.mp4");
             // six frames, each a flat colour
             let colour = |i: usize| [(i * 40) as u8, 200 - (i * 30) as u8, 90, 255];
-            let rate = procraft_core::frame_rate(6.0);
+            let rate = prostudio_core::frame_rate(6.0);
             let made = super::write(&out, 64, 48, rate, false, 1_000_000, 6, |i, w, h| {
                 Some(colour(i).repeat(w as usize * h as usize))
             });
@@ -850,7 +850,7 @@ mod tests {
     /// seconds, its time exact.
     #[test]
     fn a_slow_video_shows_each_frame_ten_seconds() {
-        let dir = std::env::temp_dir().join(format!("procraft-slow-video-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-slow-video-{}", std::process::id()));
         let _ = std::fs::create_dir_all(&dir);
         let out = dir.join("slow.mp4");
         let made = super::write_mp4(&out, 64, 48, 64, 0.1, false, 4, 3, |i, w, h| {

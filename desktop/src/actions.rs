@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::time::Instant;
 
 use egui::{Align2, Color32, Id, Order, Painter, Pos2, Rect, ScrollArea, Sense, Stroke, Ui, UiBuilder, pos2, vec2};
-use procraft_core::{
+use prostudio_core::{
     PluginControl, PluginInfo, PluginSource, Plugins, plugin_slider_along, plugin_slider_at, plugin_slider_shown,
 };
 
@@ -191,7 +191,7 @@ fn model_groups(tab: usize, showing: &Showing) -> Vec<Vec<Row>> {
                 Heading("Share Model"),
                 // ours comes back whole in another copy of the app; the other package holds no
                 // model yet
-                Button("ProCraft", None, Some(Act::Share(Format::ModelArtwork))),
+                Button("ProStudio", None, Some(Act::Share(Format::ModelArtwork))),
                 Button("Procreate", None, None),
                 Button("USDZ", None, Some(Act::Share(Format::ModelUsdz))),
                 Button("OBJ", None, Some(Act::Share(Format::ModelObj))),
@@ -316,7 +316,7 @@ fn groups(tab: usize, showing: &Showing, prefs: &Prefs) -> Vec<Vec<Row>> {
         2 => vec![
             vec![
                 Heading("Share Image"),
-                Button("ProCraft", None, Some(Act::Share(Format::Procraft))),
+                Button("ProStudio", None, Some(Act::Share(Format::Prostudio))),
                 Button("Procreate", None, Some(Act::Share(Format::Package))),
                 Button("PSD", None, Some(Act::Share(Format::Psd))),
                 Button("PDF", None, Some(Act::Share(Format::Pdf))),
@@ -382,7 +382,7 @@ fn groups(tab: usize, showing: &Showing, prefs: &Prefs) -> Vec<Vec<Row>> {
             ]
         }
         _ => vec![
-            vec![Button("About ProCraft", None, Some(Act::About)), Button("Licences", None, Some(Act::Licences))],
+            vec![Button("About ProStudio", None, Some(Act::About)), Button("Licences", None, Some(Act::Licences))],
             vec![
                 Button("Keyboard shortcuts", None, Some(Act::Shortcuts)),
                 Button("Advanced settings", None, Some(Act::AdvancedSettings)),
@@ -876,7 +876,7 @@ impl Actions {
                     if shown.is_empty() {
                         let width = ui.available_width();
                         let (area, _) = ui.allocate_exact_size(vec2(width, PLUGINS_EMPTY), Sense::hover());
-                        let words = "Nothing imported yet. Import a .procraft-plugin file to add one.";
+                        let words = "Nothing imported yet. Import a .prostudio-plugin file to add one.";
                         let inside = width - 2.0 * PLUGIN_INSET;
                         let said = wrapped(ui.painter(), words, 15.0, Weight::Regular, argb(ACTIONS_ROW), inside);
                         ui.painter().galley(area.min + vec2(PLUGIN_INSET, 8.0), said, argb(ACTIONS_ROW));
@@ -1373,7 +1373,7 @@ fn slide_row(ui: &Ui, cell: Rect, label: &str, value: &str, fraction: f32, id: (
 #[cfg(test)]
 mod tests {
     use egui::{Event, Modifiers, PointerButton, RawInput};
-    use procraft_core::{PluginSlider, PluginSwitch};
+    use prostudio_core::{PluginSlider, PluginSwitch};
 
     use super::*;
 
@@ -1390,12 +1390,12 @@ mod tests {
             (0..MODULE.len() / 2).map(|i| u8::from_str_radix(&MODULE[2 * i..2 * i + 2], 16).unwrap()).collect();
         let manifest = format!(
             r#"{{"schema":1,"id":"org.example.plugin","name":"A plugin","version":"1.0.0","holds":["hooks"],
-            "publisher":{{"name":"Someone"}},"description":"Changes the app.","compat":{{"procraft":{{"interface":1}}}},
+            "publisher":{{"name":"Someone"}},"description":"Changes the app.","compat":{{"prostudio":{{"interface":1}}}},
             "files":[{{"path":"plugin.wasm","sha256":"{MODULE_SHA}","size":{}}}],"permissions":[],"hooks":["position"],
             "controls":[{{"key":"cut","type":"slider","label":"Cut","least":0,"most":32,"step":1,"starts":0}}]}}"#,
             module.len()
         );
-        let mut zip = procraft_engine::zip::ZipWriter::new();
+        let mut zip = prostudio_engine::zip::ZipWriter::new();
         zip.add("craft-extension.json", manifest.as_bytes());
         zip.add("plugin.wasm", &module);
         zip.finish()
@@ -1405,11 +1405,11 @@ mod tests {
     fn filter_file() -> Vec<u8> {
         let manifest = format!(
             r#"{{"schema":1,"id":"org.example.filter","name":"A filter","version":"1.0.0","holds":["filter"],
-            "publisher":{{"name":"Someone"}},"description":"Changes a layer.","compat":{{"procraft":{{"interface":1}}}},
+            "publisher":{{"name":"Someone"}},"description":"Changes a layer.","compat":{{"prostudio":{{"interface":1}}}},
             "files":[{{"path":"filter.wgsl","sha256":"{SHADER_SHA}","size":{}}}],"permissions":[],"controls":[]}}"#,
             SHADER.len()
         );
-        let mut zip = procraft_engine::zip::ZipWriter::new();
+        let mut zip = prostudio_engine::zip::ZipWriter::new();
         zip.add("craft-extension.json", manifest.as_bytes());
         zip.add("filter.wgsl", SHADER.as_bytes());
         zip.finish()
@@ -1572,7 +1572,7 @@ mod tests {
 
     /// A page on a folder of its own, for a test's files.
     fn with_store(name: &str) -> (Page, std::path::PathBuf) {
-        let dir = std::env::temp_dir().join(format!("procraft-actions-{name}-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-actions-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         let mut page = Page::new();
         page.prefs.plugins = Plugins::with_store(dir.to_string_lossy().into_owned());
@@ -1660,7 +1660,7 @@ mod tests {
             name: "Stranger".to_owned(),
             description: "No code answers to it.".to_owned(),
             source: PluginSource::File,
-            holds: vec![procraft_core::PluginPart::Hooks],
+            holds: vec![prostudio_core::PluginPart::Hooks],
             version: "1.0.0".to_owned(),
             publisher: "Someone".to_owned(),
             experimental: false,

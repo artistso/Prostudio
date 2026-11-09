@@ -4,8 +4,8 @@
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use procraft_core::{CanvasSession, Plugins, configure, screen_profile};
-use procraft_gpu::{Gpu, wgpu};
+use prostudio_core::{CanvasSession, Plugins, configure, screen_profile};
+use prostudio_gpu::{Gpu, wgpu};
 use winit::event_loop::OwnedDisplayHandle;
 use winit::window::Window;
 
@@ -53,14 +53,14 @@ fn make_canvases(gpu: &Gpu, wake: winit::event_loop::EventLoopProxy<()>) -> Opti
     let gpu = gpu.clone();
     // on a big stack: a driver's shader compiler recurses, and a stack overflow ends the app with
     // next to no word
-    let thread = std::thread::Builder::new().name("procraft-pipelines".to_owned()).stack_size(PIPELINES_STACK);
+    let thread = std::thread::Builder::new().name("prostudio-pipelines".to_owned()).stack_size(PIPELINES_STACK);
     let made = thread.spawn(move || {
         log::info!("making the canvases' pipelines");
         let (started, errors) = (Instant::now(), gpu.errors());
         let fine = match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| gpu.prepare_canvases())) {
             Ok(()) => gpu.errors() == errors && !gpu.is_lost(),
             Err(panic) => {
-                log::error!("the canvases' pipelines panicked: {}", procraft_gpu::panic_message(panic.as_ref()));
+                log::error!("the canvases' pipelines panicked: {}", prostudio_gpu::panic_message(panic.as_ref()));
                 false
             }
         };
@@ -119,7 +119,7 @@ impl Screen {
             let started = Instant::now();
             let made =
                 std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| Screen::on(&window, display, backend, last)))
-                    .unwrap_or_else(|panic| Err(format!("panicked: {}", procraft_gpu::panic_message(panic.as_ref()))));
+                    .unwrap_or_else(|panic| Err(format!("panicked: {}", prostudio_gpu::panic_message(panic.as_ref()))));
             let name = Gpu::backend_name(backend);
             match made {
                 Ok(mut screen) => {
@@ -154,7 +154,7 @@ impl Screen {
         let surface = instance.create_surface(Arc::clone(&window)).map_err(|e| format!("the window's surface: {e}"))?;
         log::info!("the backend's instance and the window's surface made in {} ms", ms(started));
         let gpu = Gpu::for_surface(instance, &surface).map_err(|e| e.to_string())?;
-        procraft_core::keep_device(&gpu);
+        prostudio_core::keep_device(&gpu);
         let size = window.inner_size();
         let configured = Instant::now();
         let config = configure(&gpu, &surface, (size.width, size.height), INTERFACE_WIDE);
@@ -279,7 +279,7 @@ impl Screen {
     pub fn draw_pad(&mut self, pad: &CanvasSession, size: (u32, u32), started: Instant) -> egui::TextureId {
         let size = (size.0.max(1), size.1.max(1));
         let config = self.config.as_ref();
-        let screen = config.map_or(procraft_engine::profile::Profile::Srgb, screen_profile);
+        let screen = config.map_or(prostudio_engine::profile::Profile::Srgb, screen_profile);
         if self.pad.as_ref().is_none_or(|p| p.size != size) {
             let device = &self.gpu.device;
             let texture = device.create_texture(&wgpu::TextureDescriptor {

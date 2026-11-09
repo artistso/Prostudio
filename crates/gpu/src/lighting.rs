@@ -2,7 +2,7 @@
 //! harmonics, for diffuse light and the backdrop), a radiance cube prefiltered for rough
 //! reflections (each level rougher), and the split-sum table for the reflections' strength.
 
-use procraft_engine::environment::{Equirect, brdf_table, to_half};
+use prostudio_engine::environment::{Equirect, brdf_table, to_half};
 use wgpu::util::DeviceExt;
 
 use crate::Gpu;

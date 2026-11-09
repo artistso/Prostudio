@@ -5,9 +5,9 @@ use std::fs;
 use std::io::BufWriter;
 use std::path::Path;
 
-use procraft_engine::animation::{self, Animation, Playback};
-use procraft_engine::document::{Document, LayerId, LayerKind};
-use procraft_engine::formats::GifWriter;
+use prostudio_engine::animation::{self, Animation, Playback};
+use prostudio_engine::document::{Document, LayerId, LayerKind};
+use prostudio_engine::formats::GifWriter;
 
 use crate::layers::ThumbnailImage;
 use crate::project::{file_error, thumbnail, write_atomically};
@@ -111,11 +111,11 @@ impl CanvasSession {
             next += frames.len();
             let Some(&(w, h, _)) = frames.first() else { break };
             let frame_bytes = (w as usize * h as usize * 4).max(1);
-            few = (GIF_BATCH_BYTES / frame_bytes).clamp(1, procraft_engine::par::cores());
+            few = (GIF_BATCH_BYTES / frame_bytes).clamp(1, prostudio_engine::par::cores());
             let writer = gif.get_or_insert_with(|| GifWriter::new(w, h));
             let made = {
                 let writer = &*writer;
-                procraft_engine::par::side_by_side(&frames, |(_, _, rgba)| {
+                prostudio_engine::par::side_by_side(&frames, |(_, _, rgba)| {
                     writer.encoded_frame(rgba, delay.max(1), dither)
                 })
             };

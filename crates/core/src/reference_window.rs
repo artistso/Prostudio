@@ -5,7 +5,7 @@
 use std::io::Cursor;
 use std::sync::Arc;
 
-use procraft_engine::reference_window::{ReferenceKind, ReferenceWindow};
+use prostudio_engine::reference_window::{ReferenceKind, ReferenceWindow};
 
 use crate::{CanvasSession, ReferenceView};
 
@@ -131,7 +131,7 @@ pub struct ReferenceSize {
 #[uniffi::export]
 pub fn reference_window_size(width: f32, height: f32, screen_width: f32, screen_height: f32) -> ReferenceSize {
     let [width, height] =
-        procraft_engine::reference_window::fitted_size([width, height], [screen_width, screen_height]);
+        prostudio_engine::reference_window::fitted_size([width, height], [screen_width, screen_height]);
     ReferenceSize { width, height }
 }
 
@@ -216,7 +216,7 @@ mod tests {
 
     /// A folder of its own for test `name`, empty.
     fn folder(name: &str) -> std::path::PathBuf {
-        let dir = std::env::temp_dir().join(format!("procraft-reference-{name}-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-reference-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         dir
     }
@@ -296,7 +296,7 @@ mod tests {
 
     #[test]
     fn a_package_s_window_and_picture_come_in_upright() {
-        use procraft_engine::document::Document;
+        use prostudio_engine::document::Document;
         let mut png = Cursor::new(Vec::new());
         let two = image::RgbaImage::from_raw(2, 1, vec![255, 0, 0, 255, 0, 0, 255, 255]).unwrap();
         image::DynamicImage::ImageRgba8(two).write_to(&mut png, image::ImageFormat::Png).unwrap();
@@ -308,7 +308,7 @@ mod tests {
             ..ReferenceWindow::default()
         };
         let doc = Document::new(64, 48);
-        let bytes = procraft_engine::native::write(&procraft_engine::native::Export {
+        let bytes = prostudio_engine::native::write(&prostudio_engine::native::Export {
             document: &doc,
             pixels: &std::collections::HashMap::new(),
             composite: &[255; 64 * 48 * 4],
@@ -322,7 +322,7 @@ mod tests {
             reference: Some(&window),
             reference_picture: Some(png.get_ref()),
         });
-        let package = std::env::temp_dir().join(format!("procraft-reference-package-{}.procraft", std::process::id()));
+        let package = std::env::temp_dir().join(format!("prostudio-reference-package-{}.prostudio", std::process::id()));
         std::fs::write(&package, &bytes).unwrap();
         let s = CanvasSession::open_package(package.to_string_lossy().into_owned()).unwrap();
         assert_eq!(
@@ -382,10 +382,10 @@ mod tests {
 
     #[test]
     fn a_package_keeps_the_model_shown_as_its_3d_flag() {
-        use procraft_engine::document::Document;
+        use prostudio_engine::document::Document;
         let window = ReferenceWindow { shown: true, three_d: true, ..ReferenceWindow::default() };
         let doc = Document::new(64, 48);
-        let bytes = procraft_engine::native::write(&procraft_engine::native::Export {
+        let bytes = prostudio_engine::native::write(&prostudio_engine::native::Export {
             document: &doc,
             pixels: &std::collections::HashMap::new(),
             composite: &[255; 64 * 48 * 4],
@@ -399,7 +399,7 @@ mod tests {
             reference: Some(&window),
             reference_picture: None,
         });
-        let package = std::env::temp_dir().join(format!("procraft-reference-3d-{}.procraft", std::process::id()));
+        let package = std::env::temp_dir().join(format!("prostudio-reference-3d-{}.prostudio", std::process::id()));
         std::fs::write(&package, &bytes).unwrap();
         // a flat artwork shows its canvas, and keeps the flag to write back
         let s = CanvasSession::open_package(package.to_string_lossy().into_owned()).unwrap();

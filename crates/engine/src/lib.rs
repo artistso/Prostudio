@@ -1,5 +1,5 @@
-//! ProCraft's painting engine: the document model, brushes and stroke geometry, and the canvas
-//! view. No GPU and no platform code: `procraft-gpu` draws what this crate describes, and the app
+//! ProStudio's painting engine: the document model, brushes and stroke geometry, and the canvas
+//! view. No GPU and no platform code: `prostudio-gpu` draws what this crate describes, and the app
 //! feeds it input.
 
 pub mod abr;

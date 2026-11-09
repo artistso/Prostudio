@@ -1,8 +1,8 @@
 //! Reading USD models (see `models/README.md` for how the files were made).
 #![allow(clippy::unwrap_used, clippy::indexing_slicing)]
 
-use procraft_engine::mesh::Mesh;
-use procraft_engine::usd::{read_usdc, read_usdz};
+use prostudio_engine::mesh::Mesh;
+use prostudio_engine::usd::{read_usdc, read_usdz};
 
 fn model(name: &str) -> Vec<u8> {
     std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/models").join(name)).unwrap()
@@ -81,20 +81,20 @@ fn damaged_files_are_refused_without_panicking() {
 fn a_written_package_reads_back() {
     let mesh = read_usdz(&model("cube.usdz")).unwrap();
     // the lid has a normal map and ambient occlusion too
-    let textures: Vec<procraft_engine::mesh::PartImages> = mesh
+    let textures: Vec<prostudio_engine::mesh::PartImages> = mesh
         .parts
         .iter()
         .map(|p| {
             let file = |c: &str| (format!("{}-{c}.png", p.material), vec![0; 4]);
             let extra = p.material == "Lid";
-            procraft_engine::mesh::PartImages {
+            prostudio_engine::mesh::PartImages {
                 maps: ["color", "roughness", "metallic"].map(file),
                 normal: extra.then(|| file("normal")),
                 occlusion: extra.then(|| file("ambient_occlusion")),
             }
         })
         .collect();
-    let again = read_usdz(&procraft_engine::usd::write_usdz(&mesh, &textures)).unwrap();
+    let again = read_usdz(&prostudio_engine::usd::write_usdz(&mesh, &textures)).unwrap();
     assert_eq!(again.triangles.len(), mesh.triangles.len());
     let parts: Vec<(&str, usize)> = again.parts.iter().map(|p| (p.material.as_str(), p.count)).collect();
     assert_eq!(parts, [("Body", 8), ("Lid", 4)]);
@@ -158,7 +158,7 @@ def Scope "Looks"
     }
 }
 "#;
-    let mesh = procraft_engine::usd::read_usda(text).unwrap();
+    let mesh = prostudio_engine::usd::read_usda(text).unwrap();
     assert_eq!(mesh.triangles.len(), 1);
     assert_eq!(mesh.parts[0].material, "Paint");
     // moved 5 up z, then z up turned to y up
@@ -173,14 +173,14 @@ def Scope "Looks"
         "def Mesh \"A\" { int[] faceVertexCounts = [3 }",
         "\"unterminated",
     ] {
-        assert!(procraft_engine::usd::read_usda(bad).is_err(), "{bad}");
+        assert!(prostudio_engine::usd::read_usda(bad).is_err(), "{bad}");
     }
 }
 
 #[test]
 fn text_copies_read_as_their_binary_layers() {
     for (text, binary) in [("cube.usda", "cube.usdz"), ("moved.usda", "moved.usdc"), ("grid.usda", "grid.usdc")] {
-        let a = procraft_engine::usd::read_usd(&model(text)).unwrap();
+        let a = prostudio_engine::usd::read_usd(&model(text)).unwrap();
         let b = if binary.ends_with(".usdz") { read_usdz(&model(binary)) } else { read_usdc(&model(binary)) }.unwrap();
         assert_eq!(a, b, "{text}");
     }

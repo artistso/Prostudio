@@ -4,13 +4,13 @@
 
 use std::f32::consts::{PI, TAU};
 
-use procraft_engine::brush::Brush;
-use procraft_engine::document::LayerId;
-use procraft_engine::geom::Vec2;
-use procraft_engine::input::Sample;
-use procraft_engine::quickshape::{Shape, ShapeKind, end_hook_reach, fit_ellipse, recognise, without_end_hook};
-use procraft_engine::stroke::StrokeBuilder;
-use procraft_gpu::{Canvas, StrokeStyle};
+use prostudio_engine::brush::Brush;
+use prostudio_engine::document::LayerId;
+use prostudio_engine::geom::Vec2;
+use prostudio_engine::input::Sample;
+use prostudio_engine::quickshape::{Shape, ShapeKind, end_hook_reach, fit_ellipse, recognise, without_end_hook};
+use prostudio_engine::stroke::StrokeBuilder;
+use prostudio_gpu::{Canvas, StrokeStyle};
 
 use crate::{CanvasSession, PointerKind, State};
 
@@ -758,7 +758,7 @@ impl CanvasSession {
 
 #[cfg(test)]
 mod tests {
-    use procraft_engine::input::Pointer;
+    use prostudio_engine::input::Pointer;
 
     use super::*;
 
@@ -817,11 +817,11 @@ mod tests {
     }
 
     /// The session's stroke through `samples` with `brush`, held until it snapped: its stamps.
-    fn snapped(brush: procraft_engine::brush::Brush, samples: &[Sample]) -> Vec<procraft_engine::stroke::Stamp> {
+    fn snapped(brush: prostudio_engine::brush::Brush, samples: &[Sample]) -> Vec<prostudio_engine::stroke::Stamp> {
         let s = CanvasSession::new(1000, 800);
         {
             let mut st = s.shared.lock();
-            st.view = Some(procraft_engine::view::View::fit((1000, 800), (1000, 800)));
+            st.view = Some(prostudio_engine::view::View::fit((1000, 800), (1000, 800)));
             st.stroke = Some(StrokeBuilder::new(brush, 8.0, Pointer::Stylus));
             st.remember_input(samples);
         }
@@ -832,8 +832,8 @@ mod tests {
 
     #[test]
     fn a_shape_redrawn_is_not_smoothed_whatever_the_brush_does_to_a_stroke() {
-        let mut brush = procraft_engine::brush::Brush::round_pen();
-        brush.pen_taper = procraft_engine::brush::Taper::NONE;
+        let mut brush = prostudio_engine::brush::Brush::round_pen();
+        brush.pen_taper = prostudio_engine::brush::Taper::NONE;
         brush.set_setting("motion_filtering", 1.0);
         let stamps = snapped(brush, &circle(1.0, 4.0));
         let radius = |p: Vec2| p.distance(Vec2::new(500.0, 400.0));

@@ -15,8 +15,8 @@ pub(crate) fn most_for(width: f32, height: f32) -> f32 {
 
 #[cfg(test)]
 mod tests {
-    use procraft_engine::geom::Affine;
-    use procraft_engine::view::View;
+    use prostudio_engine::geom::Affine;
+    use prostudio_engine::view::View;
 
     use super::most_for;
     use crate::{CanvasSession, PenSample, PointerKind, TransformTouch};
@@ -24,7 +24,7 @@ mod tests {
     /// A session shown 1:1 at twice the pixels a point, the interface at `size`, in a transform of
     /// a box from (100, 100) to (500, 500) whose corners move on their own.
     fn transforming(size: f32) -> std::sync::Arc<CanvasSession> {
-        use procraft_engine::transform::{Transform, TransformMode};
+        use prostudio_engine::transform::{Transform, TransformMode};
         let s = CanvasSession::new(1024, 1024);
         s.set_display_scale(2.0);
         s.set_interface_size(size);

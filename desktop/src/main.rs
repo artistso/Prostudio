@@ -1,4 +1,4 @@
-//! ProCraft on the desktop: the engine draws the canvas into the window, and the interface is
+//! ProStudio on the desktop: the engine draws the canvas into the window, and the interface is
 //! drawn over it with egui, on the same device.
 
 // no console window behind the app on Windows (a debug build keeps it, for the log)
@@ -70,7 +70,7 @@ mod zoom;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use procraft_core::CanvasSession;
+use prostudio_core::CanvasSession;
 use winit::application::ApplicationHandler;
 use winit::dpi::LogicalSize;
 use winit::event::WindowEvent;
@@ -204,7 +204,7 @@ fn main() {
     // the layers' textures may take what the layers themselves may (the engine's budget): none is
     // ever kept off the GPU, but the composite is made around the layers not being worked on, so
     // a frame composites only those (as the tablet's)
-    procraft_core::set_resident_budget(LAYERS_ON_GPU);
+    prostudio_core::set_resident_budget(LAYERS_ON_GPU);
     let event_loop = match EventLoop::new() {
         Ok(l) => l,
         Err(e) => {
@@ -217,7 +217,7 @@ fn main() {
     #[cfg(target_os = "macos")]
     finder::watch();
     // the colour profiles imported before
-    procraft_core::set_profile_folder(files::app_dir().join("profiles").to_string_lossy().into_owned());
+    prostudio_core::set_profile_folder(files::app_dir().join("profiles").to_string_lossy().into_owned());
     let mut app = App {
         wake: event_loop.create_proxy(),
         started: Instant::now(),
@@ -254,7 +254,7 @@ fn main() {
             if let Some(screen) = &app.screen {
                 screen.window.set_visible(false);
             }
-            startup::stopped(procraft_gpu::panic_message(panic.as_ref()));
+            startup::stopped(prostudio_gpu::panic_message(panic.as_ref()));
             // what the app held is let go by the system: a driver that panicked may not take it back
             std::process::exit(101);
         }
@@ -309,7 +309,7 @@ struct App {
 
 /// The app's icon, for the window's title bar and the task bar.
 fn window_icon() -> Option<winit::window::Icon> {
-    let picture = image::load_from_memory(include_bytes!("../../assets/app-icon/procraft-256.png")).ok()?;
+    let picture = image::load_from_memory(include_bytes!("../../assets/app-icon/prostudio-256.png")).ok()?;
     let rgba = picture.into_rgba8();
     let (width, height) = rgba.dimensions();
     winit::window::Icon::from_rgba(rgba.into_raw(), width, height).ok()
@@ -326,19 +326,19 @@ impl ApplicationHandler for App {
             return;
         }
         let attributes = Window::default_attributes()
-            .with_title("ProCraft")
+            .with_title("ProStudio")
             .with_window_icon(window_icon())
             .with_inner_size(LogicalSize::new(1440.0, 900.0))
             .with_min_inner_size(LogicalSize::new(640.0, 480.0))
-            // opened for a test (PROCRAFT_BACKGROUND set), it leaves the keyboard where it was
-            .with_active(std::env::var_os("PROCRAFT_BACKGROUND").is_none());
-        // on Linux the desktop's menus match the window to the app's entry (procraft.desktop)
+            // opened for a test (PROSTUDIO_BACKGROUND set), it leaves the keyboard where it was
+            .with_active(std::env::var_os("PROSTUDIO_BACKGROUND").is_none());
+        // on Linux the desktop's menus match the window to the app's entry (prostudio.desktop)
         #[cfg(target_os = "linux")]
         let attributes = {
             use winit::platform::wayland::WindowAttributesExtWayland;
             use winit::platform::x11::WindowAttributesExtX11;
-            let attributes = WindowAttributesExtWayland::with_name(attributes, "procraft", "procraft");
-            WindowAttributesExtX11::with_name(attributes, "procraft", "ProCraft")
+            let attributes = WindowAttributesExtWayland::with_name(attributes, "prostudio", "prostudio");
+            WindowAttributesExtX11::with_name(attributes, "prostudio", "ProStudio")
         };
         let window = match event_loop.create_window(attributes) {
             Ok(w) => Arc::new(w),
@@ -365,7 +365,7 @@ impl ApplicationHandler for App {
             }
             Err(e) => {
                 log::error!("no GPU for the window:\n{e}");
-                files::tell("ProCraft can't draw", &startup::no_gpu_text(&e));
+                files::tell("ProStudio can't draw", &startup::no_gpu_text(&e));
                 event_loop.exit();
                 return;
             }
@@ -689,7 +689,7 @@ impl App {
         let edits = session.edits();
         let saved = edits == self.ui.saved_edits || session.edits_saved() == Some(edits);
         let unsaved = if saved { "" } else { " •" };
-        let title = format!("{}{unsaved} — ProCraft", session.name());
+        let title = format!("{}{unsaved} — ProStudio", session.name());
         if title != self.title {
             screen.window.set_title(&title);
             self.title = title;
@@ -764,9 +764,9 @@ impl App {
         if let Some(soon) = soon {
             self.again = Some(self.again.map_or(soon, |due| due.min(soon)));
         }
-        if self.title != "ProCraft" {
-            screen.window.set_title("ProCraft");
-            self.title = "ProCraft".into();
+        if self.title != "ProStudio" {
+            screen.window.set_title("ProStudio");
+            self.title = "ProStudio".into();
         }
         self.zoom_on();
         // Project canvas is black while the gallery shows
@@ -795,7 +795,7 @@ impl App {
                 if !busy {
                     let (w, h) = self.gallery.screen_px;
                     let session = CanvasSession::new(w, h);
-                    session.set_new_profile(procraft_core::P3.into());
+                    session.set_new_profile(prostudio_core::P3.into());
                     let dir = self.gallery.store.new_folder(folder);
                     self.open_artwork(session, dir);
                     self.ui.started_new();
@@ -1085,7 +1085,7 @@ impl App {
     /// An artwork dragged out of the window: written as Drag and Drop export's file format says,
     /// then dragged on as that file, for wherever it is let go (the system's drag carries it).
     #[cfg(any(windows, target_os = "macos"))]
-    fn drag_out(&mut self, artwork: &procraft_core::GalleryArtwork) {
+    fn drag_out(&mut self, artwork: &prostudio_core::GalleryArtwork) {
         let format = self.ui.drag_format();
         let Some(screen) = self.screen.as_mut() else { return };
         let path = match files::drag_file(artwork, format) {
@@ -1113,7 +1113,7 @@ impl App {
     }
 
     #[cfg(not(any(windows, target_os = "macos")))]
-    fn drag_out(&mut self, _artwork: &procraft_core::GalleryArtwork) {}
+    fn drag_out(&mut self, _artwork: &prostudio_core::GalleryArtwork) {}
 
     /// The graphics device was lost (its driver reset or stopped), and all it held: nothing is
     /// saved from it (the gallery keeps the artwork as it was last saved, seconds before); the
@@ -1132,7 +1132,7 @@ impl App {
                 startup::stopped("the graphics device stopped, and it couldn't start itself again");
             }
         } else {
-            files::tell("The graphics device stopped", "ProCraft starts again, with the artwork as it was last saved.");
+            files::tell("The graphics device stopped", "ProStudio starts again, with the artwork as it was last saved.");
             startup::start_again(None);
         }
         event_loop.exit();

@@ -1,4 +1,4 @@
-//! Brush shape and grain images, generated here (ProCraft's own, made procedurally at start-up):
+//! Brush shape and grain images, generated here (ProStudio's own, made procedurally at start-up):
 //! 8-bit greyscale, white = paint. Grains tile seamlessly.
 
 use std::f32::consts::{FRAC_PI_2, PI, TAU};
@@ -2040,12 +2040,12 @@ mod tests {
         }
     }
 
-    /// Writes every shape and grain as a PGM into the directory in `PROCRAFT_DUMP`, for looking at
-    /// them: `cargo test -p procraft-engine dump_textures -- --ignored`.
+    /// Writes every shape and grain as a PGM into the directory in `PROSTUDIO_DUMP`, for looking at
+    /// them: `cargo test -p prostudio-engine dump_textures -- --ignored`.
     #[test]
     #[ignore]
     fn dump_textures() {
-        let Ok(dir) = std::env::var("PROCRAFT_DUMP") else { return };
+        let Ok(dir) = std::env::var("PROSTUDIO_DUMP") else { return };
         for (kind, images) in [("shape", shapes()), ("grain", grains())] {
             for (i, img) in images.iter().enumerate() {
                 let mut pgm = format!(

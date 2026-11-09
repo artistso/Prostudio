@@ -12,7 +12,7 @@ use egui::text::{CCursor, CCursorRange, LayoutJob, TextFormat, TextWrapping};
 use egui::{
     Align2, Color32, Pos2, Rect, ScrollArea, Sense, TextureHandle, TextureOptions, Ui, UiBuilder, Vec2, pos2, vec2,
 };
-use procraft_core::{BrushInfo, BrushSetInfo, CanvasSession, ReadBrushes, ToolKind, read_any_brushes};
+use prostudio_core::{BrushInfo, BrushSetInfo, CanvasSession, ReadBrushes, ToolKind, read_any_brushes};
 
 use crate::alert::{Alert, Answer};
 use crate::icons;

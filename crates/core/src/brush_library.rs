@@ -3,14 +3,14 @@
 
 use std::collections::BTreeMap;
 
-use procraft_engine::brush::{
+use prostudio_engine::brush::{
     Author, Brush, FullGrain, GrainFile, Notches, PressureCurves, ResetPoint, ShapeFile, Source, StockImage,
     StockImages,
 };
-use procraft_engine::brushfile::{self, Texture};
-use procraft_engine::curve::Curve;
-use procraft_engine::geom::Vec2;
-use procraft_engine::library::{BrushSet, SHELF};
+use prostudio_engine::brushfile::{self, Texture};
+use prostudio_engine::curve::Curve;
+use prostudio_engine::geom::Vec2;
+use prostudio_engine::library::{BrushSet, SHELF};
 
 use crate::{CanvasSession, State};
 
@@ -356,14 +356,14 @@ pub fn adopt_kept_brushes(dir: String, seen: Option<String>, choices: Option<Str
 /// One brush as a file to share.
 #[derive(serde::Serialize, serde::Deserialize)]
 struct BrushFile {
-    procraft_brush: u32,
+    prostudio_brush: u32,
     brush: SavedBrush,
 }
 
 /// A set as a file to share.
 #[derive(serde::Serialize, serde::Deserialize)]
 struct SetFile {
-    procraft_brush_set: u32,
+    prostudio_brush_set: u32,
     set: SavedSet,
 }
 
@@ -395,7 +395,7 @@ impl State {
             if c == b { Vec::new() } else { c.points().iter().map(|p| [p.x, p.y]).collect() }
         };
         let image = |mine: Option<u32>, theirs: Option<u32>| (mine != theirs).then(|| mine.map_or(-1, i64::from));
-        let text = |png: &Option<std::sync::Arc<[u8]>>| png.as_deref().map(procraft_engine::base64::encode);
+        let text = |png: &Option<std::sync::Arc<[u8]>>| png.as_deref().map(prostudio_engine::base64::encode);
         SavedBrush {
             from,
             name: brush.name.clone(),
@@ -421,7 +421,7 @@ impl State {
             shape_full: brush.shape_file_now().map(|f| (f.full.id, f.full.side)),
             shape_image: image(brush.shape.image, base.shape.image),
             grain_image: image(brush.grain.image, base.grain.image),
-            thumbnail: brush.thumbnail.as_deref().map(procraft_engine::base64::encode),
+            thumbnail: brush.thumbnail.as_deref().map(prostudio_engine::base64::encode),
             notches: SavedNotches::of(&brush.notches),
             sliders: if brush.sliders.iter().any(Option::is_some) { brush.sliders.to_vec() } else { Vec::new() },
             author: brush.author.as_ref().map(|a| SavedAuthor {
@@ -493,7 +493,7 @@ impl State {
             metallic: stock(&b.metallic_stock),
             roughness: stock(&b.roughness_stock),
         };
-        let png = |text: &Option<String>| text.as_deref().and_then(procraft_engine::base64::decode).map(Into::into);
+        let png = |text: &Option<String>| text.as_deref().and_then(prostudio_engine::base64::decode).map(Into::into);
         brush.thumbnail = png(&b.thumbnail);
         if let Some(s) = &brush.stock.shape {
             let texture = Texture::Stock { name: s.name.clone(), inverted: s.inverted };
@@ -1205,7 +1205,7 @@ impl CanvasSession {
     pub fn brush_file(&self, set: u32, index: u32) -> Option<String> {
         let st = self.shared.lock();
         let brush = st.saved(st.library.get(set as usize)?, index as usize)?;
-        serde_json::to_string(&BrushFile { procraft_brush: 1, brush }).ok()
+        serde_json::to_string(&BrushFile { prostudio_brush: 1, brush }).ok()
     }
 
     /// A set as a file to share (JSON).
@@ -1214,7 +1214,7 @@ impl CanvasSession {
         let entry = st.library.get(set as usize)?;
         let brushes = (0..entry.brushes.len()).filter_map(|i| st.saved(entry, i)).collect();
         serde_json::to_string(&SetFile {
-            procraft_brush_set: 1,
+            prostudio_brush_set: 1,
             set: SavedSet { name: entry.name.clone(), brushes, icon: Some(entry.icon), icons: ICON_NUMBERING },
         })
         .ok()
@@ -1277,7 +1277,7 @@ mod keeping {
     #[test]
     fn a_library_kept_in_a_folder_comes_back_with_its_choices() {
         let dir = std::env::temp_dir().join(format!(
-            "procraft-brushes-{}-{}",
+            "prostudio-brushes-{}-{}",
             std::process::id(),
             std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_nanos())
         ));

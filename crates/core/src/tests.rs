@@ -1,7 +1,7 @@
 //! The session on the host: input in window pixels → strokes → pixels, on a headless GPU.
 
-use procraft_engine::view::View;
-use procraft_gpu::Gpu;
+use prostudio_engine::view::View;
+use prostudio_gpu::Gpu;
 
 use crate::{CanvasSession, PenSample, PointerKind, ToolKind};
 
@@ -173,14 +173,14 @@ fn readers_never_panic_on_damaged_files() {
             }
             tried += 1;
             let read = std::panic::catch_unwind(|| match extension.as_str() {
-                "psd" | "psb" => _ = procraft_engine::psd::read(&damaged),
-                "procreate" | "procraft" => _ = procraft_engine::native::read(&damaged),
-                "obj" => _ = procraft_engine::mesh::read_obj(&String::from_utf8_lossy(&damaged), None),
-                "usdz" => _ = procraft_engine::usd::read_usdz(&damaged),
-                "usd" | "usdc" | "usda" => _ = procraft_engine::usd::read_usd(&damaged),
-                "swatches" => _ = procraft_engine::palette::read_swatches(&damaged),
-                "ase" | "aco" => _ = procraft_engine::palette::read_other(&damaged, name.as_deref()),
-                "icc" | "icm" => _ = procraft_engine::cms::IccProfile::parse(&damaged),
+                "psd" | "psb" => _ = prostudio_engine::psd::read(&damaged),
+                "procreate" | "prostudio" => _ = prostudio_engine::native::read(&damaged),
+                "obj" => _ = prostudio_engine::mesh::read_obj(&String::from_utf8_lossy(&damaged), None),
+                "usdz" => _ = prostudio_engine::usd::read_usdz(&damaged),
+                "usd" | "usdc" | "usda" => _ = prostudio_engine::usd::read_usd(&damaged),
+                "swatches" => _ = prostudio_engine::palette::read_swatches(&damaged),
+                "ase" | "aco" => _ = prostudio_engine::palette::read_other(&damaged, name.as_deref()),
+                "icc" | "icm" => _ = prostudio_engine::cms::IccProfile::parse(&damaged),
                 _ => _ = crate::brush_files::read_any_brushes(&damaged, name.clone()),
             });
             if read.is_err() {
@@ -588,7 +588,7 @@ fn a_save_leaves_liquify_working_and_the_next_keeps_how_it_ended() {
     s.stroke_end(vec![]);
     let red = pixel(&s, 96, 64);
     assert!(red[0] > 200 && red[1] < 40, "{red:?}");
-    let dir = std::env::temp_dir().join(format!("procraft-save-liquify-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("prostudio-save-liquify-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     let path = dir.to_string_lossy().into_owned();
     let contents = |s: &CanvasSession| -> Vec<Vec<u8>> {
@@ -772,7 +772,7 @@ fn merge_duplicate_blend_and_locks() {
     s.stroke_end(vec![]);
     let copy = s.duplicate_layer(bottom).unwrap();
     assert_eq!(s.layers().len(), 2);
-    assert!(s.set_layer_blend(copy, procraft_engine::document::BlendMode::Multiply.id()));
+    assert!(s.set_layer_blend(copy, prostudio_engine::document::BlendMode::Multiply.id()));
     assert!(!s.set_layer_blend(copy, 999));
     assert_eq!(crate::layers::blend_modes().len(), 27);
     assert!(s.merge_down(copy));
@@ -827,7 +827,7 @@ fn a_preview_mixes_wet_only_where_the_brush_says_it_does() {
     let (set, index) = {
         let st = s.shared.lock();
         let found = st.library.iter().enumerate().find_map(|(set, l)| {
-            l.brushes.iter().position(procraft_engine::brush::Brush::mixes_wet).map(|index| (set, index))
+            l.brushes.iter().position(prostudio_engine::brush::Brush::mixes_wet).map(|index| (set, index))
         });
         found.unwrap()
     };
@@ -852,7 +852,7 @@ fn brushes_keep_their_own_sliders() {
     s.set_brush_size(0.9);
     assert!(s.select_brush(0, 0));
     // at the size its preview shows (0.09 of its range: the slider's place for it)
-    let start = 0.09f32.powf(1.0 / procraft_engine::brush::SIZE_CURVE);
+    let start = 0.09f32.powf(1.0 / prostudio_engine::brush::SIZE_CURVE);
     assert!((s.info().size - start).abs() < 1e-6, "a fresh brush starts at its default");
     s.set_brush_size(0.1);
     assert!(s.select_brush(1, 0));
@@ -866,11 +866,11 @@ fn brushes_keep_their_own_sliders() {
 }
 
 /// Writes every brush preview as raw RGBA (`<set>-<index>.rgba`, 480×120) into the directory in
-/// `PROCRAFT_DUMP`, for looking at the brushes: `cargo test -p procraft-core dump -- --ignored`.
+/// `PROSTUDIO_DUMP`, for looking at the brushes: `cargo test -p prostudio-core dump -- --ignored`.
 #[test]
 #[ignore]
 fn dump_brush_previews() {
-    let Ok(dir) = std::env::var("PROCRAFT_DUMP") else { return };
+    let Ok(dir) = std::env::var("PROSTUDIO_DUMP") else { return };
     let Some(s) = session(100, 100) else { return };
     let mut names = String::new();
     for set in s.brush_library() {
@@ -890,13 +890,13 @@ fn dump_brush_previews() {
 /// A brush set's own previews beside the engine's, to see where a set's brushes differ: for each
 /// brush, `thumbnail.png` (the file's), `engine.png` (drawn here at the same size) and a line of
 /// their alpha's mean and root-mean-square difference in `summary.txt`, worst first.
-/// `BRUSH_SET=set.brushset PROCRAFT_DUMP=dir cargo test -p procraft-core dump_brush_comparisons -- --ignored`
+/// `BRUSH_SET=set.brushset PROSTUDIO_DUMP=dir cargo test -p prostudio-core dump_brush_comparisons -- --ignored`
 #[test]
 #[ignore]
 fn dump_brush_comparisons() {
-    use procraft_engine::brushfile;
+    use prostudio_engine::brushfile;
     let Ok(path) = std::env::var("BRUSH_SET") else { return };
-    let Ok(root) = std::env::var("PROCRAFT_DUMP") else { return };
+    let Ok(root) = std::env::var("PROSTUDIO_DUMP") else { return };
     let Some(s) = session(100, 100) else { return };
     let set = s.import_brushes(std::fs::read(path).unwrap()).unwrap();
     let brushes: Vec<(u32, String)> =
@@ -1000,7 +1000,7 @@ fn a_finger_strokes_head_is_drawn_in_its_layer_under_those_above() {
 #[test]
 fn an_open_artwork_is_kept_saved_until_that_stops() {
     let Some(s) = session(64, 64) else { return };
-    let dir = std::env::temp_dir().join(format!("procraft-autosave-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("prostudio-autosave-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::sync::Arc::clone(&s).start_autosave(dir.to_string_lossy().into_owned());
     assert_eq!(s.edits_saved(), None);
@@ -1029,7 +1029,7 @@ fn an_open_artwork_is_kept_saved_until_that_stops() {
 #[test]
 fn an_autosave_that_finds_a_stroke_saves_as_it_ends() {
     let Some(s) = session(64, 64) else { return };
-    let dir = std::env::temp_dir().join(format!("procraft-gap-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("prostudio-gap-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     let every = std::time::Duration::from_millis(1000);
     let started = std::time::Instant::now();
@@ -1062,7 +1062,7 @@ fn an_autosave_that_finds_a_stroke_saves_as_it_ends() {
 #[test]
 fn an_autosave_ends_with_the_graphics_device() {
     let Some(s) = session(64, 64) else { return };
-    let dir = std::env::temp_dir().join(format!("procraft-lost-autosave-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("prostudio-lost-autosave-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     s.stroke_begin(PointerKind::Finger, vec![sample(20.0, 20.0, 0.0)]);
     s.stroke_end(vec![]);
@@ -1077,7 +1077,7 @@ fn an_autosave_ends_with_the_graphics_device() {
         let st = s.shared.lock();
         let gpu = st.gpu.as_ref().unwrap();
         gpu.device.destroy();
-        let _ = gpu.device.poll(procraft_gpu::wgpu::PollType::wait_indefinitely());
+        let _ = gpu.device.poll(prostudio_gpu::wgpu::PollType::wait_indefinitely());
         assert!(gpu.is_lost());
     }
     std::sync::Arc::clone(&s).start_autosave(dir.to_string_lossy().into_owned());
@@ -1097,8 +1097,8 @@ fn an_autosave_ends_with_the_graphics_device() {
 fn a_failing_autosave_is_told_once_until_a_save_works() {
     let Some(s) = session(64, 64) else { return };
     // a file where its folder would be: every save there fails
-    let blocked = std::env::temp_dir().join(format!("procraft-blocked-{}", std::process::id()));
-    let good = std::env::temp_dir().join(format!("procraft-unblocked-{}", std::process::id()));
+    let blocked = std::env::temp_dir().join(format!("prostudio-blocked-{}", std::process::id()));
+    let good = std::env::temp_dir().join(format!("prostudio-unblocked-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&good);
     std::fs::write(&blocked, b"not a folder").unwrap();
     let paint = |x: f32| {
@@ -1141,7 +1141,7 @@ fn an_export_tells_how_far_it_has_come() {
     let Some(s) = session(64, 64) else { return };
     s.stroke_begin(PointerKind::Finger, vec![sample(10.0, 10.0, 0.0)]);
     s.stroke_end(vec![]);
-    let dir = std::env::temp_dir().join(format!("procraft-progress-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("prostudio-progress-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = |n: &str| dir.join(n).to_string_lossy().into_owned();
     s.export_psd(path("a.psd")).unwrap();
@@ -1168,7 +1168,7 @@ fn nothing_is_saved_from_a_lost_graphics_device() {
     let Some(s) = session(64, 64) else { return };
     s.stroke_begin(PointerKind::Finger, vec![sample(30.0, 30.0, 0.0)]);
     s.stroke_end(vec![]);
-    let dir = std::env::temp_dir().join(format!("procraft-lost-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("prostudio-lost-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     s.save(dir.to_string_lossy().into_owned()).unwrap();
     let kept = std::fs::read(dir.join("thumbnail.png")).unwrap();
@@ -1176,7 +1176,7 @@ fn nothing_is_saved_from_a_lost_graphics_device() {
     s.stroke_end(vec![]);
     let gpu = s.shared.lock().gpu.clone().unwrap();
     gpu.device.destroy();
-    let _ = gpu.device.poll(procraft_gpu::wgpu::PollType::wait_indefinitely());
+    let _ = gpu.device.poll(prostudio_gpu::wgpu::PollType::wait_indefinitely());
     assert!(gpu.is_lost());
     assert!(s.save(dir.to_string_lossy().into_owned()).is_err());
     assert_eq!(std::fs::read(dir.join("thumbnail.png")).unwrap(), kept);
@@ -1188,7 +1188,7 @@ fn a_stroke_on_a_canvas_whose_graphics_stopped_tells_so_again() {
     let Some(s) = session(64, 64) else { return };
     let gpu = s.shared.lock().gpu.clone().unwrap();
     gpu.device.destroy();
-    let _ = gpu.device.poll(procraft_gpu::wgpu::PollType::wait_indefinitely());
+    let _ = gpu.device.poll(prostudio_gpu::wgpu::PollType::wait_indefinitely());
     assert!(gpu.is_lost());
     let told = s.take_failure();
     assert!(told.is_some());
@@ -1219,7 +1219,7 @@ fn an_artwork_opened_again_has_every_layer_as_it_was() {
     };
     let before = contents(&s);
     assert!(before.iter().any(|(id, px)| *id == empty && px.iter().all(|&v| v == 0)));
-    let dir = std::env::temp_dir().join(format!("procraft-reopen-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("prostudio-reopen-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     s.save(dir.to_string_lossy().into_owned()).unwrap();
     let opened = CanvasSession::open(dir.to_string_lossy().into_owned()).unwrap();
@@ -1263,7 +1263,7 @@ fn artworks_save_and_open() {
     assert_eq!(stats.assisted, 0);
     s.set_guide_assisted(true);
     assert_eq!(s.layer_stats().assisted, 1);
-    let dir = std::env::temp_dir().join(format!("procraft-save-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("prostudio-save-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     s.save(dir.to_string_lossy().into_owned()).unwrap();
     assert!(dir.join("artwork.json").exists() && dir.join("thumbnail.png").exists());
@@ -1497,7 +1497,7 @@ fn where_layers_are_painted_is_found_on_the_gpu_as_on_the_cpu() {
     let mut guard = s.shared.lock();
     let st = &mut *guard;
     let (canvas, gpu) = (st.canvas.as_mut().unwrap(), st.gpu.as_ref().unwrap());
-    let ids: Vec<_> = ids.into_iter().map(procraft_engine::document::LayerId).collect();
+    let ids: Vec<_> = ids.into_iter().map(prostudio_engine::document::LayerId).collect();
     let found = canvas.painted_boxes(gpu, &ids);
     for (id, gpu_box) in ids.iter().zip(&found) {
         let cpu_box = crate::layer_ops::painted_rect(&canvas.read_layer(gpu, *id).unwrap(), 1100);
@@ -1636,13 +1636,13 @@ fn a_crop_by_whole_pixels_copies_the_layers_as_the_cpu_would() {
     // reaching past the left and the bottom edges
     let rect = [-30.0f32, 50.0, 250.0, 280.0];
     assert!(s.crop_canvas(rect[0], rect[1], rect[2], rect[3], 0.0, false, 0, 0));
-    let c = procraft_engine::crop::crop(rect, 0.0, None);
+    let c = prostudio_engine::crop::crop(rect, 0.0, None);
     assert!(c.whole_pixels().is_some());
     let _ = pixel(&s, 0, 0);
     for (id, old) in ids.iter().zip(&before) {
         let now = s.copy_layer_contents(*id).unwrap();
         assert_eq!((now.width, now.height), (c.width, c.height));
-        assert!(now.rgba == procraft_engine::crop::resample(old, 300, 300, &c), "{id}");
+        assert!(now.rgba == prostudio_engine::crop::resample(old, 300, 300, &c), "{id}");
     }
 }
 
@@ -1662,12 +1662,12 @@ fn a_crop_turned_or_resized_resamples_on_the_gpu_as_the_cpu_would() {
         let before = s.copy_layer_contents(id).unwrap().rgba;
         let (w, h) = size.unwrap_or((0, 0));
         assert!(s.crop_canvas(rect[0], rect[1], rect[2], rect[3], angle, size.is_some(), w, h));
-        let c = procraft_engine::crop::crop(rect, angle, size);
+        let c = prostudio_engine::crop::crop(rect, angle, size);
         assert!(c.whole_pixels().is_none());
         let _ = pixel(&s, 0, 0);
         let now = s.copy_layer_contents(id).unwrap();
         assert_eq!((now.width, now.height), (c.width, c.height));
-        let cpu = procraft_engine::crop::resample(&before, 300, 300, &c);
+        let cpu = prostudio_engine::crop::resample(&before, 300, 300, &c);
         let off = now.rgba.iter().zip(&cpu).filter(|(a, b)| a != b).count();
         let worst = now.rgba.iter().zip(&cpu).map(|(a, b)| a.abs_diff(*b)).max().unwrap_or(0);
         eprintln!("crop {rect:?} {angle}: {off} of {} values differ, by {worst} at most", cpu.len());
@@ -2149,8 +2149,8 @@ fn newspaper_halftone_is_grey() {
 
 #[test]
 fn an_imported_brush_shows_its_own_preview_until_changed() {
-    use procraft_engine::brush::Brush;
-    use procraft_engine::brushfile::{self, Pictures};
+    use prostudio_engine::brush::Brush;
+    use prostudio_engine::brushfile::{self, Pictures};
     let Some(s) = session(100, 100) else { return };
     // a file whose preview is a solid white band across its middle
     let (w, h) = (327u32, 100u32);
@@ -2180,7 +2180,7 @@ fn an_imported_brush_shows_its_own_preview_until_changed() {
     assert_eq!(alpha(&s), (255, 0));
     // kept with the library (in a file of its own), and written back out as it came
     let Some(other) = session(100, 100) else { return };
-    let dir = std::env::temp_dir().join(format!("procraft-library-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("prostudio-library-{}", std::process::id()));
     let kept = dir.join("brushes").join("library.json").to_string_lossy().into_owned();
     assert!(s.save_brush_library_file(kept.clone()));
     assert!(other.load_brush_library_file(kept.clone()));
@@ -2826,7 +2826,7 @@ fn a_private_picture_shows_on_the_canvas_but_not_in_the_thumbnail() {
     let id = s.insert_image(photo, true).unwrap();
     assert!(s.layers().iter().any(|l| l.id == id && l.private));
     assert_eq!(pixel(&s, 50, 50), [255, 0, 0, 255]);
-    let dir = std::env::temp_dir().join(format!("procraft-private-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("prostudio-private-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     s.save(dir.to_string_lossy().into_owned()).unwrap();
     let png = std::fs::read(dir.join("thumbnail.png")).unwrap();
@@ -2846,7 +2846,7 @@ fn a_private_picture_shows_on_the_canvas_but_not_in_the_thumbnail() {
 #[test]
 fn a_private_picture_stays_out_of_the_time_lapse() {
     let Some(s) = session(100, 100) else { return };
-    let dir = std::env::temp_dir().join(format!("procraft-private-lapse-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("prostudio-private-lapse-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     let artwork = dir.to_string_lossy().into_owned();
     let lapse = crate::TimeLapse::new(artwork.clone());
@@ -3349,7 +3349,7 @@ fn exports_psd_tiff_pdf_and_layer_pngs() {
     s.stroke_end(vec![]);
     s.combine_down(top).unwrap();
     s.add_mask(top).unwrap();
-    let dir = std::env::temp_dir().join(format!("procraft-export-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("prostudio-export-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = |name: &str| dir.join(name).to_string_lossy().into_owned();
     s.export_psd(path("a.psd")).unwrap();
@@ -3508,7 +3508,7 @@ fn an_artwork_from_a_picture() {
 #[test]
 fn a_picture_saved_before_it_is_shown_has_its_thumbnail() {
     use crate::layers::ThumbnailImage;
-    let dir = std::env::temp_dir().join(format!("procraft-unshown-thumbnail-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("prostudio-unshown-thumbnail-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     let rgba = [0u8, 0, 255, 255].repeat(6 * 4);
     let s = CanvasSession::from_image(ThumbnailImage { width: 6, height: 4, rgba }, "Blue".to_owned());
@@ -3521,7 +3521,7 @@ fn a_picture_saved_before_it_is_shown_has_its_thumbnail() {
 #[test]
 fn a_picture_larger_than_a_canvas_may_be_is_scaled_down_to_fit() {
     use crate::layers::ThumbnailImage;
-    let most = procraft_engine::document::canvas_edge_most();
+    let most = prostudio_engine::document::canvas_edge_most();
     let (w, h) = (most + most / 4, 8);
     // the left half red, the right half blue
     let rgba: Vec<u8> =
@@ -3647,7 +3647,7 @@ fn a_saved_animation_can_be_drawn_with_no_window() {
     s.stroke_begin(PointerKind::Finger, vec![sample(20.0, 15.0, 0.0)]);
     s.stroke_end(vec![]);
     s.add_layer();
-    let dir = std::env::temp_dir().join(format!("procraft-plays-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("prostudio-plays-{}", std::process::id()));
     let path = dir.to_string_lossy().into_owned();
     s.save(path.clone()).unwrap();
     assert!(!crate::artwork_plays(path.clone()), "not animated");
@@ -3712,7 +3712,7 @@ fn layers_export_as_animations() {
     assert!(px(&second).iter().all(|p| p[3] == 0 || p[2] >= p[0]));
     assert!(px(&second).iter().any(|p| p[3] == 0), "no background when transparent");
     assert!(s.animation_frame(2, false, 0).is_none());
-    let dir = std::env::temp_dir().join(format!("procraft-animation-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("prostudio-animation-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = |name: &str| dir.join(name).to_string_lossy().into_owned();
     s.export_gif(path("a.gif"), 0, 15.0, true, true, false).unwrap();
@@ -3725,7 +3725,7 @@ fn layers_export_as_animations() {
     let shared = std::fs::read(dir.join("b.gif")).unwrap();
     assert_eq!(shared[10] & 0x80, 0x80);
     let mut frames: Vec<Vec<u8>> = Vec::new();
-    procraft_engine::gif::frames(&shared, |canvas, _| {
+    prostudio_engine::gif::frames(&shared, |canvas, _| {
         frames.push(canvas.to_vec());
         true
     });
@@ -4026,7 +4026,7 @@ fn saves_before_and_after_a_crop_leave_nothing_beside_and_open_at_the_new_size()
     s.add_layer();
     s.stroke_begin(PointerKind::Stylus, vec![sample(20.0, 80.0, 0.0)]);
     s.stroke_end(vec![sample(140.0, 80.0, 50.0)]);
-    let dir = std::env::temp_dir().join(format!("procraft-staged-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("prostudio-staged-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     let d = dir.to_string_lossy().into_owned();
     s.save(d.clone()).unwrap();
@@ -4054,7 +4054,7 @@ fn an_artwork_whose_file_has_settings_it_cant_read_opens_with_its_layers() {
     let Some(s) = session(64, 160) else { return };
     s.add_layer();
     s.add_layer();
-    let dir = std::env::temp_dir().join(format!("procraft-unreadable-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("prostudio-unreadable-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     s.save(dir.to_string_lossy().into_owned()).unwrap();
     // how it was last shown, what it keeps about itself and the guide no longer readable
@@ -4093,7 +4093,7 @@ fn a_kept_library_with_a_brush_it_cant_read_keeps_the_rest() {
 
 #[test]
 fn a_kept_library_damaged_anyhow_opens_with_each_tool_on_a_brush_that_paints() {
-    let dir = std::env::temp_dir().join(format!("procraft-library-damaged-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("prostudio-library-damaged-{}", std::process::id()));
     for seed in 0u32..10 {
         let mut state = seed.wrapping_mul(2_654_435_761) | 1;
         let mut next = |n: usize| {
@@ -4213,17 +4213,17 @@ fn a_shaped_brush_outlines_its_shape_and_the_round_tip_none() {
 
 #[test]
 fn an_old_brush_file_without_grain_depth_has_its_grain_at_full_depth_moving() {
-    use procraft_engine::plist::Value;
+    use prostudio_engine::plist::Value;
     // a file from before grain depth and behaviour were kept: a named grain, its movement only
     let file = |extra: Vec<(&str, Value)>| {
-        let mut b = procraft_engine::keyed::Builder::new();
+        let mut b = prostudio_engine::keyed::Builder::new();
         let root = b.reserve();
         let name = b.string("Old Canvas");
         let grain = b.string("Canvas.jpg");
         let mut fields = vec![("name", name), ("bundledGrainPath", grain), ("textureMovement", Value::Real(0.4))];
         fields.extend(extra);
         b.fill(&root, &["SilicaBrush", "ValkyrieBrush", "NSObject"], fields);
-        let mut zip = procraft_engine::zip::ZipWriter::new();
+        let mut zip = prostudio_engine::zip::ZipWriter::new();
         zip.add("Brush.archive", &b.finish(root));
         zip.finish()
     };
@@ -4234,7 +4234,7 @@ fn an_old_brush_file_without_grain_depth_has_its_grain_at_full_depth_moving() {
         let g = &st.library[set].brushes[0].grain;
         (g.depth, g.mode)
     };
-    use procraft_engine::brush::GrainMode;
+    use prostudio_engine::brush::GrainMode;
     assert_eq!(grain_of(file(vec![])), (1.0, GrainMode::Moving));
     // a file that names them keeps its own
     let kept = grain_of(file(vec![("grainDepth", Value::Real(0.3)), ("textureApplication", Value::Int(1))]));
@@ -4364,7 +4364,7 @@ fn a_brush_paints_with_a_shape_of_the_users_own_and_keeps_it() {
     assert_ne!(t.studio_source(crate::studio::SourceKind::Shape), vec![255; n * n]);
     // the grains' library starts with the Blank, which isn't a shipped grain
     let library = crate::studio::source_library(true);
-    assert_eq!(library.len(), procraft_engine::textures::grains().len() + 1);
+    assert_eq!(library.len(), prostudio_engine::textures::grains().len() + 1);
     assert!(library.first().is_some_and(|b| b.name == "Blank" && b.pixels.iter().all(|&v| v == 255)));
 }
 
@@ -4391,7 +4391,7 @@ fn an_artwork_opens_as_it_was_shown() {
     let Some(s) = session(100, 100) else { return };
     s.view_gesture(50.0, 50.0, 5.0, -3.0, 2.0, 0.4);
     let shown = s.shared.lock().view.unwrap();
-    let dir = std::env::temp_dir().join(format!("procraft-view-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("prostudio-view-{}", std::process::id()));
     s.save(dir.to_string_lossy().into_owned()).unwrap();
     let t = CanvasSession::open(dir.to_string_lossy().into_owned()).unwrap();
     let back = t.shared.lock().saved_view.and_then(|v| v.view((100, 100))).unwrap();
@@ -4415,7 +4415,7 @@ fn saves_at_the_same_time_keep_the_layers_whole() {
         s.stroke_add((1..30).map(|k| sample(10.0 + 9.0 * k as f32, y + 3.0, f64::from(k) * 8.0)).collect());
         s.stroke_end(vec![]);
     }
-    let dir = std::env::temp_dir().join(format!("procraft-twice-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("prostudio-twice-{}", std::process::id()));
     let path = dir.to_string_lossy().into_owned();
     // the open's save and the close's save, together, a few times over
     for _ in 0..4 {
@@ -4479,7 +4479,7 @@ fn a_canvas_keeps_its_colour_profile() {
     assert_eq!(s.profile(), "sRGB IEC61966-2.1");
     assert!(!s.set_new_profile("Adobe RGB".to_owned()));
     assert!(s.set_new_profile("Display P3".to_owned()));
-    let dir = std::env::temp_dir().join(format!("procraft-profile-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("prostudio-profile-{}", std::process::id()));
     s.save(dir.to_string_lossy().into_owned()).unwrap();
     let t = CanvasSession::open(dir.to_string_lossy().into_owned()).unwrap();
     assert_eq!(t.profile(), "Display P3");
@@ -4503,7 +4503,7 @@ fn an_artwork_saved_while_its_canvas_is_being_made_keeps_its_picture() {
     let red: Vec<u8> = [255u8, 0, 0, 255].repeat(64 * 64);
     let s = CanvasSession::from_image(crate::layers::ThumbnailImage { width: 64, height: 64, rgba: red }, "Red".into());
     s.shared.lock().gpu = Some(gpu);
-    let dir = std::env::temp_dir().join(format!("procraft-unmade-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("prostudio-unmade-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     s.save(dir.to_string_lossy().into_owned()).unwrap();
     let reader = png::Decoder::new(std::io::BufReader::new(std::fs::File::open(dir.join("thumbnail.png")).unwrap()));
@@ -4519,7 +4519,7 @@ fn a_jpeg_coded_in_stretches_reads_back_as_its_picture() {
     // tall enough to be coded in several stretches between restart markers
     let (w, h) = (96u32, 640u32);
     let rgb: Vec<u8> = (0..w * h).flat_map(|i| [(i % w * 2) as u8, (i / w % 256) as u8, 128]).collect();
-    let jpg = procraft_engine::jpeg::encode(&rgb, w, h, 95);
+    let jpg = prostudio_engine::jpeg::encode(&rgb, w, h, 95);
     assert!(jpg.windows(2).any(|m| m == [0xFF, 0xDD]), "no restart interval");
     let back = image::load_from_memory_with_format(&jpg, image::ImageFormat::Jpeg).unwrap().to_rgb8();
     assert_eq!(back.dimensions(), (w, h));
@@ -4532,14 +4532,14 @@ fn a_jpeg_coded_in_stretches_reads_back_as_its_picture() {
 fn a_p3_canvas_exports_with_its_profile() {
     let Some(s) = session(20, 10) else { return };
     assert!(s.set_new_profile("Display P3".to_owned()));
-    let path = std::env::temp_dir().join(format!("procraft-p3-{}.png", std::process::id()));
+    let path = std::env::temp_dir().join(format!("prostudio-p3-{}.png", std::process::id()));
     s.export_png(path.to_string_lossy().into_owned()).unwrap();
     let reader = png::Decoder::new(std::io::BufReader::new(std::fs::File::open(&path).unwrap())).read_info().unwrap();
     let icc = reader.info().icc_profile.as_ref().expect("an embedded profile").to_vec();
-    assert_eq!(icc, procraft_engine::icc::icc(procraft_engine::profile::Profile::DisplayP3));
+    assert_eq!(icc, prostudio_engine::icc::icc(prostudio_engine::profile::Profile::DisplayP3));
     let _ = std::fs::remove_file(path);
     // a JPEG carries it too, the see-through canvas laid onto white
-    let path = std::env::temp_dir().join(format!("procraft-p3-{}.jpg", std::process::id()));
+    let path = std::env::temp_dir().join(format!("prostudio-p3-{}.jpg", std::process::id()));
     s.export_jpeg(path.to_string_lossy().into_owned()).unwrap();
     let bytes = std::fs::read(&path).unwrap();
     assert_eq!(&bytes[..2], &[0xFF, 0xD8]);
@@ -4551,7 +4551,7 @@ fn a_p3_canvas_exports_with_its_profile() {
 #[test]
 fn a_cmyk_canvas_keeps_rgb_pixels_and_prints_its_inks() {
     let Some(s) = session(20, 10) else { return };
-    let cmyk = procraft_engine::cmyk::NAME.to_owned();
+    let cmyk = prostudio_engine::cmyk::NAME.to_owned();
     assert!(s.set_new_profile(cmyk.clone()));
     assert!(s.is_cmyk());
     assert_eq!(s.profile(), cmyk);
@@ -4568,14 +4568,14 @@ fn a_cmyk_canvas_keeps_rgb_pixels_and_prints_its_inks() {
     s.stroke_begin(PointerKind::Finger, vec![sample(2.0, 5.0, 0.0), sample(18.0, 5.0, 10.0)]);
     s.stroke_end(vec![]);
     assert_eq!(pixel(&s, 10, 5), [0, 255, 0, 255]);
-    let dir = std::env::temp_dir().join(format!("procraft-cmyk-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("prostudio-cmyk-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let png_path = dir.join("a.png");
     s.export_png(png_path.to_string_lossy().into_owned()).unwrap();
     let mut reader =
         png::Decoder::new(std::io::BufReader::new(std::fs::File::open(&png_path).unwrap())).read_info().unwrap();
     let icc = reader.info().icc_profile.as_ref().unwrap().to_vec();
-    assert_eq!(icc, procraft_engine::icc::icc(procraft_engine::profile::Profile::DisplayP3));
+    assert_eq!(icc, prostudio_engine::icc::icc(prostudio_engine::profile::Profile::DisplayP3));
     let mut buf = vec![0; reader.output_buffer_size().unwrap()];
     reader.next_frame(&mut buf).unwrap();
     let at = (5 * 20 + 10) * 4;
@@ -4622,7 +4622,7 @@ fn an_artwork_never_shown_exports_offscreen() {
     s.set_color(1.0, 0.0, 0.0);
     s.stroke_begin(PointerKind::Finger, vec![sample(20.0, 20.0, 0.0)]);
     s.stroke_end(vec![]);
-    let dir = std::env::temp_dir().join(format!("procraft-offscreen-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("prostudio-offscreen-{}", std::process::id()));
     s.save(dir.to_string_lossy().into_owned()).unwrap();
     let t = CanvasSession::open(dir.to_string_lossy().into_owned()).unwrap();
     let png = dir.join("out.png");
@@ -4642,7 +4642,7 @@ fn an_artwork_never_shown_exports_offscreen() {
 #[test]
 fn saving_while_idle_writes_only_what_changed() {
     let Some(s) = session(40, 40) else { return };
-    let dir = std::env::temp_dir().join(format!("procraft-idle-save-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("prostudio-idle-save-{}", std::process::id()));
     let path = dir.to_string_lossy().into_owned();
     s.save(path.clone()).unwrap();
     let edits = s.edits();
@@ -4796,8 +4796,8 @@ fn slider_notches_are_kept_with_the_library() {
 
 #[test]
 fn a_brush_files_sliders_start_where_it_left_them_and_go_back_out() {
-    use procraft_engine::brush::Brush;
-    use procraft_engine::brushfile::{self, Pictures};
+    use prostudio_engine::brush::Brush;
+    use prostudio_engine::brushfile::{self, Pictures};
     let Some(s) = session(100, 100) else { return };
     let png = crate::project::rgba_png(1, 1, &[255; 4]);
     let pictures = Pictures {
@@ -4843,9 +4843,9 @@ fn a_brush_files_sliders_start_where_it_left_them_and_go_back_out() {
 
 #[test]
 fn a_brushs_own_pressure_curves_are_kept_with_the_library() {
-    use procraft_engine::brush::PressureCurve;
-    use procraft_engine::curve::Curve;
-    use procraft_engine::geom::Vec2;
+    use prostudio_engine::brush::PressureCurve;
+    use prostudio_engine::curve::Curve;
+    use prostudio_engine::geom::Vec2;
     let bend = Curve::new(&[Vec2::new(0.0, 0.2), Vec2::new(1.0, 0.6)]);
     let s = CanvasSession::new(64, 64);
     {
@@ -4920,22 +4920,22 @@ fn the_pad_turns_into_a_sphere_of_its_own_and_back() {
     let px = {
         let mut guard = pad.shared.lock();
         let st = &mut *guard;
-        let format = procraft_gpu::wgpu::TextureFormat::Rgba8Unorm;
+        let format = prostudio_gpu::wgpu::TextureFormat::Rgba8Unorm;
         let gpu = st.gpu.clone().unwrap();
-        let target = gpu.device.create_texture(&procraft_gpu::wgpu::TextureDescriptor {
+        let target = gpu.device.create_texture(&prostudio_gpu::wgpu::TextureDescriptor {
             label: Some("test frame"),
-            size: procraft_gpu::wgpu::Extent3d { width: 300, height: 300, depth_or_array_layers: 1 },
+            size: prostudio_gpu::wgpu::Extent3d { width: 300, height: 300, depth_or_array_layers: 1 },
             mip_level_count: 1,
             sample_count: 1,
-            dimension: procraft_gpu::wgpu::TextureDimension::D2,
+            dimension: prostudio_gpu::wgpu::TextureDimension::D2,
             format,
-            usage: procraft_gpu::wgpu::TextureUsages::RENDER_ATTACHMENT | procraft_gpu::wgpu::TextureUsages::COPY_SRC,
+            usage: prostudio_gpu::wgpu::TextureUsages::RENDER_ATTACHMENT | prostudio_gpu::wgpu::TextureUsages::COPY_SRC,
             view_formats: &[],
         });
-        let view = target.create_view(&procraft_gpu::wgpu::TextureViewDescriptor::default());
+        let view = target.create_view(&prostudio_gpu::wgpu::TextureViewDescriptor::default());
         st.render_sphere(&view, format, (300, 300), None);
         assert_eq!(gpu.errors(), 0, "GPU validation errors");
-        procraft_gpu::read_texture(&gpu, &target, 300, 300).unwrap()
+        prostudio_gpu::read_texture(&gpu, &target, 300, 300).unwrap()
     };
     let at = |x: usize, y: usize| px[(y * 300 + x) * 4];
     assert!(at(2, 2).abs_diff(26) <= 1, "{}", at(2, 2));
@@ -5149,12 +5149,12 @@ fn set_sheet() {
 /// round brush 22 px across, spaced as its file keeps 0.042, at 49% flow, one pass along a line.
 #[test]
 fn rendering_modes_build_up_as_measured() {
-    use procraft_engine::brush::{Brush, Taper};
-    use procraft_engine::document::Document;
-    use procraft_engine::geom::Vec2;
-    use procraft_engine::input::{Pointer, Sample};
-    use procraft_engine::stroke::StrokeBuilder;
-    use procraft_gpu::{Canvas, StrokeStyle, StrokeTool};
+    use prostudio_engine::brush::{Brush, Taper};
+    use prostudio_engine::document::Document;
+    use prostudio_engine::geom::Vec2;
+    use prostudio_engine::input::{Pointer, Sample};
+    use prostudio_engine::stroke::StrokeBuilder;
+    use prostudio_gpu::{Canvas, StrokeStyle, StrokeTool};
     let Ok(gpu) = Gpu::headless() else { return };
     let pass = |mode: f32| -> f32 {
         let mut b = Brush {
@@ -5226,7 +5226,7 @@ fn the_brushes_in_use_are_kept_between_sessions() {
 fn a_zip_of_brushes_is_told_from_other_zips() {
     let s = CanvasSession::new(64, 64);
     assert!(crate::brush_files::is_brush_zip(s.brush_as_file(0, 0).unwrap()));
-    let mut other = procraft_engine::zip::ZipWriter::new();
+    let mut other = prostudio_engine::zip::ZipWriter::new();
     other.add("model.obj", b"v 0 0 0");
     assert!(!crate::brush_files::is_brush_zip(other.finish()));
     assert!(!crate::brush_files::is_brush_zip(b"not a zip".to_vec()));
@@ -5248,7 +5248,7 @@ fn kept_brush_choices_with_entries_it_cant_read_keep_the_rest() {
 
 #[test]
 fn the_brushes_are_kept_in_their_folder_and_an_earlier_version_s_taken_in() {
-    let dir = std::env::temp_dir().join(format!("procraft-brushes-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("prostudio-brushes-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     let d = dir.to_string_lossy().into_owned();
     // nothing kept: the library as it ships, what shipped noted
@@ -5277,8 +5277,8 @@ fn the_brushes_are_kept_in_their_folder_and_an_earlier_version_s_taken_in() {
 
 #[test]
 fn a_brush_keeps_its_maker_and_a_reset_point() {
-    use procraft_engine::brush::Brush;
-    use procraft_engine::brushfile::{self, Pictures};
+    use prostudio_engine::brush::Brush;
+    use prostudio_engine::brushfile::{self, Pictures};
     let s = CanvasSession::new(64, 64);
     // a file by someone, with their picture (and a signature that isn't a picture)
     let face = crate::project::rgba_png(2, 2, &[200; 16]);
@@ -5334,13 +5334,13 @@ fn a_brush_keeps_its_maker_and_a_reset_point() {
 
 #[test]
 fn a_rolling_grain_stays_put_when_painting_wet() {
-    use procraft_engine::brush::{Brush, Grain, GrainMode};
+    use prostudio_engine::brush::{Brush, Grain, GrainMode};
     let Some(s) = session(200, 200) else { return };
     // a wet brush whose fine grain rolls along with the stroke, light enough for the grain to
     // show (built up in full, it fills in)
     let mut b = Brush {
         grain: Grain {
-            image: Some(procraft_engine::textures::grain::NOISE),
+            image: Some(prostudio_engine::textures::grain::NOISE),
             mode: GrainMode::Moving,
             scale: 256.0,
             depth: 1.0,
@@ -5374,12 +5374,12 @@ fn a_rolling_grain_stays_put_when_painting_wet() {
 
 #[test]
 fn a_moving_grain_streaks_along_the_stroke_however_the_stamps_turn() {
-    use procraft_engine::brush::{Brush, Grain, GrainMode};
+    use prostudio_engine::brush::{Brush, Grain, GrainMode};
     let Some(s) = session(200, 200) else { return };
     // a wet brush turning each stamp at random, its fine grain moving a tenth of the way along
     let mut b = Brush {
         grain: Grain {
-            image: Some(procraft_engine::textures::grain::SPECKLED),
+            image: Some(prostudio_engine::textures::grain::SPECKLED),
             mode: GrainMode::Moving,
             scale: 256.0,
             depth: 1.0,
@@ -5419,9 +5419,9 @@ fn a_moving_grain_streaks_along_the_stroke_however_the_stamps_turn() {
 
 #[test]
 fn stock_images_a_file_names_are_kept_and_named_again() {
-    use procraft_engine::brush::{Brush, StockImage, StockImages};
-    use procraft_engine::brushfile::{self, Pictures, Texture};
-    use procraft_engine::textures::grain;
+    use prostudio_engine::brush::{Brush, StockImage, StockImages};
+    use prostudio_engine::brushfile::{self, Pictures, Texture};
+    use prostudio_engine::textures::grain;
     let s = CanvasSession::new(64, 64);
     let png = crate::project::rgba_png(1, 1, &[255; 4]);
     let named = |name: &str| Some(StockImage { name: name.to_owned(), inverted: true });
@@ -5465,7 +5465,7 @@ fn stock_images_a_file_names_are_kept_and_named_again() {
         assert_eq!(b.stock.shape.as_ref().map(|g| (g.name.as_str(), g.inverted)), Some(("Hard-Round.png", true)));
         assert_eq!(b.grain.image, Some(grain::RECYCLED));
         // a stock metalness source we have nothing like: the amount all over, its name kept
-        assert_eq!(b.metallic, procraft_engine::brush::MaterialSource::default());
+        assert_eq!(b.metallic, prostudio_engine::brush::MaterialSource::default());
         assert!(b.stock.metallic.is_some() && b.stock.roughness.is_none());
         set as u32
     };
@@ -5479,11 +5479,11 @@ fn stock_images_a_file_names_are_kept_and_named_again() {
 
 #[test]
 fn keys_a_brush_file_has_that_nothing_draws_yet_are_kept_and_written_again() {
-    use procraft_engine::brushfile;
-    use procraft_engine::document::BlendMode;
-    use procraft_engine::keyed::Builder;
-    use procraft_engine::plist::Value;
-    use procraft_engine::zip::ZipWriter;
+    use prostudio_engine::brushfile;
+    use prostudio_engine::document::BlendMode;
+    use prostudio_engine::keyed::Builder;
+    use prostudio_engine::plist::Value;
+    use prostudio_engine::zip::ZipWriter;
     let mut b = Builder::new();
     let root = b.reserve();
     let name = b.string("Carried");
@@ -5836,9 +5836,9 @@ fn recolor_follows_its_point_and_colour_and_is_a_named_step() {
 
 #[test]
 fn a_layered_psd_comes_in_as_an_artwork() {
-    use procraft_engine::document::BlendMode;
-    use procraft_engine::formats::{PsdKind, PsdLayer, psd};
-    let dir = std::env::temp_dir().join(format!("procraft-psd-{}", std::process::id()));
+    use prostudio_engine::document::BlendMode;
+    use prostudio_engine::formats::{PsdKind, PsdLayer, psd};
+    let dir = std::env::temp_dir().join(format!("prostudio-psd-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     let (w, h) = (8, 6);
@@ -5949,7 +5949,7 @@ fn a_group_shown_alone_shows_its_layers_and_opens_whole_once_hidden() {
     assert!(s.set_layer_visible(group, false));
     assert_eq!([pixel(&s, 10, 50), pixel(&s, 40, 50), pixel(&s, 70, 50)], [white, white, white]);
     let gpu = s.shared.lock().gpu.clone().unwrap();
-    let dir = std::env::temp_dir().join(format!("procraft-solo-group-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("prostudio-solo-group-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     s.save(dir.to_string_lossy().into_owned()).unwrap();
     let opened = CanvasSession::open(dir.to_string_lossy().into_owned()).unwrap();
@@ -5979,7 +5979,7 @@ fn a_group_shown_alone_shows_its_layers_and_opens_whole_once_hidden() {
 fn reopened(s: &CanvasSession, name: &str) -> std::sync::Arc<CanvasSession> {
     let gpu = s.shared.lock().gpu.clone().unwrap();
     let side = s.shared.lock().window_size;
-    let dir = std::env::temp_dir().join(format!("procraft-{name}-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("prostudio-{name}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     s.save(dir.to_string_lossy().into_owned()).unwrap();
     let opened = CanvasSession::open(dir.to_string_lossy().into_owned()).unwrap();
@@ -6150,7 +6150,7 @@ fn a_group_with_a_hidden_layer_in_it_takes_no_change_and_says_so() {
 
 #[test]
 fn a_documents_pages_come_in_as_page_layers() {
-    let dir = std::env::temp_dir().join(format!("procraft-pages-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("prostudio-pages-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     let (w, h) = (6, 4);
@@ -6234,7 +6234,7 @@ fn a_photoshop_brush_files_tips_become_a_set() {
 /// preview, and a brush written out, read back and written out again comes out the same.
 #[test]
 fn a_corpus_of_real_brush_files_imports_draws_and_round_trips() {
-    use procraft_engine::brushfile::{self, BrushFile};
+    use prostudio_engine::brushfile::{self, BrushFile};
     let Ok(root) = std::env::var("BRUSH_CORPUS") else { return };
     let extension =
         |p: &std::path::Path| p.extension().and_then(|e| e.to_str()).unwrap_or_default().to_ascii_lowercase();
@@ -6363,7 +6363,7 @@ fn sliders_kept(a: &[Option<[f32; 2]>; 3], b: &[Option<[f32; 2]>; 3]) -> bool {
 
 /// What differs between two brush files (nothing: empty): the settings that changed, and the other
 /// fields.
-fn changes(a: &procraft_engine::brushfile::BrushFile, b: &procraft_engine::brushfile::BrushFile) -> String {
+fn changes(a: &prostudio_engine::brushfile::BrushFile, b: &prostudio_engine::brushfile::BrushFile) -> String {
     let mut out = Vec::new();
     for (k, v) in &a.settings {
         match b.settings.iter().find(|(k2, _)| k2 == k) {
@@ -6396,7 +6396,7 @@ fn changes(a: &procraft_engine::brushfile::BrushFile, b: &procraft_engine::brush
         ("author pictures", a.author_picture == b.author_picture && a.signature == b.signature),
     ];
     out.extend(fields.iter().filter(|f| !f.1).map(|f| f.0.to_owned()));
-    let order = |f: &procraft_engine::brushfile::BrushFile| f.settings.iter().map(|s| s.0.clone()).collect::<Vec<_>>();
+    let order = |f: &prostudio_engine::brushfile::BrushFile| f.settings.iter().map(|s| s.0.clone()).collect::<Vec<_>>();
     if order(a) != order(b) {
         out.push("settings' order".to_owned());
     }
@@ -6476,8 +6476,8 @@ fn a_krita_preset_becomes_a_round_brush_with_its_settings() {
     let s = CanvasSession::new(64, 64);
     // its texture: a 100 px picture, half white, kept as the base64 of its base64
     let px: Vec<u8> = (0..100 * 100).flat_map(|i| if i % 100 < 50 { [255; 4] } else { [0, 0, 0, 255] }).collect();
-    let paper = procraft_engine::base64::encode(
-        procraft_engine::base64::encode(&crate::project::rgba_png(100, 100, &px)).as_bytes(),
+    let paper = prostudio_engine::base64::encode(
+        prostudio_engine::base64::encode(&crate::project::rgba_png(100, 100, &px)).as_bytes(),
     );
     let xml = format!(
         r#"<Preset paintopid="paintbrush" name="Soft Round"><param name="PressureSize"><![CDATA[false]]></param><param name="brush_definition"><![CDATA[<Brush type="auto_brush" spacing="0.2" useAutoSpacing="0"><MaskGenerator type="circle" ratio="0.5" hfade="0.25" vfade="0.25"/></Brush>]]></param><param name="Texture/Pattern/Enabled"><![CDATA[true]]></param><param name="Texture/Pattern/Pattern"><![CDATA[{paper}]]></param><param name="Texture/Pattern/Scale"><![CDATA[0.5]]></param><param name="Texture/Pattern/Strength"><![CDATA[0.7]]></param></Preset>"#
@@ -6526,7 +6526,7 @@ fn a_krita_preset_holding_its_pictures_keeps_its_tip_and_texture() {
     paper.extend_from_slice(b"GPAT");
     paper.push(0);
     paper.extend((0..64 * 64).flat_map(|i| if i % 64 < 32 { [255; 3] } else { [0; 3] }));
-    let (tip, paper) = (procraft_engine::base64::encode(&tip), procraft_engine::base64::encode(&paper));
+    let (tip, paper) = (prostudio_engine::base64::encode(&tip), prostudio_engine::base64::encode(&paper));
     let xml = format!(
         r#"<Preset paintopid="paintbrush" name="Gild" embedded_resources="2"><resources><resource md5sum="aa" filename="Tip.gbr" name="Tip" type="brushes"><![CDATA[{tip}]]></resource><resource md5sum="bb" filename="Grain.0001.pat" name="Grain" type="patterns"><![CDATA[{paper}]]></resource></resources><param name="brush_definition"><![CDATA[<Brush md5sum="aa" type="gbr_brush" filename="Tip.gbr" useAutoSpacing="1"/>]]></param><param name="Texture/Pattern/Enabled"><![CDATA[true]]></param><param name="Texture/Pattern/Name"><![CDATA[Grain]]></param><param name="Texture/Pattern/PatternFileName"><![CDATA[Grain.0001.pat]]></param><param name="Texture/Pattern/PatternMD5Sum"><![CDATA[bb]]></param><param name="Texture/Pattern/Scale"><![CDATA[0.5]]></param></Preset>"#
     );
@@ -6549,7 +6549,7 @@ fn a_krita_preset_holding_its_pictures_keeps_its_tip_and_texture() {
     assert_eq!(b.name, "Gild");
     // its own tip, painting on the left and not the right
     let shape = b.shape.source.as_ref().unwrap();
-    let row = procraft_engine::textures::TEXTURE_SIZE * 128;
+    let row = prostudio_engine::textures::TEXTURE_SIZE * 128;
     assert!(shape.pixels[row + 40] == 255 && shape.pixels[row + 216] == 0);
     // its texture as paper grain, its 64 px tiles at half size
     assert!(b.grain.source.is_some());
@@ -6558,7 +6558,7 @@ fn a_krita_preset_holding_its_pictures_keeps_its_tip_and_texture() {
 
 #[test]
 fn a_krita_preset_with_a_masking_brush_becomes_a_dual_brush() {
-    use procraft_engine::document::BlendMode;
+    use prostudio_engine::document::BlendMode;
     // the masking brush's tip: a GIMP brush 4 x 4, its top half painting, held in the preset
     let mut tip = Vec::new();
     for v in [29u32, 2, 4, 4, 1] {
@@ -6568,7 +6568,7 @@ fn a_krita_preset_with_a_masking_brush_becomes_a_dual_brush() {
     tip.extend_from_slice(&10u32.to_be_bytes());
     tip.push(0);
     tip.extend((0..16).map(|i| if i < 8 { 255 } else { 0 }));
-    let tip = procraft_engine::base64::encode(&tip);
+    let tip = prostudio_engine::base64::encode(&tip);
     let kpp = |op: &str| {
         let xml = format!(
             r#"<Preset paintopid="paintbrush" name="Eroded" embedded_resources="1"><resources><resource md5sum="dd" filename="Debris.gbr" name="Debris" type="brushes"><![CDATA[{tip}]]></resource></resources><param name="brush_definition"><![CDATA[<Brush type="auto_brush" spacing="0.1" useAutoSpacing="0"><MaskGenerator type="circle" hfade="0.8" vfade="0.8"/></Brush>]]></param><param name="MaskingBrush/Enabled"><![CDATA[true]]></param><param name="MaskingBrush/MaskingCompositeOp"><![CDATA[{op}]]></param><param name="MaskingBrush/UseMasterSize"><![CDATA[true]]></param><param name="MaskingBrush/MasterSizeCoeff"><![CDATA[0.5]]></param><param name="MaskingBrush/Preset/brush_definition"><![CDATA[<Brush md5sum="dd" type="gbr_brush" filename="Debris.gbr" spacing="0.3" useAutoSpacing="0"/>]]></param><param name="MaskingBrush/Preset/PressureSize"><![CDATA[false]]></param><param name="MaskingBrush/Preset/FlowValue"><![CDATA[0.4]]></param><param name="MaskingBrush/Preset/OpacityValue"><![CDATA[0.9]]></param></Preset>"#
@@ -6597,7 +6597,7 @@ fn a_krita_preset_with_a_masking_brush_becomes_a_dual_brush() {
         assert!(b.shape.source.is_none() && (b.hardness - 0.8).abs() < 1e-6);
         let second = b.secondary.as_deref().unwrap();
         let shape = second.shape.source.as_ref().unwrap();
-        let n = procraft_engine::textures::TEXTURE_SIZE;
+        let n = prostudio_engine::textures::TEXTURE_SIZE;
         assert!(shape.pixels[n * n / 4 + n / 2] == 255 && shape.pixels[n * n * 3 / 4 + n / 2] == 0);
         assert_eq!(b.setting("dual_blend"), BlendMode::Subtract.id() as f32);
         // half the main brush's size at every slider, its own spacing, flow, opacity and pressure
@@ -6608,14 +6608,14 @@ fn a_krita_preset_with_a_masking_brush_becomes_a_dual_brush() {
         assert_eq!((second.pressure_size, second.pressure_opacity), (0.0, 0.0));
         assert!(second.grain.source.is_none() && second.secondary.is_none());
         // as Krita masks, in its wash mode: the stroke builds up to its opacity and no further
-        assert_eq!((second.rendering, second.max_opacity), (procraft_engine::brush::Rendering::Capped, 1.0));
-        let most = second.pressure_curves.get(procraft_engine::brush::PressureCurve::Flow).unwrap();
+        assert_eq!((second.rendering, second.max_opacity), (prostudio_engine::brush::Rendering::Capped, 1.0));
+        let most = second.pressure_curves.get(prostudio_engine::brush::PressureCurve::Flow).unwrap();
         assert!((most.eval(0.2) - 0.9).abs() < 1e-3 && (most.eval(1.0) - 0.9).abs() < 1e-3);
         assert_eq!(second.setting("pressure_flow"), 1.0);
     }
     // written out it is a dual brush that comes back the same
     let file = s.brush_as_file(set, 0).unwrap();
-    let read = procraft_engine::brushfile::read(&file).unwrap();
+    let read = prostudio_engine::brushfile::read(&file).unwrap();
     assert!(read.secondary.is_some());
     let t = CanvasSession::new(64, 64);
     let back = t.import_brushes(file).unwrap();
@@ -6628,7 +6628,7 @@ fn a_krita_preset_with_a_masking_brush_becomes_a_dual_brush() {
         ("burn", BlendMode::ColorBurn.id()),
         ("hard_mix_softer_photoshop", BlendMode::LinearBurn.id()),
         ("hard_mix_photoshop", BlendMode::HardMix.id()),
-        ("linear_height_photoshop", procraft_engine::brush::GRAIN_LINEAR_HEIGHT),
+        ("linear_height_photoshop", prostudio_engine::brush::GRAIN_LINEAR_HEIGHT),
         ("no such op", BlendMode::Multiply.id()),
     ] {
         let set = s.import_other_brushes(kpp(op), "Krita".to_owned()).unwrap();
@@ -6644,13 +6644,13 @@ fn a_kept_view_that_leaves_the_canvas_off_the_page_is_not_used() {
     let fitted = View::fit(canvas, window);
     assert!(shows_canvas(&fitted, window, canvas));
     // centred on a point far beyond the canvas: none of it shows
-    let away = View::centred(procraft_engine::geom::Vec2::new(9000.0, -7000.0), 0.78, 0.0, window).unwrap();
+    let away = View::centred(prostudio_engine::geom::Vec2::new(9000.0, -7000.0), 0.78, 0.0, window).unwrap();
     assert!(!shows_canvas(&away, window, canvas));
     // half off the right edge: still enough to work on
-    let half = View::centred(procraft_engine::geom::Vec2::new(0.0, 1024.0), 0.78, 0.0, window).unwrap();
+    let half = View::centred(prostudio_engine::geom::Vec2::new(0.0, 1024.0), 0.78, 0.0, window).unwrap();
     assert!(shows_canvas(&half, window, canvas));
     // zoomed far out, small but whole on screen
-    let tiny = View::centred(procraft_engine::geom::Vec2::new(1024.0, 1024.0), 0.01, 0.0, window).unwrap();
+    let tiny = View::centred(prostudio_engine::geom::Vec2::new(1024.0, 1024.0), 0.01, 0.0, window).unwrap();
     assert!(shows_canvas(&tiny, window, canvas));
 }
 
@@ -6940,7 +6940,7 @@ fn pictures_of_the_layers_made_again_in_kept_textures_show_what_changed() {
         let st = &mut *guard;
         let (canvas, gpu) = (st.canvas.as_mut().unwrap(), st.gpu.as_ref().unwrap());
         let red = [200u8, 0, 0, 255].repeat(200 * 200);
-        canvas.upload_layer(gpu, procraft_engine::document::LayerId(bottom), &red).unwrap();
+        canvas.upload_layer(gpu, prostudio_engine::document::LayerId(bottom), &red).unwrap();
     }
     let cached = composite(&s, true);
     assert!(cached != first);
@@ -7081,7 +7081,7 @@ fn the_text_tools_typefaces_and_styles() {
 
 #[test]
 fn imported_fonts_are_kept_in_their_folder_and_offered() {
-    let dir = std::env::temp_dir().join(format!("procraft-fonts-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("prostudio-fonts-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     // nowhere to keep them yet
     assert!(crate::import_text_font(vec![1, 2, 3], "Nothing.ttf".into()).is_none());
@@ -7478,7 +7478,7 @@ fn a_mixed_artwork_saved_and_opened_again_shows_the_same() {
             }
         }
         let shown = composite(&s);
-        let dir = std::env::temp_dir().join(format!("procraft-mixed-{}-{seed}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-mixed-{}-{seed}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         s.save(dir.to_string_lossy().into_owned()).unwrap();
         let opened = CanvasSession::open(dir.to_string_lossy().into_owned()).unwrap();
@@ -7576,7 +7576,7 @@ fn a_mixed_artwork_through_a_layered_package_comes_back_the_same() {
             }
         }
         let shown = composite(&s);
-        let dir = std::env::temp_dir().join(format!("procraft-package-{}-{seed}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-package-{}-{seed}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         let file = dir.join("out.package");
@@ -7600,7 +7600,7 @@ fn a_mixed_artwork_through_a_layered_package_comes_back_the_same() {
 
 #[test]
 fn a_mixed_artwork_through_a_psd_comes_back_the_same() {
-    use procraft_engine::document::BlendMode;
+    use prostudio_engine::document::BlendMode;
     // every mode the format names as it is (shade is written as darken)
     let modes: Vec<u32> = BlendMode::ALL.iter().filter(|m| **m != BlendMode::Shade).map(|m| m.id()).collect();
     for seed in [9u32, 44] {
@@ -7665,7 +7665,7 @@ fn a_mixed_artwork_through_a_psd_comes_back_the_same() {
             s.set_layer_visible(l.id, l.visible);
         }
         let shown = composite(&s);
-        let dir = std::env::temp_dir().join(format!("procraft-psd-mixed-{}-{seed}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-psd-mixed-{}-{seed}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         let file = dir.join("out.psd");
@@ -7718,7 +7718,7 @@ fn saved_again_and_again_into_one_folder_an_artwork_opens_as_it_was_last() {
             let layers = s.layers();
             layers.get(k as usize % layers.len().max(1)).map_or(0, |l| l.id)
         };
-        let dir = std::env::temp_dir().join(format!("procraft-resaved-{}-{seed}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-resaved-{}-{seed}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         let path = dir.to_string_lossy().into_owned();
         let mut done = Vec::new();
@@ -8192,7 +8192,7 @@ fn an_animation_saved_and_through_a_package_plays_the_same() {
             }
             opened
         };
-        let dir = std::env::temp_dir().join(format!("procraft-animation-{}-{seed}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-animation-{}-{seed}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         let saved = dir.join("saved");
         s.save(saved.to_string_lossy().into_owned()).unwrap();
@@ -8276,7 +8276,7 @@ fn layer_and_canvas_settings_come_back_saved_and_through_a_package() {
             }
             opened
         };
-        let dir = std::env::temp_dir().join(format!("procraft-settings-{}-{seed}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-settings-{}-{seed}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         let saved = dir.join("saved");
         s.save(saved.to_string_lossy().into_owned()).unwrap();
@@ -8389,7 +8389,7 @@ fn brushes_set_anyhow_paint_smudge_and_erase_without_errors() {
         s.studio_end(true);
         // now and then a dual brush: a second set anyhow too, combined by any mode
         {
-            let mut second = procraft_engine::brush::Brush::round_pen();
+            let mut second = prostudio_engine::brush::Brush::round_pen();
             for key in KEYS {
                 second.set_setting(key, next(1400) as f32 / 1000.0 - 0.2);
             }
@@ -8683,7 +8683,7 @@ fn group_work_undoes_and_redoes_whole_and_comes_back_saved() {
         let most = whole.iter().zip(&end.0).map(|(a, b)| a.abs_diff(*b)).max().unwrap_or(0);
         assert!(most <= 4, "seed {seed}: cached and whole differ by {most} after {done:?}");
         let gpu = s.shared.lock().gpu.clone().unwrap();
-        let dir = std::env::temp_dir().join(format!("procraft-groups-{}-{seed}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-groups-{}-{seed}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         s.save(dir.to_string_lossy().into_owned()).unwrap();
         let opened = CanvasSession::open(dir.to_string_lossy().into_owned()).unwrap();
@@ -8856,7 +8856,7 @@ fn painting_in_every_mode_undoes_redoes_and_saves_whole() {
         }
         let whole = composite(&s);
         let gpu = s.shared.lock().gpu.clone().unwrap();
-        let dir = std::env::temp_dir().join(format!("procraft-modes-{}-{seed}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-modes-{}-{seed}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         s.save(dir.to_string_lossy().into_owned()).unwrap();
         let opened = CanvasSession::open(dir.to_string_lossy().into_owned()).unwrap();
@@ -8899,8 +8899,8 @@ fn a_layer_added_after_an_undo_starts_clear() {
 
 #[test]
 fn every_studio_setting_comes_back_from_the_library_and_a_brush_file() {
-    use procraft_engine::brushfile;
-    let mut keys: Vec<&str> = procraft_engine::studio::DRAWN.to_vec();
+    use prostudio_engine::brushfile;
+    let mut keys: Vec<&str> = prostudio_engine::studio::DRAWN.to_vec();
     for k in [
         "count_jitter",
         "flow",
@@ -9074,7 +9074,7 @@ fn merging_down_keeps_only_where_the_upper_layer_is_painted() {
 
 #[test]
 fn a_blend_mode_inside_a_group_blends_with_what_is_below_the_group() {
-    use procraft_engine::document::BlendMode;
+    use prostudio_engine::document::BlendMode;
     let Some(s) = session(32, 32) else { return };
     // red below, a grey Multiply layer grouped above it
     let bottom = s.layers()[0].id;
@@ -9304,8 +9304,8 @@ fn luminance_blending_mixes_a_stroke_in_by_squared_colour() {
 
 #[test]
 fn a_dual_brush_keeps_its_second_through_the_library_and_its_file() {
-    use procraft_engine::brush::Brush;
-    use procraft_engine::brushfile::{self, Pictures};
+    use prostudio_engine::brush::Brush;
+    use prostudio_engine::brushfile::{self, Pictures};
     let Some(s) = session(100, 100) else { return };
     let png = crate::project::rgba_png(1, 1, &[255; 4]);
     let pictures = |secondary| Pictures {
@@ -9353,7 +9353,7 @@ fn a_dual_brush_keeps_its_second_through_the_library_and_its_file() {
 
 #[test]
 fn a_dual_brush_draws_its_two_strokes_combined_by_its_mode() {
-    use procraft_engine::brush::Brush;
+    use prostudio_engine::brush::Brush;
     let Some(s) = session(120, 120) else { return };
     s.set_brush_size(0.5);
     s.set_color(0.0, 0.0, 0.0);
@@ -9720,7 +9720,7 @@ fn leaving_with_liquify_or_crop_open_keeps_the_work() {
         }
         composite(&o)
     };
-    let dir = std::env::temp_dir().join(format!("procraft-leave-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("prostudio-leave-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     // liquified, then off to the gallery with Liquify still open: saved as shown
     assert!(s.liquify_begin());
@@ -10241,7 +10241,7 @@ fn dots_listed(s: &CanvasSession, spots: &[(u32, u32)]) -> Vec<bool> {
         let alone = solo.is_none_or(|g| l.id == g || up.iter().any(|a| a.id == g));
         assert_eq!(l.soloed_out, !alone, "{} #{} shown alone or not", l.name, l.id);
         let shows = ticked(l) && up.iter().all(|g| ticked(g));
-        let px = canvas.read_layer(gpu, procraft_engine::document::LayerId(l.id)).unwrap();
+        let px = canvas.read_layer(gpu, prostudio_engine::document::LayerId(l.id)).unwrap();
         for (k, &(x, y)) in spots.iter().enumerate() {
             if shows && px[((y * w + x) * 4 + 3) as usize] > 200 {
                 out[k] = true;
@@ -10383,7 +10383,7 @@ fn picture_follows_the_panel(seed: u32, side: u32, resident: u64, steps: usize) 
     }
     let before = dots_shown(&s, &spots[..used]);
     let gpu = s.shared.lock().gpu.clone().unwrap();
-    let dir = std::env::temp_dir().join(format!("procraft-panel-{}-{seed}-{side}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("prostudio-panel-{}-{seed}-{side}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     s.save(dir.to_string_lossy().into_owned()).unwrap();
     let opened = CanvasSession::open(dir.to_string_lossy().into_owned()).unwrap();
@@ -10519,7 +10519,7 @@ fn merge_down_keeps_a_multiply_layer_s_look() {
     s.set_color(0.0, 1.0, 1.0);
     s.stroke_begin(PointerKind::Finger, vec![sample(50.0, 50.0, 0.0)]);
     s.stroke_end(vec![]);
-    assert!(s.set_layer_blend(upper, procraft_engine::document::BlendMode::Multiply.id()));
+    assert!(s.set_layer_blend(upper, prostudio_engine::document::BlendMode::Multiply.id()));
     let shown = pixel(&s, 50, 50);
     assert_eq!(shown, [0, 255, 0, 255]);
     assert!(s.merge_down(upper));

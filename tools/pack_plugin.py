@@ -1,4 +1,4 @@
-"""Builds the plugins under plugins/ and packs each as a .procraft-plugin file, which the app imports:
+"""Builds the plugins under plugins/ and packs each as a .prostudio-plugin file, which the app imports:
 
     python tools/pack_plugin.py [touch-offset | extract-lines] [--out DIR]
     python tools/pack_plugin.py --bundle
@@ -31,7 +31,7 @@ MANIFEST = 'craft-extension.json'
 TARGET_DIR = os.path.join(ROOT, 'target', 'plugins')
 BUNDLED = os.path.join(ROOT, 'crates', 'core', 'bundled-plugins')
 SOURCES = 'sources.txt'
-EXTENSION = '.procraft-plugin'
+EXTENSION = '.prostudio-plugin'
 
 
 def built(name, folder):

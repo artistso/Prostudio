@@ -10,7 +10,7 @@ use egui::epaint::RectShape;
 use egui::{
     Align2, Color32, CornerRadius, Id, Order, Pos2, Rect, Sense, Stroke, TextureHandle, Ui, UiBuilder, pos2, vec2,
 };
-use procraft_core::{CanvasSession, SourceKind};
+use prostudio_core::{CanvasSession, SourceKind};
 
 use crate::icons::{self, Icon};
 use crate::look::{Look, Themed, Weight, argb, pc, text};
@@ -119,7 +119,7 @@ impl SourceEditor {
 
     /// `pixels` made to repeat as Auto repeat's settings say.
     fn repeated(&self, pixels: Vec<u8>) -> Vec<u8> {
-        procraft_core::repeatable_source(
+        prostudio_core::repeatable_source(
             pixels,
             1.0 + self.scale * 3.0,
             self.rotate * 360.0,
@@ -138,7 +138,7 @@ impl SourceEditor {
     /// The image as it shows: Auto repeat's on the small image, quick enough to follow the sliders.
     fn preview(&self) -> Vec<u8> {
         if self.repeating && !self.image.is_empty() {
-            self.repeated(procraft_core::small_source(self.image.clone()))
+            self.repeated(prostudio_core::small_source(self.image.clone()))
         } else {
             self.image.clone()
         }
@@ -499,7 +499,7 @@ impl SourceEditor {
                 });
         });
         if let Some(index) = picked {
-            let images = procraft_core::source_library(grain);
+            let images = prostudio_core::source_library(grain);
             self.image = images.into_iter().nth(index).map(|i| i.pixels).unwrap_or_default();
             // the grains' Blank isn't a shipped grain
             self.shipped = if grain { index.checked_sub(1) } else { Some(index) }.map(|i| i as u32);
@@ -515,7 +515,7 @@ impl SourceEditor {
 impl Library {
     fn new(ctx: &egui::Context, grains: bool) -> Library {
         let load = |grain: bool| {
-            procraft_core::source_library(grain)
+            prostudio_core::source_library(grain)
                 .into_iter()
                 .filter_map(|image| Some((image.name, picture(ctx, &image.pixels, false, false)?)))
                 .collect()
@@ -615,7 +615,7 @@ fn picked_picture(title: &str) -> Option<Vec<u8>> {
     let picture = if picture.width().max(picture.height()) > 2048 { picture.thumbnail(2048, 2048) } else { picture };
     let rgba = picture.to_rgba8();
     let (w, h) = rgba.dimensions();
-    Some(procraft_core::source_from_picture(rgba.into_raw(), w, h))
+    Some(prostudio_core::source_from_picture(rgba.into_raw(), w, h))
 }
 
 /// A picture on the clipboard as a source image; none if there isn't one.
@@ -625,5 +625,5 @@ fn pasted() -> Option<Vec<u8>> {
         crate::files::tell("Can't paste", "There's no picture to paste.");
         return None;
     };
-    Some(procraft_core::source_from_picture(image.bytes.into_owned(), image.width as u32, image.height as u32))
+    Some(prostudio_core::source_from_picture(image.bytes.into_owned(), image.width as u32, image.height as u32))
 }
