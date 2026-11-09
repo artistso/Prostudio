@@ -256,7 +256,8 @@ impl Document {
     /// trimmed, frames pointing at layers that exist, the active timeline valid — and the
     /// legacy `animation` object, if there is one, moved into the artwork's first timeline.
     pub(crate) fn normalize_timelines(&mut self) {
-        if self.timelines.items.is_empty() && let Some(a) = self.animation.take() {
+        let legacy = if self.timelines.items.is_empty() { self.animation.take() } else { None };
+        if let Some(a) = legacy {
             let frames = crate::animation::frames(self);
             self.timelines.items.push(Timeline { id: 1, name: "Timeline 1".to_owned(), settings: a, frames });
             self.timelines.active = Some(1);
