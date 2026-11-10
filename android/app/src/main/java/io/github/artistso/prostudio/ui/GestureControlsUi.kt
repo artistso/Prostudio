@@ -54,23 +54,23 @@ import io.github.artistso.prostudio.canvas.title
 import io.github.artistso.prostudio.core.GesturePurpose
 import io.github.artistso.prostudio.canvas.GestureSettings
 
-private val ScreenFill get() = if (Ps.light) Color(0xFFF3F0E9) else Color(0xFF1F1C26)
-private val RailFill get() = if (Ps.light) Color(0xFFEDEAE3) else Color(0xFF242129)
-private val CardFill get() = if (Ps.light) Color(0xFFFFFFFF) else Color(0xFF252525)
-private val Ink get() = if (Ps.light) Color(0xFF46413A) else Color(0xFFC4BFB2)
-private val Detail get() = if (Ps.light) Color(0xFF6A6A6A) else Color(0xFF98928A)
-private val RailIdle get() = if (Ps.light) Color(0xFF3F3F3F) else Color(0xFFABA59A)
-private val Track get() = if (Ps.light) Color(0xFFEDEAE3) else Color(0xFF46413A)
-// a delay whose way of touching is off: a dark line and a dim knob, no blue
-private val TrackOff get() = if (Ps.light) Color(0xFFE9E9EB) else Color(0xFF1F1C26)
-private val KnobOff get() = if (Ps.light) Color(0xFFD0CCC2) else Color(0xFF35313E)
-private val DoneBlue = Color(0xFFFF6B4A)
+// the Glass Horizon materials: the page is the world at night, its cards the frosted plum glass
+private val ScreenFill get() = androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color(0xFF220A1E), Color(0xFF150010)))
+private val RailFill = Color(0x8C14000E)
+private val CardFill = Color(0xA614000E)
+private val Ink get() = Glass.Paper
+private val Detail get() = Color(0xB8FFF0F3)
+private val RailIdle get() = Color(0xD9F7CAC9)
+private val Track get() = Color(0x3DF7CAC9)
+// a delay whose way of touching is off: a faint line and a dim knob, no colour
+private val TrackOff = Color(0x14FFF0F3)
+private val KnobOff = Color(0x33FFF0F3)
 
 /** Where a wide screen's page starts and ends, beside the card of what gestures can do. */
 private val WideContentStart = 358.dp
 private val WideContentEnd = 28.dp
-private val CardEdge get() = if (Ps.light) Color(0xFFDAD6CD) else Color(0xFF332F3B)
-private val PageInk get() = if (Ps.light) Color(0xFF38343F) else Color(0xFF57544F)
+private val CardEdge get() = Glass.RimInner.copy(alpha = 0.35f)
+private val PageInk get() = Color(0xB8FFF0F3)
 
 /** What gestures can do, by icon and name on a card headed "Gesture controls" (a wide screen's). */
 @Composable
@@ -154,7 +154,7 @@ fun GestureControls(vm: CanvasViewModel) {
             Text(page.heading, color = Ink, fontSize = 20.sp, fontWeight = FontWeight.Bold, maxLines = 1, modifier = Modifier.offset(x = 101.dp, y = 28.dp))
         }
         Box(
-            Modifier.align(Alignment.TopEnd).padding(top = 20.dp, end = 20.dp).size(44.dp, 45.dp).clip(CircleShape).background(DoneBlue).clickable { vm.gestureControlsOpen = false },
+            Modifier.align(Alignment.TopEnd).padding(top = 20.dp, end = 20.dp).size(44.dp, 45.dp).clip(CircleShape).background(Glass.AccentGradient).border(1.dp, Glass.RimInner.copy(alpha = 0.6f), CircleShape).clickable { vm.gestureControlsOpen = false },
             contentAlignment = Alignment.Center,
         ) {
             Icon(PsIcons.DoneTick, contentDescription = "Done", tint = Color.White, modifier = Modifier.requiredSize(40.dp))
