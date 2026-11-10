@@ -71,17 +71,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Release APK and lint
         working-directory: android
-        # TEMP instrumentation to read the failure without log access: echo the offending lines as annotations
-        run: |
-          set -o pipefail
-          ./gradlew --no-daemon :app:assembleRelease :app:lintRelease > /tmp/android-build.log 2>&1 || {
-            ec=$?
-            LC_ALL=C grep -aE "^e: |FAILURE:|> Task :app:[a-zA-Z]+ FAILED| Error: |Lint found|What went wrong" /tmp/android-build.log | head -25 | while IFS= read -r line; do
-              msg=$(printf '%s' "$line" | tr -d '\r' | sed -e 's/%/%25/g' | cut -c1-350)
-              echo "::error::$msg"
-            done
-            exit $ec
-          }
+        run: ./gradlew --no-daemon :app:assembleRelease :app:lintRelease
       - name: Unit tests
         working-directory: android
         run: ./gradlew --no-daemon :app:testDebugUnitTest -Pprostudio.abis=x86_64
