@@ -191,20 +191,21 @@ pub use transform::{
     mesh_handle_at, screen_box, shown_mesh_points,
 };
 
-/// Colour around the canvas, sRGB; and with the light interface.
+/// Colour around the canvas, sRGB; and with the light interface: the Glass Horizon's deep plum, or
+/// warm blush with the lamps on — never a neutral grey.
 #[cfg_attr(not(target_os = "android"), allow(dead_code))]
-pub(crate) const SURROUND: [f32; 3] = [37.0 / 255.0, 37.0 / 255.0, 37.0 / 255.0];
+pub(crate) const SURROUND: [f32; 3] = [26.0 / 255.0, 0.0, 26.0 / 255.0];
 #[cfg_attr(not(target_os = "android"), allow(dead_code))]
-pub(crate) const SURROUND_LIGHT: [f32; 3] = [206.0 / 255.0, 209.0 / 255.0, 210.0 / 255.0];
+pub(crate) const SURROUND_LIGHT: [f32; 3] = [240.0 / 255.0, 226.0 / 255.0, 222.0 / 255.0];
 
 /// The grid over the surround: its line colour (sRGB), and its spacing, line width (a point, its
 /// edges smoothed a third of a pixel out on a 2x screen) and top (the bar's height, none under
 /// it), in interface points. It is fixed to the glass: see [`CanvasSession::set_grid_origin`].
 #[cfg_attr(not(target_os = "android"), allow(dead_code))]
-pub(crate) const GRID_LINE: [f32; 3] = [46.0 / 255.0, 46.0 / 255.0, 46.0 / 255.0];
+pub(crate) const GRID_LINE: [f32; 3] = [51.0 / 255.0, 19.0 / 255.0, 51.0 / 255.0];
 /// The grid's lines with the light interface: a little darker than its surround.
 #[cfg_attr(not(target_os = "android"), allow(dead_code))]
-pub(crate) const GRID_LINE_LIGHT: [f32; 3] = [202.0 / 255.0, 205.0 / 255.0, 206.0 / 255.0];
+pub(crate) const GRID_LINE_LIGHT: [f32; 3] = [222.0 / 255.0, 208.0 / 255.0, 203.0 / 255.0];
 #[cfg_attr(not(target_os = "android"), allow(dead_code))]
 pub(crate) const GRID_SPACING_PT: f32 = 16.0;
 #[cfg_attr(not(target_os = "android"), allow(dead_code))]

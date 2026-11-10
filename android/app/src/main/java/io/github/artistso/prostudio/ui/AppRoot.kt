@@ -104,6 +104,10 @@ fun AppRoot(vm: CanvasViewModel) {
                 ),
             ) {
                 AndroidView(factory = { CanvasSurfaceView(it, vm) }, modifier = Modifier.fillMaxSize())
+                // the Glass Horizon: light, rays, vignette and grain over the engine's plum, and the
+                // frame glass at the world's edge — never a touch, under every bar and panel
+                HorizonAtmosphere()
+                FrameGlass()
                 // the drawing guide is the canvas's: under every bar and panel
                 GuideOverlay(vm)
                 if (vm.transforming) TransformOverlay(vm)

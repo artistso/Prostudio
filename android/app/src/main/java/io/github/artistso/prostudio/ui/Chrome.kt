@@ -49,6 +49,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.foundation.layout.Column
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -68,7 +72,14 @@ private fun Modifier.tap(enabled: Boolean = true, onClick: () -> Unit): Modifier
 /** The bar across the top of the canvas: artwork actions on the left, painting tools on the right. */
 @Composable
 fun TopBar(vm: CanvasViewModel, modifier: Modifier = Modifier) {
-    BoxWithConstraints(modifier.fillMaxWidth().height(Ps.BarHeight).background(Ps.Bar)) {
+    BoxWithConstraints(
+        modifier.fillMaxWidth().height(Ps.BarHeight)
+            .background(Glass.BarGradient)
+            .drawBehind {
+                // the bar's lower edge catches the horizon: a hairline rim of rose under the frost
+                drawLine(Glass.RimInner.copy(alpha = 0.45f), Offset(0f, size.height - 0.6.dp.toPx()), Offset(size.width, size.height - 0.6.dp.toPx()), 0.6.dp.toPx())
+            },
+    ) {
         val fit = Ps.barFit(maxWidth)
         Row(
             Modifier.align(Alignment.CenterStart).padding(start = fit.margin),
@@ -85,6 +96,38 @@ fun TopBar(vm: CanvasViewModel, modifier: Modifier = Modifier) {
         }
         // the layers and colour panels take the highlight from the current tool while open
         val panelOpen = vm.panel == Panel.LAYERS || vm.panel == Panel.COLOR || vm.transforming || vm.selecting || vm.adjustment != null
+        // the wordmark sits at the centre of the bar, where its ends cannot reach: white through rose to accent
+        if (maxWidth >= 620.dp) {
+            Column(
+                Modifier.align(Alignment.Center),
+                horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
+                verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
+            ) {
+                Text(
+                    "PROSTUDIO",
+                    fontFamily = FontFamily.Serif,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.5.sp,
+                    letterSpacing = 3.2.sp,
+                    textAlign = TextAlign.Center,
+                    style = androidx.compose.ui.text.TextStyle(
+                        brush = Glass.TitleGradient,
+                        shadow = Shadow(Color(0x66BB0037), Offset.Zero, 9f),
+                    ),
+                    maxLines = 1,
+                    softWrap = false,
+                )
+                Text(
+                    "THE GLASS HORIZON",
+                    fontSize = 6.5.sp,
+                    letterSpacing = 2.4.sp,
+                    color = Glass.RoseDim,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    softWrap = false,
+                )
+            }
+        }
         Row(
             Modifier.align(Alignment.CenterEnd).padding(end = fit.margin),
             horizontalArrangement = Arrangement.spacedBy(fit.toolGap),
@@ -196,7 +239,9 @@ fun SideBar(vm: CanvasViewModel, modifier: Modifier = Modifier, right: Boolean =
                         addRoundRect(RoundRect(o.x, o.y, o.x + track.width, o.y + track.height, trackR))
                     }
                 }
-                drawPath(body, Ps.SideBar)
+                drawPath(body, Glass.Gradient)
+                // the glass's rim: the horizon catching the edge, tracks rimmed too
+                drawPath(body, Glass.RimInner.copy(alpha = 0.4f), style = Stroke(1.dp.toPx()))
             },
     ) {
         BrushSlider(vm.size, vm::changeSize, Modifier.offset(x(SliderLeft, Ps.SliderWidth), SizeTrackTop).then(rememberFrost(Ps.SliderCorner, track)), panel(vm, CanvasViewModel.SliderPanel.SIZE), vm.sizeNotches, trackHeight)

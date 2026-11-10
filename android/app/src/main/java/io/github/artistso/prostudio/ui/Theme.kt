@@ -25,24 +25,24 @@ object Ps {
 
     val Panel: Color get() = pick(0xF226222E, 0xF7ECE9E2)
     val Row: Color get() = pick(0xFF332F3B, 0xFFDDDAD1)
-    val RowSelected: Color get() = pick(0xFFFF6B4A, 0xFFD84A28)
-    val Ember = Color(0xFFFF6B4A)
-    val Ultraviolet = Color(0xFF8B5CF6)
-    val Accent: Color get() = pick(0xFFFF6B4A, 0xFFD84A28)
-    /** The brand blend: amber into ember into ultraviolet. For the rare stroke that says where you are. */
-    val Brand: Brush get() = Brush.linearGradient(listOf(Color(0xFFFFC43D), Ember, Color(0xFFEC4878), Ultraviolet))
+    val RowSelected: Color get() = pick(0xFFBB0037, 0xFFA00030)
+    val AccentRose = Color(0xFFBB0037)
+    val DeepPlum = Color(0xFF1A001A)
+    val Accent: Color get() = pick(0xFFBB0037, 0xFFA00030)
+    /** The brand blend: blush into accent rose into deep plum. For the rare stroke that says where you are. */
+    val Brand: Brush get() = Brush.linearGradient(listOf(Color(0xFFFFD9E2), Color(0xFFBB0037), Color(0xFF4D0A33)))
     val Text: Color get() = pick(0xFFF5F1E8, 0xFF26221F)
     val TextDim: Color get() = pick(0x99F5F1E8, 0x9926221F)
     val Disabled: Color get() = pick(0x4DF5F1E8, 0x4D26221F)
     val Divider: Color get() = pick(0x26F5F1E8, 0x1F26221F)
-    val Surround = Color(0xFF17141C)
+    val Surround = Color(0xFF1A001A)
 
     // the bar across the top of the canvas
     /** The bar's ink, translucent, so the canvas shows through. */
-    val Bar: Color get() = pick(0xE61B1822, 0xCFECE9E2)
+    val Bar: Color get() = pick(0x29F7CAC9, 0xCFF5E4DE)
     val BarText: Color get() = pick(0xFFA8A294, 0xFF4C463D)
     val BarGlyph: Color get() = pick(0xFFCFC9BC, 0xFF3E3931)
-    val BarGlyphSelected: Color get() = pick(0xFFFF6B4A, 0xFFD84A28)
+    val BarGlyphSelected: Color get() = pick(0xFFFFD9E2, 0xFFA00030)
     val ActionDisc: Color get() = pick(0xFF1F1C26, 0xFFF3F0E9)
     val ActionGlyph: Color get() = pick(0xFF98928A, 0xFF5B564D)
     val ColorRing: Color get() = pick(0xFF8F897E, 0xFF6E6A61)
@@ -155,7 +155,7 @@ object Ps {
     // the side bar
     // the bar and the tracks translucent, each straight over what is behind; the thumbs opaque,
     // warm paper on both faces of the interface
-    val SideBar: Color get() = pick(0xE61B1822, 0xCFE9E6DE)
+    val SideBar: Color get() = pick(0x24F7CAC9, 0xCFF3E4DE)
     val SliderTrack: Color get() = pick(0xC9353140, 0xBFF2EFE7)
     // a lighter rim round each track, more of what is behind showing through it
     val SliderRim: Color get() = pick(0xB9565262, 0xFFEDEAE3)
@@ -237,6 +237,63 @@ object Ps {
         val rest = SideBarHeight - SliderHeight * 2
         return SideBarFit(BarHeight, ((height - BarHeight - ShortSideBarFoot - rest) / 2).coerceIn(ShortestTrack, SliderHeight))
     }
+}
+
+/**
+ * The Glass Horizon: InkFrame's world, in ProStudio. The exact colours, glass values and light of
+ * the Glass Horizon visual contract — a luminous rose horizon over a deep plum world, paper canvas
+ * in a rounded frame of frosted glass, and optical nodes that float over it. Dark only: the world
+ * does not dim with the lamps on; with the light interface the same glass reads over warm blush.
+ */
+object Glass {
+    // the horizon's progression, bright rose at the top of the sky to plum-black at the far edge
+    val Highlight = Color(0xFFFFD9E2)
+    val RoseQuartz = Color(0xFFF7CAC9)
+    val RoseDim = Color(0xFFD77FA0)
+    val HorizonDeep = Color(0xFFA52766)
+    val ShadowPlum = Color(0xFF4D0A33)
+    val Deep = Color(0xFF1A001A)
+    /** The horizon's stops, top to bottom, as the contract specifies. */
+    val HorizonStops = listOf(Highlight, RoseQuartz, RoseDim, HorizonDeep, ShadowPlum, Deep)
+    /** #880057 — shadows with the dark magenta cast of the reference. */
+    val ShadowMagenta = Color(0xFF880057)
+    /** #BB0037 — the interactive accent: what is chosen, what is possible. */
+    val Accent = Color(0xFFBB0037)
+    /** #FFF0F3 — the canvas paper, and the near-white of the rims. */
+    val Paper = Color(0xFFFFF0F3)
+    /** rgba(20,0,14,.55) — the vignette's edge falloff. */
+    val VignetteEdge = Color(0x8C14000E)
+    /** rgba(10,0,10,.62) — a glass node's deep exterior shadow. */
+    val NodeShadow = Color(0x9E0A000A)
+    /** rgba(20,0,14,.55) — the frame glass's long drop shadow. */
+    val FrameShadow = Color(0x8C14000E)
+
+    // the frosted glass the contract specifies, in its two strengths
+    /** rgba(247,202,201,.12) — the glass of the world at rest. */
+    val Normal = Color(0x1FF7CAC9)
+    /** rgba(247,202,201,.20) — the glass over what is lit (rims, strong edges). */
+    val Strong = Color(0x33F7CAC9)
+    /** rgba(247,202,201,.30) / rgba(247,202,201,.42) — the glass of what is held or open. */
+    val NormalHeld = Color(0x4DF7CAC9)
+    val StrongHeld = Color(0x6BF7CAC9)
+    /** rgba(255,240,243,.35) — the bright inner rim a glass edge catches. */
+    val RimInner = Color(0x59FFF0F3)
+    /** rgba(255,240,243,.6) — the rim of a node's optical centre. */
+    val Rim = Color(0x99FFF0F3)
+    /** rgba(247,202,201,.18) — the glass gradient's strong end. */
+    val GradientStrong = Color(0x2EF7CAC9)
+    /** rgba(247,202,201,.06) — the glass gradient's weak end. */
+    val GradientWeak = Color(0x0FF7CAC9)
+    /** The shared glass gradient (160 degrees: light from the upper-left). */
+    val Gradient: Brush = Brush.linearGradient(listOf(GradientStrong, GradientWeak))
+    /** The bar across the top, its frost catching the horizon above it. */
+    val BarGradient: Brush = Brush.linearGradient(listOf(Color(0x3DF7CAC9), Color(0x1FF7CAC9)))
+    /** The blush-to-accent gradient of what is current. */
+    val AccentGradient: Brush = Brush.linearGradient(listOf(Color(0xFFF7CAC9), Accent))
+    /** The wordmark's vertical gradient: white through rose to accent red. */
+    val TitleGradient: Brush = Brush.verticalGradient(listOf(Color(0xFFFFFFFF), Highlight, RoseQuartz, RoseDim, Accent))
+    /** The deep radial optical centre a node's glyph sits on, for contrast. */
+    val OpticalCenter: Brush = Brush.radialGradient(listOf(Color(0xB30F020F), Color(0x00FFFFFF)))
 }
 
 /**
