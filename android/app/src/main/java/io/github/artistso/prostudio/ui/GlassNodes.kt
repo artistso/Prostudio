@@ -296,7 +296,7 @@ private fun GlassOrb(
                             .background(Color(0xFF000000.toInt() or vm.colorRgb()))
                             .border(1.2.dp, Color.White.copy(alpha = 0.6f), CircleShape),
                     )
-                    glyph != null -> Image(rememberVectorPainter(glyph), contentDescription = node.label, tint = Glass.Paper, modifier = Modifier.requiredSize(23.dp))
+                    glyph != null -> Image(rememberVectorPainter(glyph), contentDescription = node.label, colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Glass.Paper), modifier = Modifier.requiredSize(23.dp))
                 }
             }
         }
@@ -370,7 +370,7 @@ private fun ChildOrb(child: NodeChild, modifier: Modifier = Modifier) {
                         .background(Color(0xFF000000.toInt() or child.swatch))
                         .border(1.dp, Color.White.copy(alpha = 0.55f), CircleShape),
                 )
-                child.glyph != null -> Image(rememberVectorPainter(child.glyph), contentDescription = child.label, tint = Glass.Paper, modifier = Modifier.requiredSize(19.dp))
+                child.glyph != null -> Image(rememberVectorPainter(child.glyph), contentDescription = child.label, colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Glass.Paper), modifier = Modifier.requiredSize(19.dp))
             }
         }
         if (child.label.isNotEmpty()) {
