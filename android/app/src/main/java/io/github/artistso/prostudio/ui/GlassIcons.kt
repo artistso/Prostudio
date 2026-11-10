@@ -134,7 +134,7 @@ fun GlassGlyph(name: String?, size: Dp, modifier: Modifier = Modifier, color: Co
     val primitives = remember(name) { name?.let { GlassIcons.GLYPHS[it] } } ?: return
     Canvas(modifier.requiredSize(size)) {
         val u = size.toPx() / 24f
-        translate(0f, 0.6f * u) { drawGlyphPass(primitives, u, color, alpha, halo = true) }
+        withTransform({ translate(left = 0f, top = 0.6f * u) }) { drawGlyphPass(primitives, u, color, alpha, halo = true) }
         drawGlyphPass(primitives, u, color, alpha, halo = false)
     }
 }
