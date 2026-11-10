@@ -38,7 +38,7 @@ object GlassIcons {
     data class P(val d: String, override val soft: Boolean = false, override val fill: Boolean = false, override val w: Float = 1f, override val dash: FloatArray? = null, override val tint: Color? = null) : Prim
     data class C(val cx: Float, val cy: Float, val r: Float, override val soft: Boolean = false, override val fill: Boolean = false, override val w: Float = 1f, override val dash: FloatArray? = null, override val tint: Color? = null) : Prim
     data class L(val x1: Float, val y1: Float, val x2: Float, val y2: Float, override val soft: Boolean = false, override val w: Float = 1f, override val dash: FloatArray? = null, override val tint: Color? = null) : Prim { override val fill = false }
-    data class R(val x: Float, val y: Float, val w: Float, val h: Float, val rx: Float, override val soft: Boolean = false, override val fill: Boolean = false, override val w: Float = 1f, override val dash: FloatArray? = null, override val tint: Color? = null) : Prim
+    data class R(val x: Float, val y: Float, val width: Float, val h: Float, val rx: Float, override val soft: Boolean = false, override val fill: Boolean = false, override val w: Float = 1f, override val dash: FloatArray? = null, override val tint: Color? = null) : Prim
 
     private fun stroke(d: String, soft: Boolean = false, w: Float = 1f, dash: FloatArray? = null, tint: Color? = null) = P(d, soft = soft, fill = false, w = w, dash = dash, tint = tint)
     private fun fill(d: String) = P(d, fill = true)
@@ -134,7 +134,7 @@ fun GlassGlyph(name: String?, size: Dp, modifier: Modifier = Modifier, color: Co
     val primitives = remember(name) { name?.let { GlassIcons.GLYPHS[it] } } ?: return
     Canvas(modifier.requiredSize(size)) {
         val u = size.toPx() / 24f
-        drawGlyphPass(primitives, u, color, alpha, halo = true)
+        translate(0f, 0.6f * u) { drawGlyphPass(primitives, u, color, alpha, halo = true) }
         drawGlyphPass(primitives, u, color, alpha, halo = false)
     }
 }
@@ -158,22 +158,21 @@ private fun DrawScope.drawGlyphPass(primitives: List<GlassIcons.Prim>, u: Float,
             join = androidx.compose.ui.graphics.StrokeJoin.Round,
             pathEffect = prim.dash?.let { PathEffect.dashPathEffect(FloatArray(it.size) { i -> it[i] * u }) },
         )
-        val shift = if (halo) Offset(0f, 0.6f * u) else Offset.Zero
         when (prim) {
             is GlassIcons.P -> {
                 val path = cachedPath(prim.d)
-                if (prim.fill) drawPath(path, ink, alpha = 1f, topLeft = shift) else drawPath(path, ink, style = stroke, topLeft = shift)
+                if (prim.fill) drawPath(path, ink, alpha = 1f) else drawPath(path, ink, style = stroke)
             }
             is GlassIcons.C -> {
-                val c = Offset(prim.cx * u + shift.x, prim.cy * u + shift.y)
+                val c = Offset(prim.cx * u, prim.cy * u)
                 if (prim.fill) drawCircle(ink, prim.r * u, c) else drawCircle(ink, prim.r * u, c, style = stroke)
             }
             is GlassIcons.L -> {
-                drawLine(ink, Offset(prim.x1 * u + shift.x, prim.y1 * u + shift.y), Offset(prim.x2 * u + shift.x, prim.y2 * u + shift.y), strokeWidth = w, cap = androidx.compose.ui.graphics.StrokeCap.Round, pathEffect = stroke.pathEffect)
+                drawLine(ink, Offset(prim.x1 * u, prim.y1 * u), Offset(prim.x2 * u, prim.y2 * u), strokeWidth = w, cap = androidx.compose.ui.graphics.StrokeCap.Round, pathEffect = stroke.pathEffect)
             }
             is GlassIcons.R -> {
-                val tl = Offset(prim.x * u + shift.x, prim.y * u + shift.y)
-                val sz = Size(prim.w * u, prim.h * u)
+                val tl = Offset(prim.x * u, prim.y * u)
+                val sz = Size(prim.width * u, prim.h * u)
                 val corner = CornerRadius(prim.rx * u)
                 if (prim.fill) {
                     drawRoundRect(ink, tl, sz, corner)
