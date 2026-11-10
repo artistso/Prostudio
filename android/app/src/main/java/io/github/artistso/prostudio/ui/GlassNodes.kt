@@ -335,10 +335,10 @@ private fun GlassOrb(
 }
 
 /** The fan of children an open node blooms toward the middle of the drawing. */
-@Composable
 private const val GOLDEN_ANGLE = 2.3999632f // 137.5078 degrees — the angle between successive sunflower seeds
 private const val DETACH_DP = 130f // how far a child must be dragged from its seat before its connector lets go
 
+@Composable
 private fun ChildrenFan(
     children: List<NodeChild>,
     vm: CanvasViewModel,
@@ -347,12 +347,8 @@ private fun ChildrenFan(
     w: Dp,
     h: Dp,
 ) {
-    val fade = remember { Animatable(0f) }
     val bloom = remember { Animatable(0f) }
-    LaunchedEffect(Unit) {
-        fade.animateTo(1f, spring(dampingRatio = 0.8f, stiffness = 600f))
-        bloom.animateTo(1f, spring(dampingRatio = 0.52f, stiffness = 230f))
-    }
+    LaunchedEffect(Unit) { bloom.animateTo(1f, spring(dampingRatio = 0.52f, stiffness = 230f)) }
     val centre = Offset(cx.value, cy.value)
     val toCentre = Offset(w.value / 2f - centre.x, h.value / 2f - centre.y)
     val base = atan2(toCentre.y, toCentre.x)
