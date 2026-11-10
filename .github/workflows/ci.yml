@@ -72,6 +72,19 @@ jobs:
       - name: Release APK and lint
         working-directory: android
         run: ./gradlew --no-daemon :app:assembleRelease :app:lintRelease
+      - name: Lint diagnostics
+        if: failure()
+        working-directory: android
+        run: |
+          echo "::notice::reports present:"
+          find app/build/reports -name 'lint-results-release.*' 2>/dev/null
+          echo "::notice::txt report:"
+          grep -H -E "Error|error " app/build/reports/lint-results-release.txt 2>/dev/null | head -80 > /tmp/lintdiag.txt || true
+          cat /tmp/lintdiag.txt | while IFS= read -r line; do echo "::error::$line"; done
+          echo "::notice::xml errors:"
+          grep -o '<issue[^>]*severity="Error"[^>]*>' app/build/reports/lint-results-release.xml 2>/dev/null | head -30 | while IFS= read -r line; do echo "::error::$line"; done
+          echo "::notice::gradle failure marker:"
+          find app/build/reports -name '*.txt' -newer /tmp -path '*lint*' 2>/dev/null | head
       - name: Unit tests
         working-directory: android
         run: ./gradlew --no-daemon :app:testDebugUnitTest -Pprostudio.abis=x86_64

@@ -25,7 +25,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -35,7 +34,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.StrokeCap
@@ -386,24 +384,18 @@ private fun ChildrenFan(
             val droop = dist * 0.16f
             val bow = sin(i * 2.3f + 0.8f) * dist * 0.14f
             val control = (s + e) / 2f + perp * bow + Offset(0f, droop)
-            // the connector grows out of the parent as the bloom reaches this orb
+            // the connector grows out of the parent as the bloom reaches this orb — a curve of straight ink
             val steps = 20
             val upto = (steps * trim).roundToInt().coerceAtLeast(2)
-            val path = Path().apply {
-                moveTo(s.x, s.y)
-                var t = 1f / steps
-                repeat(upto) {
-                    val p = quadratic(s, control, e, t.coerceAtMost(1f))
-                    lineTo(p.x, p.y)
-                    t += 1f / steps
-                }
+            val points = (0..upto).map { segment -> quadratic(s, control, e, (segment.toFloat() / steps).coerceAtMost(1f)) }
+            val halo = if (children[i].accent) Color(0x59FB8FB3) else Glass.RimInner.copy(alpha = 0.16f)
+            val core = if (children[i].accent) Color(0xCCFFB7CD) else Glass.Paper.copy(alpha = 0.75f)
+            for (segment in 1 until points.size) {
+                drawLine(halo, points[segment - 1], points[segment], 4.6.dp.toPx(), cap = StrokeCap.Round)
             }
-            if (children[i].accent) {
-                drawPath(path, Color(0x59FB8FB3), style = Stroke(4.6.dp.toPx(), cap = StrokeCap.Round))
-            } else {
-                drawPath(path, Glass.RimInner.copy(alpha = 0.16f), style = Stroke(4.6.dp.toPx(), cap = StrokeCap.Round))
+            for (segment in 1 until points.size) {
+                drawLine(core, points[segment - 1], points[segment], 1.4.dp.toPx(), cap = StrokeCap.Round)
             }
-            drawPath(path, if (children[i].accent) Color(0xCCFFB7CD) else Glass.Paper.copy(alpha = 0.75f), style = Stroke(1.4.dp.toPx(), cap = StrokeCap.Round))
         }
     }
     for ((i, child) in children.withIndex()) {
@@ -440,7 +432,8 @@ private fun ChildOrb(
     // the drag of this orb away from its seat (dp), and whether its connector has let go
     val drag = remember { Animatable(Offset.Zero, Offset.VectorConverter) }
     var detached by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { snapshotFlow { drag.value }.collect { onPosition(index, seat + it) } }
+    // report the drag (and the spring back home) so the connector can follow
+    LaunchedEffect(drag.value) { onPosition(index, seat + drag.value) }
     val pop = remember { Animatable(0.35f) }
     LaunchedEffect(Unit) {
         kotlinx.coroutines.delay(index * 45L)
@@ -462,7 +455,7 @@ private fun ChildOrb(
                 detectDragGestures(
                     onDragEnd = {
                         val d = drag.value
-                        if (!detached && kotlin.math.hypot(d.x, d.y) > DETACH_DP) {
+                        if (!detached && d.x * d.x + d.y * d.y > DETACH_DP * DETACH_DP) {
                             detached = true
                             onDetach(index)
                         } else if (!detached) {
