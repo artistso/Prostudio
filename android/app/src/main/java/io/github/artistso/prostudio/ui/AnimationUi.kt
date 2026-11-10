@@ -79,13 +79,14 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 private val BarHeight = 96.dp
-private val HeldFrame = Color(0xFFA3A3A3)
+private val HeldFrame = Color(0xFF52303F)
 private val BarGap = 25.dp
 private val FrameHeight = 40.dp
-private val BarFill get() = if (Ps.light) Color(0xFFE4E4E4) else Color(0xFF272430)
-private val TrackFill get() = if (Ps.light) Color(0xFFD0CCC2) else Color(0xFF403B4B)
-private val TrackEdge get() = if (Ps.light) Color(0xFFBDBDBD) else Color(0xFF5C5C5C)
-private val BarInk get() = if (Ps.light) Color(0xFF332F3B) else Color(0xFFC4BFB2)
+// the rail and its lanes: deep plum glass under the horizon, warm blush with the lamps on
+private val BarFill get() = if (Ps.light) Color(0xFFEFE3DC) else Color(0xE02B0A20)
+private val TrackFill get() = if (Ps.light) Color(0xFFDDD2CA) else Color(0x2EF7CAC9)
+private val TrackEdge get() = if (Ps.light) Color(0xFFBDB2AA) else Color(0x33FFF0F3)
+private val BarInk get() = if (Ps.light) Color(0xFF332F3B) else Color(0xFFF7CAC9)
 private const val MAX_ONION = 12
 
 /** Play's and Add Frame's inset from the bar's ends. */
@@ -140,7 +141,7 @@ private fun displayWidth(window: Dp): Dp {
 
 /**
  * Animation Assist's bar at the bottom: Play, Settings and Add Frame over the timeline of frames,
- * the current one in the middle; with its settings or the current frame's options above it.
+ * the current one in the middle; with its settings or the current frame's options above it. The bar is the rail: frosted plum glass on the horizon.
  */
 @Composable
 fun BoxScope.AnimationBar(vm: CanvasViewModel) {
@@ -163,16 +164,23 @@ fun BoxScope.AnimationBar(vm: CanvasViewModel) {
             } else if (vm.frameOptionsOpen) {
                 DownPopover(260.dp, 130.dp, Modifier.offset(x = barWidth / 2 - 130.dp)) { FrameOptionsPage(vm) }
             }
-            // the timeline lanes: one per timeline (a scene), the one in play in ember; tap to switch, long-press to rename or delete
+            // the timeline lanes: one per timeline (a scene), the one in play in accent; tap to switch, long-press to rename or delete
             TimelineLanes(vm, barWidth, Modifier.padding(bottom = 6.dp))
             // the whole bar takes its touches: none reach the canvas under it (a swipe would paint)
-            Box(Modifier.padding(bottom = BarGap).size(barWidth, BarHeight).clip(RoundedCornerShape(30.dp)).background(BarFill).pointerInput(Unit) { detectTapGestures { } }) {
+            Box(Modifier.padding(bottom = BarGap).size(barWidth, BarHeight).clip(RoundedCornerShape(30.dp)).background(BarFill).border(1.dp, Glass.RimInner.copy(alpha = 0.35f), RoundedCornerShape(30.dp)).pointerInput(Unit) { detectTapGestures { } }) {
                 val pages = vm.animation?.pages == true
                 Row(Modifier.fillMaxWidth().padding(start = BarInset, end = BarInset, top = 8.dp).height(30.dp), verticalAlignment = Alignment.CenterVertically) {
+                    // previous and next stop, past any holds (each tap passes one stop)
+                    if (!pages) StepChevron(PsIcons.ChevronLeft, "Back a frame") {
+                        (vm.playingSlot ?: vm.currentSlot)?.let { vm.tapFrame((it - 1).coerceIn(0, vm.frameSlots.size - 1)) }
+                    }
                     Text(
                         if (pages) "Page Assist" else if (vm.playingFrame != null) "Pause" else "Play", color = BarInk, fontSize = 17.sp, fontWeight = FontWeight.Bold,
                         modifier = if (pages) Modifier else Modifier.clickable { vm.togglePlaying() },
                     )
+                    if (!pages) StepChevron(PsIcons.ChevronRight, "Forward a frame") {
+                        (vm.playingSlot ?: vm.currentSlot)?.let { vm.tapFrame((it + 1).coerceIn(0, vm.frameSlots.size - 1)) }
+                    }
                     Spacer(Modifier.weight(1f))
                     if (!pages) BarText(
                         "Settings",
@@ -193,7 +201,7 @@ fun BoxScope.AnimationBar(vm: CanvasViewModel) {
 
 /**
  * The timeline lanes: one pill per timeline in the artwork (ink and paper, the one in play in
- * ember), each naming itself and how many frames it has; a + starts a fresh timeline. Tap a
+ * accent), each naming itself and how many frames it has; a + starts a fresh timeline. Tap a
  * lane to bring its frames into play; long-press to rename it or delete it (its layers stay in
  * the artwork — only the timeline goes).
  */
@@ -271,6 +279,14 @@ private fun TimelineEditDialog(vm: CanvasViewModel, timeline: TimelineInfo, onCl
     )
 }
 
+/** A chevron stepping the assist sequence one stop. */
+@Composable
+private fun StepChevron(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit) {
+    Box(Modifier.size(30.dp).clickable(onClick = onClick), contentAlignment = Alignment.Center) {
+        Icon(icon, contentDescription = label, tint = BarInk, modifier = Modifier.requiredSize(21.dp))
+    }
+}
+
 @Composable
 private fun BarText(label: String, modifier: Modifier, onClick: () -> Unit) {
     Box(modifier.height(30.dp).clickable(onClick = onClick), contentAlignment = Alignment.Center) {
@@ -280,7 +296,7 @@ private fun BarText(label: String, modifier: Modifier, onClick: () -> Unit) {
 
 /**
  * The frames in a rounded track [width] wide, the current (or played) one in the middle with a
- * blue line under it; each frame's card is 40 tall and as wide as the canvas's shape makes it.
+ * the accent line under it; each frame's card is 40 tall and as wide as the canvas's shape makes it.
  * Dragged, the track scrolls through the frames, each showing as it passes the middle; let go,
  * it coasts and settles on a frame, which becomes the current one.
  */
@@ -345,8 +361,8 @@ private fun Timeline(vm: CanvasViewModel, width: Dp, modifier: Modifier) {
             val x = width / 2 - frameWidth / 2 + pitch * (i - at)
             if (x > -frameWidth && x < width) {
                 Box(
-                    Modifier.offset(x = x, y = 2.dp).size(frameWidth, FrameHeight).clip(RoundedCornerShape(6.dp)).background(if (held) HeldFrame else Color.White)
-                        .border(1.dp, Color(0xFF98928A), RoundedCornerShape(6.dp)).clickable { vm.tapFrame(i) },
+                    Modifier.offset(x = x, y = 2.dp).size(frameWidth, FrameHeight).clip(RoundedCornerShape(6.dp)).background(if (held) HeldFrame else Glass.Paper)
+                        .border(1.dp, Glass.RimInner.copy(alpha = 0.35f), RoundedCornerShape(6.dp)).clickable { vm.tapFrame(i) },
                 ) {
                     if (!held) vm.animationFrames.getOrNull(frame)?.let { vm.frameThumbnails[it] }?.let { Image(it, contentDescription = "Frame ${i + 1}", contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize().padding(2.dp)) }
                 }

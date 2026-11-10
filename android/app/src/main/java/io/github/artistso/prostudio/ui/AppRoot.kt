@@ -182,6 +182,13 @@ fun AppRoot(vm: CanvasViewModel) {
                 // a full-screen page covers the timeline, as it covers the canvas; the panels open over it
                 val pageOver = vm.canvasInfoOpen || vm.gestureControlsOpen || vm.cropRect != null || vm.timeLapseReplaying ||
                     vm.animatedExport != null || vm.modelAnimatedExport != null
+                // the Glass Horizon's assist furniture: the perimeter frame board, in the bars' own
+                // fade as the interface hides; under the assist rail, which keeps the strip
+                if (barsShown > 0.01f && !vm.barsHidden) {
+                    Box(Modifier.fillMaxSize().graphicsLayer { alpha = barsShown }) {
+                        PerimeterFrameBoard(vm, Modifier.fillMaxSize())
+                    }
+                }
                 if (!vm.barsHidden && !pageOver) AnimationBar(vm)
                 // the bottom toolbars rise from below the screen, and drop away
                 androidx.compose.animation.AnimatedVisibility(
