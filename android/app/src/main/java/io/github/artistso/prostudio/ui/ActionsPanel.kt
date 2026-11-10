@@ -306,6 +306,7 @@ fun ActionsPanel(vm: CanvasViewModel, arrowX: Dp, modifier: Modifier = Modifier)
         )
         else -> listOf(
             listOf(
+                Act("Quick Help") { vm.quickHelpOpen = true },
                 Act("About ProStudio") { dialog = "ProStudio" to "Version ${versionName(context)}" },
                 Act("Licences") { dialog = "Licences" to licences(context) },
             ),

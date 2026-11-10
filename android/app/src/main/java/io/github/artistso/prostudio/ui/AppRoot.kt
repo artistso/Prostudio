@@ -272,6 +272,7 @@ fun AppRoot(vm: CanvasViewModel) {
                     enter = androidx.compose.animation.slideInVertically(Motion.studioIn()) { it },
                     exit = androidx.compose.animation.slideOutVertically(Motion.studioOut()) { it },
                 ) { Box(Modifier.fillMaxSize()) { GestureControls(vm) } }
+                if (vm.quickHelpOpen) QuickHelp(vm)
                 ModelPicture(vm)
                 BlockedDialog(vm)
                 ModelWarningsAlert(vm)
