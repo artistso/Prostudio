@@ -19,6 +19,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
@@ -59,10 +61,13 @@ fun PerimeterFrameBoard(vm: CanvasViewModel, modifier: Modifier = Modifier) {
         val width = right - left
         val height = bottom - top
         val stops = slots.size
-        // every stop plus the invitation gets the room the perimeter allows, evenly around the world
-        val roomPerSlot = (width + height) * 2 / (stops + 1)
+        // the board always shows at least a dozen stops — InkFrame's own floor — so the world is
+        // framed by a full ring, mostly quiet until the frames need it
+        val total = maxOf(12, ((stops + 1 + 11) / 12) * 12)
+        // every stop gets the room the perimeter allows, evenly around the world
+        val roomPerSlot = (width + height) * 2 / total
         val slotSize = (roomPerSlot - BoardGap).coerceIn(BoardSlotMin, BoardSlot)
-        val positions = pathPositions(stops + 1, left, top, right, bottom, roomPerSlot, slotSize)
+        val positions = pathPositions(total, left, top, right, bottom, roomPerSlot, slotSize)
         for ((index, frame) in slots.withIndex()) {
             val (x, y) = positions[index]
             val playing = (vm.playingSlot ?: vm.currentSlot) == index
@@ -84,6 +89,14 @@ fun PerimeterFrameBoard(vm: CanvasViewModel, modifier: Modifier = Modifier) {
                 size = slotSize,
                 modifier = Modifier.offset { IntOffset(x.toPx().roundToInt(), y.toPx().roundToInt()) },
                 onTap = { vm.addFrame() },
+            )
+        }
+        // the quiet ring: the stops not yet needed, dashed and dim, holding the world's frame
+        for (index in stops + 1 until total) {
+            val (x, y) = positions[index]
+            EmptyFrameSlot(
+                size = slotSize,
+                modifier = Modifier.offset { IntOffset(x.toPx().roundToInt(), y.toPx().roundToInt()) },
             )
         }
         // the capacity badge: the live frame count (this engine has no frame cap)
@@ -213,6 +226,30 @@ private fun NextFrameSlot(
             maxLines = 1,
         )
     }
+}
+
+/** A stop not yet needed: dashed, dim, not a button — the world's frame holding its place. */
+@Composable
+private fun EmptyFrameSlot(
+    size: Dp,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier
+            .requiredSize(size)
+            .clip(RoundedCornerShape(BoardSlotRadius))
+            .drawBehind {
+                val radius = CornerRadius(BoardSlotRadius.toPx())
+                drawRoundRect(
+                    color = Color(0x668C5A6B),
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(
+                        width = 1.dp.toPx(),
+                        pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(3.dp.toPx(), 3.dp.toPx())),
+                    ),
+                    cornerRadius = radius,
+                )
+            },
+    )
 }
 
 /** The live frame count, a floating plum pill at the foot of the world; InkFrame's capacity badge, honest about what this engine enforces. */
