@@ -290,8 +290,8 @@ object Glass {
     val BarGradient: Brush = Brush.linearGradient(listOf(Color(0x3DF7CAC9), Color(0x1FF7CAC9)))
     /** The blush-to-accent gradient of what is current. */
     val AccentGradient: Brush = Brush.linearGradient(listOf(Color(0xFFF7CAC9), Accent))
-    /** The wordmark's vertical gradient: white through rose to accent red. */
-    val TitleGradient: Brush = Brush.verticalGradient(listOf(Color(0xFFFFFFFF), Highlight, RoseQuartz, RoseDim, Accent))
+    /** The wordmark's vertical gradient: white through the rose 55% down to the accent red. */
+    val TitleGradient: Brush = Brush.verticalGradient(colorStops = arrayOf(0f to Color(0xFFFFFFFF), 0.55f to RoseQuartz, 1f to Accent))
     /** The deep radial optical centre a node's glyph sits on, for contrast. */
     val OpticalCenter: Brush = Brush.radialGradient(listOf(Color(0xB30F020F), Color(0x00FFFFFF)))
 }

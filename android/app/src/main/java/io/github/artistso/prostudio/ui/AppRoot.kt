@@ -151,7 +151,7 @@ fun AppRoot(vm: CanvasViewModel) {
                 // nodes around the stage; the size and opacity capsule floats in from the side
                 if (barsShown > 0.01f && !vm.barsHidden) {
                     Box(Modifier.fillMaxSize().graphicsLayer { alpha = barsShown }) {
-                        GlassWordmark(Modifier.align(Alignment.TopCenter).padding(top = 8.dp))
+                        GlassWordmark(Modifier.align(Alignment.TopCenter).padding(top = 14.dp))
                         GlassNodes(vm, Modifier.fillMaxSize())
                     }
                 }
@@ -177,6 +177,7 @@ fun AppRoot(vm: CanvasViewModel) {
                         )
                     }
                 }
+                GlassLens(vm)
                 NoticeBand(vm)
                 DropBandUi(vm)
                 // a full-screen page covers the timeline, as it covers the canvas; the panels open over it

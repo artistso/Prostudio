@@ -2,12 +2,14 @@ package io.github.artistso.prostudio.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawscope.StrokeCap
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -151,8 +153,9 @@ private val RAYS: Array<Pair<Float, Color>> = run {
 }
 
 /**
- * The wordmark, out in the world rather than behind a bar: PROSTUDIO in a serif whose gradient
- * runs white through rose to accent over a luminous shadow, THE GLASS HORIZON tracked beneath.
+ * The wordmark, out in the world rather than behind a bar: the inkFrame title spec exactly —
+ * display serif bold uppercase, .22em tracking, white through the rose 55% down to the accent,
+ * a faint luminous shadow; THE GLASS HORIZON tracked .28em beneath, .86 opacity rose-dim.
  */
 @androidx.compose.runtime.Composable
 fun GlassWordmark(modifier: Modifier = Modifier) {
@@ -165,24 +168,56 @@ fun GlassWordmark(modifier: Modifier = Modifier) {
             "PROSTUDIO",
             fontFamily = androidx.compose.ui.text.font.FontFamily.Serif,
             fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-            fontSize = 15.sp,
-            letterSpacing = 3.4.sp,
+            fontSize = 20.sp,
+            letterSpacing = 4.4.sp,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
             style = androidx.compose.ui.text.TextStyle(
                 brush = Glass.TitleGradient,
-                shadow = androidx.compose.ui.graphics.Shadow(Color(0x66BB0037), Offset.Zero, 10f),
+                shadow = androidx.compose.ui.graphics.Shadow(Color(0x40FFFFFF), Offset(0f, 2f), 16f),
             ),
             maxLines = 1,
             softWrap = false,
         )
         androidx.compose.material3.Text(
             "THE GLASS HORIZON",
-            fontSize = 6.5.sp,
-            letterSpacing = 2.6.sp,
-            color = Glass.RoseDim,
+            fontSize = 10.sp,
+            letterSpacing = 2.8.sp,
+            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+            color = Glass.RoseDim.copy(alpha = 0.86f),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
             maxLines = 1,
             softWrap = false,
+            modifier = Modifier.padding(top = 3.dp),
         )
+    }
+}
+
+/**
+ * The live glass lens: the pen's cursor, as the reference draws it — a soft field of glass at the
+ * pen tip with a bright rim, a fine white nib mark at its heart and a plum shadow beneath. It is
+ * drawn over the engine's paper, never into the artwork, and never takes a touch. Shown whenever
+ * the pen is over the canvas (hover or contact) while the brush cursor is on.
+ */
+@androidx.compose.runtime.Composable
+fun GlassLens(vm: io.github.artistso.prostudio.canvas.CanvasViewModel, modifier: Modifier = Modifier) {
+    val at = vm.cursorAt
+    if (at == null || !vm.brushCursorOn) return
+    Canvas(modifier.fillMaxSize()) {
+        val radius = 50.dp.toPx()
+        val tip = at
+        // the plum drop shadow beneath the ring
+        drawCircle(Color(0x802A001A), radius, Offset(tip.x, tip.y + 2.dp.toPx()))
+        // the glass field and its bright rim
+        drawCircle(Color(0x0FF7CAC9), radius, tip)
+        drawCircle(Glass.RimInner.copy(alpha = 0.9f), radius, tip, style = Stroke(1.2.dp.toPx()))
+        // the nib: a fine white mark at the pen's heart
+        drawLine(
+            Color(0xD9FFF0F3),
+            Offset(tip.x - 3.5.dp.toPx(), tip.y + 3.5.dp.toPx()),
+            Offset(tip.x + 3.5.dp.toPx(), tip.y - 3.5.dp.toPx()),
+            strokeWidth = 1.dp.toPx(),
+            cap = StrokeCap.Round,
+        )
+        drawCircle(Color(0xD9FFF0F3), 1.1.dp.toPx(), tip)
     }
 }
