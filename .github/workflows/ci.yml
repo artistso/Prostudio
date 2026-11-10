@@ -71,20 +71,23 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Release APK and lint
         working-directory: android
-        run: ./gradlew --no-daemon :app:assembleRelease :app:lintRelease
-      - name: Lint diagnostics
-        if: failure()
-        working-directory: android
         run: |
-          echo "::notice::reports present:"
-          find app/build/reports -name 'lint-results-release.*' 2>/dev/null
-          echo "::notice::txt report:"
-          grep -H -E "Error|error " app/build/reports/lint-results-release.txt 2>/dev/null | head -80 > /tmp/lintdiag.txt || true
-          cat /tmp/lintdiag.txt | while IFS= read -r line; do echo "::error::$line"; done
-          echo "::notice::xml errors:"
-          grep -o '<issue[^>]*severity="Error"[^>]*>' app/build/reports/lint-results-release.xml 2>/dev/null | head -30 | while IFS= read -r line; do echo "::error::$line"; done
-          echo "::notice::gradle failure marker:"
-          find app/build/reports -name '*.txt' -newer /tmp -path '*lint*' 2>/dev/null | head
+          set +e
+          ./gradlew --no-daemon :app:assembleRelease :app:lintRelease > /tmp/build.log 2>&1
+          code=$?
+          if [ $code -ne 0 ]; then
+            echo "::notice::gradle exit $code — first errors:"
+            grep -E "^e: |error: |What went wrong|Execution failed" /tmp/build.log | head -80 | while IFS= read -r line; do
+              # keep annotations one line each and reasonably short
+              echo "::error::${line:0:480}"
+            done
+            echo "::notice::tail of build log:"
+            tail -40 /tmp/build.log | while IFS= read -r line; do
+              echo "::notice::${line:0:480}"
+            done
+            exit $code
+          fi
+          tail -5 /tmp/build.log
       - name: Unit tests
         working-directory: android
         run: ./gradlew --no-daemon :app:testDebugUnitTest -Pprostudio.abis=x86_64
