@@ -55,17 +55,17 @@ object Ps {
     val ColorDot = 31.dp
 
     // the panels hanging from the top bar
-    val PopoverFill: Color get() = pick(0xFF37333F, 0xFFECE9E2)
+    val PopoverFill: Color get() = pick(0xF21F0816, 0xFFECE9E2)
     /** A panel's own material over the canvas: what is behind it shows through, blurred. */
-    val PopoverFrost: Color get() = pick(0xDE242129, 0xFFECE9E2)
+    val PopoverFrost: Color get() = pick(0xE614000E, 0xFFECE9E2)
     /**
      * The gallery's popovers: their glass as it shows over the gallery's dark (nothing blurs what
      * is behind them there, and unblurred it shows through too sharply).
      */
     val GalleryPopover: Color get() = pick(0xFF201D26, 0xFFECE9E2)
-    val PopoverShadow: Color get() = pick(0x38000000, 0x24000000)
+    val PopoverShadow: Color get() = pick(0xB30A000A, 0x24000000)
     val PopoverShadowRadius = 51.dp
-    val PopoverCorner = 35.dp
+    val PopoverCorner = 22.dp
     val PopoverGap = 12.dp
     val ArrowHeight = 12.dp
     val ArrowShift = 2.dp
@@ -96,6 +96,8 @@ object Ps {
     val HexField: Color get() = pick(0xFF3F3B47, 0xFFCFCBC1)
     val MenuFill: Color get() = pick(0xFF4E4A56, 0xFFF1EEE7)
     /** A menu's words: paper on ink, ink on paper. */
+    /** The rim of a glass panel, caught like the world's own. */
+    val PopoverRim: Color get() = pick(0x4DFFF0F3, 0x1426221F)
     val MenuInk: Color get() = pick(0xFFF5F1E8, 0xFF26221F)
     /** The small frosted menus: over the canvas what is behind shows through, blurred. */
     val GlassMenu: Color get() = pick(0xCF302C39, 0xFAF1EEE7)

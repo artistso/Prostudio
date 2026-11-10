@@ -151,7 +151,7 @@ fun AppRoot(vm: CanvasViewModel) {
                 // nodes around the stage; the size and opacity capsule floats in from the side
                 if (barsShown > 0.01f && !vm.barsHidden) {
                     Box(Modifier.fillMaxSize().graphicsLayer { alpha = barsShown }) {
-                        GlassWordmark(Modifier.align(Alignment.TopCenter).padding(top = 14.dp))
+                        GlassWordmark(Modifier.align(Alignment.TopCenter).padding(top = 22.dp))
                         GlassNodes(vm, Modifier.fillMaxSize())
                     }
                 }

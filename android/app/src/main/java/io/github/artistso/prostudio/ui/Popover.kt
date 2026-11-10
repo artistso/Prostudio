@@ -224,6 +224,7 @@ fun Popover(
                 canvas.restore()
             }
             drawPath(outline, paint)
+            drawPath(outline, Ps.PopoverRim, style = androidx.compose.ui.graphics.drawscope.Stroke(1.dp.toPx()))
         },
     ) {
         val inset = when (side) {

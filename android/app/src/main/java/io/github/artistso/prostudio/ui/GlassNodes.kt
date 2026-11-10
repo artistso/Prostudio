@@ -15,7 +15,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -122,12 +124,17 @@ fun GlassNodes(vm: CanvasViewModel, modifier: Modifier = Modifier) {
                 )
                 Text(
                     node.label.uppercase(),
-                    color = Glass.RoseQuartz.copy(alpha = if (open == node) 1f else 0.82f),
-                    fontSize = 10.sp,
+                    color = Glass.Paper.copy(alpha = if (open == node) 1f else 0.92f),
+                    fontSize = 9.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.2.sp,
                     textAlign = TextAlign.Center,
                     maxLines = 1,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(Color(0xA614000E))
+                        .border(1.dp, Glass.RimInner.copy(alpha = 0.22f), RoundedCornerShape(999.dp))
+                        .padding(horizontal = 9.dp, vertical = 3.dp),
                 )
             }
             if (open == node && children.isNotEmpty()) {
@@ -409,12 +416,17 @@ private fun ChildOrb(child: NodeChild, vm: CanvasViewModel, modifier: Modifier =
         if (child.label.isNotEmpty()) {
             Text(
                 child.label.uppercase(),
-                color = Glass.RoseQuartz.copy(alpha = 0.85f),
-                fontSize = 6.5.sp,
+                color = Glass.Paper.copy(alpha = 0.92f),
+                fontSize = 7.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 1.1.sp,
                 maxLines = 1,
                 textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(999.dp))
+                    .background(Color(0xA614000E))
+                    .border(1.dp, Glass.RimInner.copy(alpha = 0.2f), RoundedCornerShape(999.dp))
+                    .padding(horizontal = 7.dp, vertical = 2.dp),
             )
         }
     }
