@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -49,6 +50,7 @@ import io.github.artistso.prostudio.canvas.CanvasViewModel
 import io.github.artistso.prostudio.canvas.Panel
 import io.github.artistso.prostudio.core.GuideType
 import io.github.artistso.prostudio.core.ToolKind
+import kotlinx.coroutines.launch
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
@@ -433,7 +435,7 @@ private fun ChildOrb(
     val drag = remember { Animatable(Offset.Zero, Offset.VectorConverter) }
     var detached by remember { mutableStateOf(false) }
     // report the drag (and the spring back home) so the connector can follow
-    LaunchedEffect(drag.value) { onPosition(index, seat + drag.value) }
+    LaunchedEffect(Unit) { snapshotFlow { drag.value }.collect { onPosition(index, seat + it) } }
     val pop = remember { Animatable(0.35f) }
     LaunchedEffect(Unit) {
         kotlinx.coroutines.delay(index * 45L)
@@ -441,6 +443,7 @@ private fun ChildOrb(
     }
     val tight = child.dial // the dial keeps its own vertical drag
     val density = LocalDensity.current
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
     Column(
         modifier
             .width(72.dp)
@@ -459,12 +462,13 @@ private fun ChildOrb(
                             detached = true
                             onDetach(index)
                         } else if (!detached) {
-                            drag.animateTo(Offset.Zero, spring(dampingRatio = 0.32f, stiffness = 720f))
+                            scope.launch { drag.animateTo(Offset.Zero, spring(dampingRatio = 0.32f, stiffness = 720f)) }
                         }
                     },
                     onDrag = { change, delta ->
                         change.consume()
-                        drag.snapTo(drag.value + Offset(delta.x / density.density, delta.y / density.density))
+                        val moved = Offset(delta.x / density.density, delta.y / density.density)
+                        scope.launch { drag.snapTo(drag.value + moved) }
                     },
                 )
             },
