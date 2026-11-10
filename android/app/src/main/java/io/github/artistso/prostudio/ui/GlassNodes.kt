@@ -24,6 +24,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -33,6 +34,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.StrokeCap
@@ -50,7 +52,6 @@ import io.github.artistso.prostudio.core.GuideType
 import io.github.artistso.prostudio.core.ToolKind
 import kotlin.math.atan2
 import kotlin.math.cos
-import kotlin.math.min
 import kotlin.math.sin
 import kotlin.math.roundToInt
 
@@ -152,13 +153,14 @@ private enum class GlassNode(val label: String) {
     /** Where it floats by default, as a fraction of the stage. */
     val defaultPlace: Offset
         get() = when (this) {
-            TOOLS -> Offset(0.088f, 0.240f)
-            LINE -> Offset(0.088f, 0.355f)
-            BRUSHES -> Offset(0.088f, 0.470f)
-            COLOR -> Offset(0.088f, 0.585f)
-            LAYERS -> Offset(0.912f, 0.240f)
-            ACTIONS -> Offset(0.912f, 0.435f)
-            FRAMES -> Offset(0.912f, 0.630f)
+            // seeded by the golden ratio downward from the corner orbs, as the Fibonacci gaps open
+            TOOLS -> Offset(0.088f, 0.161f)
+            LINE -> Offset(0.088f, 0.271f)
+            BRUSHES -> Offset(0.088f, 0.449f)
+            COLOR -> Offset(0.088f, 0.749f)
+            LAYERS -> Offset(0.912f, 0.161f)
+            ACTIONS -> Offset(0.912f, 0.271f)
+            FRAMES -> Offset(0.912f, 0.449f)
             STUDIO -> Offset(0.088f, 0.095f)
             GALLERY -> Offset(0.912f, 0.095f)
         }
@@ -334,6 +336,9 @@ private fun GlassOrb(
 
 /** The fan of children an open node blooms toward the middle of the drawing. */
 @Composable
+private const val GOLDEN_ANGLE = 2.3999632f // 137.5078 degrees — the angle between successive sunflower seeds
+private const val DETACH_DP = 130f // how far a child must be dragged from its seat before its connector lets go
+
 private fun ChildrenFan(
     children: List<NodeChild>,
     vm: CanvasViewModel,
@@ -342,40 +347,139 @@ private fun ChildrenFan(
     w: Dp,
     h: Dp,
 ) {
-    // the orbs bloom out from the parent with a spring, fanned toward the stage's middle
-    val pop = remember { Animatable(0.35f) }
     val fade = remember { Animatable(0f) }
+    val bloom = remember { Animatable(0f) }
     LaunchedEffect(Unit) {
         fade.animateTo(1f, spring(dampingRatio = 0.8f, stiffness = 600f))
-        pop.animateTo(1f, spring(dampingRatio = 0.55f, stiffness = 380f))
+        bloom.animateTo(1f, spring(dampingRatio = 0.52f, stiffness = 230f))
     }
     val centre = Offset(cx.value, cy.value)
     val toCentre = Offset(w.value / 2f - centre.x, h.value / 2f - centre.y)
     val base = atan2(toCentre.y, toCentre.x)
-    val spread = min(children.size * 0.62f, 2.5f)
-    val step = if (children.size > 1) spread / (children.size - 1) else 0f
-    val radius = 100f
+    // the seeds of a sunflower: the golden angle apart, the radius growing with the square root of the index
+    val k = (150f / kotlin.math.sqrt(children.size.coerceAtLeast(5).toFloat())).coerceIn(30f, 46f)
+    val seats = children.indices.map { i ->
+        val a = base + i * GOLDEN_ANGLE
+        val r = k * kotlin.math.sqrt(i + 1f)
+        Offset(
+            (centre.x + cos(a) * r).coerceIn(ChildHalf.value + 4f, w.value - ChildHalf.value - 4f),
+            (centre.y + sin(a) * r).coerceIn(ChildHalf.value + 4f, h.value - ChildHalf.value - 4f),
+        )
+    }
+    // where each orb actually is (its seat, plus any drag), and which have let go of their connector
+    // remembered for the fan's lifetime — the fan leaves the tree together, and the maps go with it
+    val positions = remember { mutableStateMapOf<Int, Offset>().apply { seats.forEachIndexed { i, seat -> put(i, seat) } } }
+    val detached = remember { mutableStateMapOf<Int, Boolean>() }
+    // the connectors, behind the orbs, grown out of the parent with the bloom
+    androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
+        val u = size.width / w.value
+        children.indices.forEach { i ->
+            if (detached[i] == true) return@forEach
+            val trim = ((bloom.value - i * 0.09f) / 0.42f).coerceIn(0f, 1f)
+            if (trim <= 0f) return@forEach
+            val seat = positions[i] ?: seats[i]
+            val toward = seat - centre
+            val len = toward.getDistance()
+            val start = centre + if (len < 0.001f) Offset.Zero else toward * (26f / len) // from under the parent's rim
+            val s = start * u
+            val e = seat * u
+            val dist = (e - s).getDistance()
+            val dir = if (dist < 0.001f) Offset(1f, 0f) else (e - s) / dist
+            val perp = Offset(-dir.y, dir.x)
+            val droop = dist * 0.16f
+            val bow = sin(i * 2.3f + 0.8f) * dist * 0.14f
+            val control = (s + e) / 2f + perp * bow + Offset(0f, droop)
+            // the connector grows out of the parent as the bloom reaches this orb
+            val steps = 20
+            val upto = (steps * trim).roundToInt().coerceAtLeast(2)
+            val path = Path().apply {
+                moveTo(s.x, s.y)
+                var t = 1f / steps
+                repeat(upto) {
+                    val p = quadratic(s, control, e, t.coerceAtMost(1f))
+                    lineTo(p.x, p.y)
+                    t += 1f / steps
+                }
+            }
+            if (children[i].accent) {
+                drawPath(path, Color(0x59FB8FB3), style = Stroke(4.6.dp.toPx(), cap = StrokeCap.Round))
+            } else {
+                drawPath(path, Glass.RimInner.copy(alpha = 0.16f), style = Stroke(4.6.dp.toPx(), cap = StrokeCap.Round))
+            }
+            drawPath(path, if (children[i].accent) Color(0xCCFFB7CD) else Glass.Paper.copy(alpha = 0.75f), style = Stroke(1.4.dp.toPx(), cap = StrokeCap.Round))
+        }
+    }
     for ((i, child) in children.withIndex()) {
-        val a = base - spread / 2f + step * i
-        val chx = (centre.x + cos(a) * radius).coerceIn(ChildHalf.value + 4f, w.value - ChildHalf.value - 4f)
-        val chy = (centre.y + sin(a) * radius).coerceIn(ChildHalf.value + 4f, h.value - ChildHalf.value - 4f)
         ChildOrb(
             child,
             vm,
-            Modifier
-                .offset(x = (chx - ChildHalf.value).dp, y = (chy - ChildHalf.value).dp)
-                .graphicsLayer {
-                    scaleX = pop.value
-                    scaleY = pop.value
-                    alpha = fade.value
-                },
+            i,
+            seats[i],
+            onPosition = { index, at -> positions[index] = at },
+            onDetach = { index -> detached[index] = true },
+            Modifier.offset(x = (seats[i].x - ChildHalf.value).dp, y = (seats[i].y - ChildHalf.value).dp),
         )
     }
 }
 
+/** A point on a quadratic bezier at [t]. */
+private fun quadratic(p0: Offset, p1: Offset, p2: Offset, t: Float): Offset {
+    val a = (1f - t) * (1f - t)
+    val b = 2f * (1f - t) * t
+    val c = t * t
+    return Offset(a * p0.x + b * p1.x + c * p2.x, a * p0.y + b * p1.y + c * p2.y)
+}
+
 @Composable
-private fun ChildOrb(child: NodeChild, vm: CanvasViewModel, modifier: Modifier = Modifier) {
-    Column(modifier.width(72.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+private fun ChildOrb(
+    child: NodeChild,
+    vm: CanvasViewModel,
+    index: Int,
+    seat: Offset,
+    onPosition: (Int, Offset) -> Unit,
+    onDetach: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    // the drag of this orb away from its seat (dp), and whether its connector has let go
+    val drag = remember { Animatable(Offset.Zero, Offset.VectorConverter) }
+    var detached by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { snapshotFlow { drag.value }.collect { onPosition(index, seat + it) } }
+    val pop = remember { Animatable(0.35f) }
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(index * 45L)
+        pop.animateTo(1f, spring(dampingRatio = 0.5f, stiffness = 420f))
+    }
+    val tight = child.dial // the dial keeps its own vertical drag
+    val density = LocalDensity.current
+    Column(
+        modifier
+            .width(72.dp)
+            .offset(drag.value.x.dp, drag.value.y.dp)
+            .graphicsLayer {
+                scaleX = pop.value * if (detached) 1.08f else 1f
+                scaleY = pop.value * if (detached) 1.08f else 1f
+                alpha = pop.value.coerceIn(0f, 1f)
+            }
+            .pointerInput(tight) {
+                if (tight) return@pointerInput
+                detectDragGestures(
+                    onDragEnd = {
+                        val d = drag.value
+                        if (!detached && kotlin.math.hypot(d.x, d.y) > DETACH_DP) {
+                            detached = true
+                            onDetach(index)
+                        } else if (!detached) {
+                            drag.animateTo(Offset.Zero, spring(dampingRatio = 0.32f, stiffness = 720f))
+                        }
+                    },
+                    onDrag = { change, delta ->
+                        change.consume()
+                        drag.snapTo(drag.value + Offset(delta.x / density.density, delta.y / density.density))
+                    },
+                )
+            },
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
         when {
             child.dial -> StreamLineDial(vm, Modifier.size(ChildSize))
             child.swatch != null -> Box(
