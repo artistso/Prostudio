@@ -8,32 +8,20 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.math.roundToInt
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
@@ -41,171 +29,24 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.foundation.layout.Column
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.artistso.prostudio.canvas.CanvasViewModel
-import io.github.artistso.prostudio.canvas.Panel
-import io.github.artistso.prostudio.core.ToolKind
 
 private val SliderLeft = 5.dp
 private val SizeTrackTop = 6.dp
 private val OpacityTrackTop = 248.dp
 
-/** A tap target without a ripple: the bars show their state through colour alone. */
-private fun Modifier.tap(enabled: Boolean = true, onClick: () -> Unit): Modifier = composed {
-    clickable(remember { MutableInteractionSource() }, indication = null, enabled = enabled, onClick = onClick)
-}
-
-/** The bar across the top of the canvas: artwork actions on the left, painting tools on the right. */
-@Composable
-fun TopBar(vm: CanvasViewModel, modifier: Modifier = Modifier) {
-    BoxWithConstraints(
-        modifier.fillMaxWidth().height(Ps.BarHeight)
-            .background(Glass.BarGradient)
-            .drawBehind {
-                // the bar's lower edge catches the horizon: a hairline rim of rose under the frost
-                drawLine(Glass.RimInner.copy(alpha = 0.45f), Offset(0f, size.height - 0.6.dp.toPx()), Offset(size.width, size.height - 0.6.dp.toPx()), 0.6.dp.toPx())
-            },
-    ) {
-        val fit = Ps.barFit(maxWidth)
-        Row(
-            Modifier.align(Alignment.CenterStart).padding(start = fit.margin),
-            horizontalArrangement = Arrangement.spacedBy(fit.actionGap),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(Modifier.size(Ps.GalleryWidth, Ps.BarButtonHeight).tap { vm.closeArtwork() }, contentAlignment = Alignment.CenterStart) {
-                Text("Gallery", color = Ps.BarText, fontSize = 18.sp, fontWeight = FontWeight.Medium, maxLines = 1, softWrap = false, modifier = Modifier.offset(y = (-1).dp))
-            }
-            ActionButton(PsIcons.Actions, "Actions", fit.button, selected = vm.panel == Panel.ACTIONS) { vm.toggle(Panel.ACTIONS) }
-            ActionButton(PsIcons.Adjustments, "Adjustments", fit.button, selected = vm.panel == Panel.ADJUSTMENTS || vm.adjustment != null || vm.opacityLayer != null || vm.recoloring) { vm.adjustmentsPressed() }
-            ActionButton(PsIcons.Selection, "Selection", fit.button, selected = vm.selecting, glyph = 33.dp) { vm.toggleSelecting() }
-            ActionButton(PsIcons.Transform, "Transform", fit.button, selected = vm.transforming, glyph = 44.dp) { vm.toggleTransform() }
-        }
-        // the layers and colour panels take the highlight from the current tool while open
-        val panelOpen = vm.panel == Panel.LAYERS || vm.panel == Panel.COLOR || vm.transforming || vm.selecting || vm.adjustment != null
-        // the wordmark sits at the centre of the bar, where its ends cannot reach: white through rose to accent
-        if (maxWidth >= 620.dp) {
-            Column(
-                Modifier.align(Alignment.Center),
-                horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
-                verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
-            ) {
-                Text(
-                    "PROSTUDIO",
-                    fontFamily = FontFamily.Serif,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.5.sp,
-                    letterSpacing = 3.2.sp,
-                    textAlign = TextAlign.Center,
-                    style = androidx.compose.ui.text.TextStyle(
-                        brush = Glass.TitleGradient,
-                        shadow = Shadow(Color(0x66BB0037), Offset.Zero, 9f),
-                    ),
-                    maxLines = 1,
-                    softWrap = false,
-                )
-                Text(
-                    "THE GLASS HORIZON",
-                    fontSize = 6.5.sp,
-                    letterSpacing = 2.4.sp,
-                    color = Glass.RoseDim,
-                    textAlign = TextAlign.Center,
-                    maxLines = 1,
-                    softWrap = false,
-                )
-            }
-        }
-        Row(
-            Modifier.align(Alignment.CenterEnd).padding(end = fit.margin),
-            horizontalArrangement = Arrangement.spacedBy(fit.toolGap),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            // painting an adjustment on (or cloning), the brush shows it
-            ToolButton(
-                if (vm.adjustPencil) PsIcons.BrushPaintedOn else PsIcons.Brush,
-                "Paint",
-                fit.button,
-                selected = vm.adjustPencil || (!panelOpen && vm.tool == ToolKind.PAINT),
-                onHold = { vm.toolHeld(ToolKind.PAINT) },
-            ) {
-                vm.toolPressed(ToolKind.PAINT)
-            }
-            ToolButton(PsIcons.Smudge, "Smudge", fit.button, selected = !panelOpen && vm.tool == ToolKind.SMUDGE, onHold = { vm.toolHeld(ToolKind.SMUDGE) }) {
-                vm.toolPressed(ToolKind.SMUDGE)
-            }
-            ToolButton(PsIcons.Erase, "Erase", fit.button, selected = !panelOpen && vm.tool == ToolKind.ERASE, onHold = { vm.toolHeld(ToolKind.ERASE) }) {
-                vm.toolPressed(ToolKind.ERASE)
-            }
-            ToolButton(PsIcons.Layers, "Layers", fit.button, selected = vm.panel == Panel.LAYERS) { vm.toggle(Panel.LAYERS) }
-            ColorButton(vm, fit.button)
-        }
-    }
-}
-
-/** An action button: its glyph on a dark disc, which turns blue while its panel is open. */
-@Composable
-private fun ActionButton(icon: ImageVector, label: String, width: Dp, selected: Boolean = false, glyph: Dp = 36.dp, onClick: () -> Unit = {}) {
-    val lit = animateHighlight(selected)
-    Box(Modifier.size(width, Ps.BarButtonHeight).tap(onClick = onClick), contentAlignment = Alignment.Center) {
-        Box(Modifier.size(Ps.ActionDiscSize).clip(CircleShape).background(lerp(Ps.ActionDisc, Ps.BarGlyphSelected, lit)))
-        // the glyphs are drawn in a 44 frame, shown [glyph] across (most 36)
-        Icon(icon, contentDescription = label, tint = lerp(Ps.ActionGlyph, Color.White, lit), modifier = Modifier.requiredSize(glyph))
-    }
-}
-
-/** A tap target that also does [onHold] when held instead. */
-private fun Modifier.tapOrHold(onClick: () -> Unit, onHold: () -> Unit): Modifier = composed {
-    val tap by rememberUpdatedState(onClick)
-    val hold by rememberUpdatedState(onHold)
-    pointerInput(Unit) { detectTapGestures(onLongPress = { hold() }, onTap = { tap() }) }
-}
-
-/** A tool button: tapped, the tool (or its brushes); held ([onHold]), it takes the current brush. */
-@Composable
-private fun ToolButton(icon: ImageVector, label: String, width: Dp, selected: Boolean, onHold: (() -> Unit)? = null, onClick: () -> Unit) {
-    val touch = if (onHold != null) Modifier.tapOrHold(onClick, onHold) else Modifier.tap(onClick = onClick)
-    Box(Modifier.size(width, Ps.BarButtonHeight).then(touch), contentAlignment = Alignment.Center) {
-        // a 44 frame shown as it is, over the 38 tall button
-        Icon(icon, contentDescription = label, tint = lerp(Ps.BarGlyph, Ps.BarGlyphSelected, animateHighlight(selected)), modifier = Modifier.requiredSize(44.dp))
-    }
-}
-
-@Composable
-private fun ColorButton(vm: CanvasViewModel, width: Dp) {
-    val rgb = vm.colorRgb()
-    // ringed only where the colour would fade into the bar: dark ones on the dark bar, light ones
-    // on the light bar
-    val ringed = if (Ps.light) vm.brightness > LIGHT_RING_ABOVE else vm.brightness < DARK_RING_BELOW
-    // held, the colour painted with before
-    // dragged out onto the canvas, it fills there (ColorDrop)
-    Box(Modifier.size(width, Ps.BarButtonHeight).dropSource(vm, onHold = { vm.previousColor() }) { vm.toggle(Panel.COLOR) }, contentAlignment = Alignment.Center) {
-        val dot = Modifier.size(Ps.ColorDot).clip(CircleShape).background(CanvasSpace.color(rgb))
-        Box(if (ringed) dot.border(1.dp, Ps.ColorRing, CircleShape) else dot)
-    }
-}
-
-/** The colour button's brightness (HSB) under which it is ringed on the dark bar. */
-private const val DARK_RING_BELOW = 0.35f
-
-/** The colour button's brightness over which it is ringed on the light bar. */
-private const val LIGHT_RING_ABOVE = 0.85f
-
 /**
- * The side bar against the left edge (the right one, [right]-handed): brush size, the modify
- * button, opacity, undo and redo, its tracks [trackHeight] long. On the right everything is
+ * The size and opacity capsule floating in the world (the right one, [right]-handed): brush
+ * size, the modify button, opacity, its tracks [trackHeight] long. On the right everything is
  * mirrored but the glyphs.
  */
 @Composable
@@ -215,13 +56,13 @@ fun SideBar(vm: CanvasViewModel, modifier: Modifier = Modifier, right: Boolean =
     // shorter tracks bring what is under each up with them
     val shorter = Ps.SliderHeight - trackHeight
     val opacityTop = OpacityTrackTop - shorter
-    // its glass slides out with it as the interface hides, its screen side's corners off the screen
+    // its glass slides out with it as the interface hides
     val aside = with(androidx.compose.ui.platform.LocalDensity.current) { Ps.SideBarWidth.toPx() } * (1f - shown) * if (right) 1f else -1f
     val moved = Offset(aside, 0f)
     val body = BarGlass(shown, moved, pastLeft = if (right) 0.dp else Ps.SideBarCorner, pastRight = if (right) Ps.SideBarCorner else 0.dp)
     val track = BarGlass(shown, moved, window = true)
     Box(
-        Modifier.then(rememberFrost(Ps.SideBarCorner, body)).then(modifier).size(Ps.SideBarWidth, Ps.SideBarHeight - shorter * 2)
+        Modifier.then(rememberFrost(Ps.SideBarCorner, body)).then(modifier).size(Ps.SideBarWidth, opacityTop + trackHeight + 14.dp)
             .drawBehind {
                 // translucent, with windows where the slider tracks are: they show what is behind
                 val r = Ps.SideBarCorner.toPx()
@@ -229,11 +70,7 @@ fun SideBar(vm: CanvasViewModel, modifier: Modifier = Modifier, right: Boolean =
                 val trackR = CornerRadius(Ps.SliderCorner.toPx())
                 val body = Path().apply {
                     fillType = PathFillType.EvenOdd
-                    val (inner, outer) = CornerRadius.Zero to CornerRadius(r)
-                    addRoundRect(
-                        if (right) RoundRect(0f, 0f, size.width, size.height, outer, inner, inner, outer)
-                        else RoundRect(0f, 0f, size.width, size.height, inner, outer, outer, inner),
-                    )
+                    addRoundRect(RoundRect(0f, 0f, size.width, size.height, CornerRadius(r), CornerRadius(r), CornerRadius(r), CornerRadius(r)))
                     for (top in listOf(SizeTrackTop, opacityTop)) {
                         val o = Offset(x(SliderLeft, Ps.SliderWidth).toPx(), top.toPx())
                         addRoundRect(RoundRect(o.x, o.y, o.x + track.width, o.y + track.height, trackR))
@@ -278,20 +115,6 @@ fun SideBar(vm: CanvasViewModel, modifier: Modifier = Modifier, right: Boolean =
             val top = if (which == CanvasViewModel.SliderPanel.SIZE) SizeTrackTop else opacityTop
             SliderPanel(vm, which, Modifier.offset(x(SliderLeft + Ps.SliderWidth + SliderPanelGap, SliderPanelSide), top - SliderPanelRise))
         }
-        SideButton(PsIcons.Undo, "Undo", vm.canUndo, Modifier.offset(x(5.dp, 40.dp), 430.5.dp - shorter * 2)) { vm.undo() }
-        SideButton(PsIcons.Redo, "Redo", vm.canRedo, Modifier.offset(x(5.dp, 40.dp), 472.5.dp - shorter * 2)) { vm.redo() }
-    }
-}
-
-@Composable
-private fun SideButton(icon: ImageVector, label: String, enabled: Boolean, modifier: Modifier, onClick: () -> Unit) {
-    // turning on or off (a stroke kept, the last step undone) fades over 0.15 s either way, linear,
-    // as measured: the lit glyph over the unlit one
-    val lit = androidx.compose.animation.core.animateFloatAsState(if (enabled) 1f else 0f, Motion.highlightOff(), label = "enabled").value
-    Box(modifier.size(40.dp, 41.dp).tap(enabled, onClick), contentAlignment = Alignment.Center) {
-        // a 50 frame shown 36 across
-        if (lit < 1f) Icon(icon, contentDescription = label.takeIf { lit <= 0f }, tint = Ps.SideGlyphDisabled, modifier = Modifier.requiredSize(36.dp))
-        if (lit > 0f) Icon(icon, contentDescription = label, tint = Ps.SideGlyph.copy(alpha = Ps.SideGlyph.alpha * lit), modifier = Modifier.requiredSize(36.dp))
     }
 }
 

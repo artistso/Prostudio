@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlin.math.hypot
 import kotlin.random.Random
 
@@ -147,4 +148,41 @@ private val RAYS: Array<Pair<Float, Color>> = run {
     val strength = floatArrayOf(0.00f, 0.10f, 0.00f, 0.00f, 0.13f, 0.00f, 0.00f, 0.09f, 0.00f, 0.00f, 0.11f, 0.00f, 0.00f, 0.12f, 0.00f, 0.00f, 0.08f, 0.00f, 0.00f, 0.10f, 0.00f, 0.09f, 0.00f)
     for (i in angles.indices) stops += angles[i] to rose.copy(alpha = strength[i])
     stops.toTypedArray()
+}
+
+/**
+ * The wordmark, out in the world rather than behind a bar: PROSTUDIO in a serif whose gradient
+ * runs white through rose to accent over a luminous shadow, THE GLASS HORIZON tracked beneath.
+ */
+@androidx.compose.runtime.Composable
+fun GlassWordmark(modifier: Modifier = Modifier) {
+    androidx.compose.foundation.layout.Column(
+        modifier,
+        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
+        verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
+    ) {
+        androidx.compose.material3.Text(
+            "PROSTUDIO",
+            fontFamily = androidx.compose.ui.text.font.FontFamily.Serif,
+            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+            fontSize = 15.sp,
+            letterSpacing = 3.4.sp,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            style = androidx.compose.ui.text.TextStyle(
+                brush = Glass.TitleGradient,
+                shadow = androidx.compose.ui.graphics.Shadow(Color(0x66BB0037), Offset.Zero, 10f),
+            ),
+            maxLines = 1,
+            softWrap = false,
+        )
+        androidx.compose.material3.Text(
+            "THE GLASS HORIZON",
+            fontSize = 6.5.sp,
+            letterSpacing = 2.6.sp,
+            color = Glass.RoseDim,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            maxLines = 1,
+            softWrap = false,
+        )
+    }
 }

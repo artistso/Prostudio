@@ -7,7 +7,6 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
@@ -21,10 +20,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.zIndex
@@ -148,21 +145,22 @@ fun AppRoot(vm: CanvasViewModel) {
                         },
                     )
                 }
-                if (barsShown > 0f) {
-                    // the top bar slides up off the screen and the side bar out to its side as they fade
-                    val fade = Modifier.graphicsLayer { alpha = barsShown }
-                    val up = Modifier.graphicsLayer { translationY = -size.height * (1f - barsShown) }
-                    val aside = Modifier.graphicsLayer { translationX = size.width * (1f - barsShown) * if (vm.rightHanded) 1f else -1f }
-                    val height = with(androidx.compose.ui.platform.LocalDensity.current) { Ps.BarHeight.toPx() }
-                    val topGlass = BarGlass(barsShown, androidx.compose.ui.geometry.Offset(0f, -height * (1f - barsShown)))
-                    TopBar(vm, Modifier.align(Alignment.TopCenter).then(rememberFrost(0.dp, topGlass)).then(up).then(fade))
+                // the Glass Horizon takes the bars' place: the wordmark out in the world, the optical
+                // nodes around the stage; the size and opacity capsule floats in from the side
+                if (barsShown > 0.01f && !vm.barsHidden) {
+                    Box(Modifier.fillMaxSize().graphicsLayer { alpha = barsShown }) {
+                        GlassWordmark(Modifier.align(Alignment.TopCenter).padding(top = 8.dp))
+                        GlassNodes(vm, Modifier.fillMaxSize())
+                    }
+                }
+                // the size and opacity capsule, floating in the world; a mode taking the screen slides it off its edge
+                if (barsShown > 0.01f) {
                     val sideBar = Ps.sideBarFit(maxHeight)
-                    // a mode taking the screen slides it off its edge, and back when it ends
                     androidx.compose.animation.AnimatedVisibility(
                         vm.showSideBar && !vm.transforming && !vm.selecting && !vm.guideEditing && !vm.lightingStudioOpen && vm.cropRect == null && vm.textInfo == null &&
                             vm.opacityLayer == null &&
                             (vm.adjustment == null || vm.adjustPencil),
-                        Modifier.align(if (vm.rightHanded) Alignment.TopEnd else Alignment.TopStart).offset(y = sideBar.top),
+                        Modifier.align(if (vm.rightHanded) Alignment.TopEnd else Alignment.TopStart).offset(x = if (vm.rightHanded) (-9).dp else 9.dp, y = sideBar.top),
                         enter = Motion.sideBarIn(vm.rightHanded),
                         exit = Motion.sideBarOut(vm.rightHanded),
                     ) {
@@ -170,7 +168,7 @@ fun AppRoot(vm: CanvasViewModel) {
                         DisposableEffect(Unit) { onDispose { vm.sideBarBounds = null } }
                         SideBar(
                             vm,
-                            aside.then(fade).onGloballyPositioned { vm.sideBarBounds = it.boundsInWindow() },
+                            Modifier.graphicsLayer { alpha = barsShown }.onGloballyPositioned { vm.sideBarBounds = it.boundsInWindow() },
                             right = vm.rightHanded,
                             trackHeight = sideBar.track,
                             shown = barsShown,
@@ -217,7 +215,7 @@ fun AppRoot(vm: CanvasViewModel) {
                         Panel.NONE -> 0.dp to 0
                     }
                     val fromLeft = shown == Panel.ACTIONS || shown == Panel.ADJUSTMENTS
-                    val buttonX = if (fromLeft) Ps.actionCentre(button, maxWidth) else maxWidth - Ps.toolCentreFromRight(button, maxWidth)
+                    val buttonX = if (fromLeft) 86.dp else maxWidth - 86.dp
                     // panels keep clear of the side bar, on whichever side it is
                     val clear = if (vm.showSideBar) Ps.SideBarWidth + Ps.PopoverGap else Ps.PopoverGap
                     val place = if (vm.rightHanded) popoverPlace(width, buttonX, maxWidth, minRight = clear) else popoverPlace(width, buttonX, maxWidth, clear)
