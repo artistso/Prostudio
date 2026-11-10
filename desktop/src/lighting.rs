@@ -6,7 +6,7 @@
 //! themselves (our own panoramas, bundled with the Android app) a model is lit by.
 
 use egui::{Align2, Color32, Id, Order, Pos2, Rect, Sense, Stroke, Ui, UiBuilder, pos2, vec2};
-use procraft_core::{CanvasSession, ModelLight};
+use prostudio_core::{CanvasSession, ModelLight};
 
 use crate::icons::{self, Icon};
 use crate::look::{Look, Weight, argb, dragged_by, pc, text};

@@ -4,7 +4,7 @@
 
 use std::sync::Arc;
 
-use procraft_core::{CanvasSession, Plugins};
+use prostudio_core::{CanvasSession, Plugins};
 
 /// When the brush cursor shows: while the pointer hovers, while painting, or both.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -24,7 +24,7 @@ pub enum CursorStyle {
 }
 
 /// What an artwork dragged out of the gallery becomes, and a picture's format when one is wanted.
-pub const DRAG_FORMATS: [&str; 5] = ["ProCraft", "PSD", "JPEG", "PNG", "TIFF"];
+pub const DRAG_FORMATS: [&str; 5] = ["ProStudio", "PSD", "JPEG", "PNG", "TIFF"];
 pub const DRAG_IMAGE_FORMATS: [&str; 3] = ["JPEG", "PNG", "TIFF"];
 
 pub const RAPID_UNDO_MIN_S: f32 = 0.1;

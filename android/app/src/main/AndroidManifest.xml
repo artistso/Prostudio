@@ -10,7 +10,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
-        android:theme="@style/Theme.ProCraft">
+        android:theme="@style/Theme.ProStudio">
 
         <!-- configuration changes are handled in place: the canvas and its GPU state stay -->
         <activity
@@ -23,7 +23,7 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!-- a file opened with the app, or shared to it: artworks, packages and pictures go to the gallery -->
+            <!-- a file opened with the app, or shared to it: artworks, packages and pictures go to the gallery; the .procraft* kinds are the same files from before the rename -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <action android:name="android.intent.action.SEND" />
@@ -47,14 +47,23 @@
                 <data android:pathSuffix=".procreate" />
                 <data android:pathPattern=".*\\.procreate" />
                 <data android:pathPattern=".*\\..*\\.procreate" />
+                <data android:pathSuffix=".prostudio" />
                 <data android:pathSuffix=".procraft" />
+                <data android:pathPattern=".*\\.prostudio" />
                 <data android:pathPattern=".*\\.procraft" />
+                <data android:pathPattern=".*\\..*\\.prostudio" />
                 <data android:pathPattern=".*\\..*\\.procraft" />
+                <data android:pathSuffix=".prostudio-plugin" />
                 <data android:pathSuffix=".procraft-plugin" />
+                <data android:pathPattern=".*\\.prostudio-plugin" />
                 <data android:pathPattern=".*\\.procraft-plugin" />
+                <data android:pathPattern=".*\\..*\\.prostudio-plugin" />
                 <data android:pathPattern=".*\\..*\\.procraft-plugin" />
+                <data android:pathSuffix=".prostudioplugin" />
                 <data android:pathSuffix=".procraftplugin" />
+                <data android:pathPattern=".*\\.prostudioplugin" />
                 <data android:pathPattern=".*\\.procraftplugin" />
+                <data android:pathPattern=".*\\..*\\.prostudioplugin" />
                 <data android:pathPattern=".*\\..*\\.procraftplugin" />
                 <data android:pathSuffix=".brush" />
                 <data android:pathPattern=".*\\.brush" />
@@ -104,14 +113,23 @@
                 <data android:pathSuffix=".procreate" />
                 <data android:pathPattern=".*\\.procreate" />
                 <data android:pathPattern=".*\\..*\\.procreate" />
+                <data android:pathSuffix=".prostudio" />
                 <data android:pathSuffix=".procraft" />
+                <data android:pathPattern=".*\\.prostudio" />
                 <data android:pathPattern=".*\\.procraft" />
+                <data android:pathPattern=".*\\..*\\.prostudio" />
                 <data android:pathPattern=".*\\..*\\.procraft" />
+                <data android:pathSuffix=".prostudio-plugin" />
                 <data android:pathSuffix=".procraft-plugin" />
+                <data android:pathPattern=".*\\.prostudio-plugin" />
                 <data android:pathPattern=".*\\.procraft-plugin" />
+                <data android:pathPattern=".*\\..*\\.prostudio-plugin" />
                 <data android:pathPattern=".*\\..*\\.procraft-plugin" />
+                <data android:pathSuffix=".prostudioplugin" />
                 <data android:pathSuffix=".procraftplugin" />
+                <data android:pathPattern=".*\\.prostudioplugin" />
                 <data android:pathPattern=".*\\.procraftplugin" />
+                <data android:pathPattern=".*\\..*\\.prostudioplugin" />
                 <data android:pathPattern=".*\\..*\\.procraftplugin" />
                 <data android:pathSuffix=".brush" />
                 <data android:pathPattern=".*\\.brush" />

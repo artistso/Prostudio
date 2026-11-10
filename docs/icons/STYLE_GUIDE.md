@@ -1,6 +1,6 @@
-# ProCraft icon style guide
+# ProStudio icon style guide
 
-The rules for ProCraft's interface icons, every one of them our own drawing. `LucideIcons` keeps the
+The rules for ProStudio's interface icons, every one of them our own drawing. `LucideIcons` keeps the
 Lucide set beside them.
 
 ## Where an icon comes from
@@ -14,7 +14,7 @@ Lucide set beside them.
   nothing else about the old glyph is used.
 - **A distinctive mark gets our own idea.** Where a control's usual picture is one app's own
   invention rather than a common metaphor, pick a different, plain idea.
-- **Every drawing is recorded.** Its master SVG lives in `assets/icons/procraft/`, it is made by
+- **Every drawing is recorded.** Its master SVG lives in `assets/icons/prostudio/`, it is made by
   `tools/icons/draw_icons.py`, and it has a line in `ATTRIBUTION.md` as original work.
 
 ## Grid and shapes

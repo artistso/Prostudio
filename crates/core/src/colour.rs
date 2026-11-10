@@ -1,13 +1,13 @@
-//! Colour profiles by name: the built-in RGB ones, ProCraft's own CMYK profile and those the user
+//! Colour profiles by name: the built-in RGB ones, ProStudio's own CMYK profile and those the user
 //! imported (kept as .icc files in a folder the app names), and colours moved between them for
 //! the colour panel.
 
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
-use procraft_engine::cms::{CanvasIcc, IccProfile, Space};
-use procraft_engine::document::Document;
-use procraft_engine::profile::Profile;
+use prostudio_engine::cms::{CanvasIcc, IccProfile, Space};
+use prostudio_engine::document::Document;
+use prostudio_engine::profile::Profile;
 
 use crate::CanvasSession;
 
@@ -23,10 +23,10 @@ fn imported() -> Vec<Arc<IccProfile>> {
     IMPORTED.lock().map(|i| i.profiles.clone()).unwrap_or_default()
 }
 
-/// ProCraft's own CMYK profile, read once.
+/// ProStudio's own CMYK profile, read once.
 fn generic_cmyk() -> Option<Arc<IccProfile>> {
     static READ: std::sync::OnceLock<Option<Arc<IccProfile>>> = std::sync::OnceLock::new();
-    READ.get_or_init(|| IccProfile::parse(&procraft_engine::cmyk::profile()).map(Arc::new)).clone()
+    READ.get_or_init(|| IccProfile::parse(&prostudio_engine::cmyk::profile()).map(Arc::new)).clone()
 }
 
 /// What a profile name puts a canvas in: a built-in profile, and a profile of its own if any.
@@ -59,9 +59,9 @@ fn rgb_named(name: &str, doc: Option<&Document>) -> Option<Arc<IccProfile>> {
 /// The table taking a canvas's colours to the screen's (as a press would print them, for a CMYK
 /// canvas), for a canvas with a profile of its own; none for the built-in profiles, which the
 /// display moves by matrix.
-pub(crate) fn display_table(doc: &Document, screen: Profile) -> Option<procraft_engine::cms::Lut> {
+pub(crate) fn display_table(doc: &Document, screen: Profile) -> Option<prostudio_engine::cms::Lut> {
     doc.icc.as_ref()?;
-    use procraft_engine::cms;
+    use prostudio_engine::cms;
     Some(cms::Lut::build(&doc.rgb_profile(), &cms::builtin(screen), doc.press().as_deref(), 33))
 }
 
@@ -228,11 +228,11 @@ mod tests {
 
     #[test]
     fn our_cmyk_profile_is_offered_and_resolves() {
-        assert_eq!(cmyk_profiles().first().map(String::as_str), Some(procraft_engine::cmyk::NAME));
-        let (profile, icc) = resolve(procraft_engine::cmyk::NAME).unwrap();
+        assert_eq!(cmyk_profiles().first().map(String::as_str), Some(prostudio_engine::cmyk::NAME));
+        let (profile, icc) = resolve(prostudio_engine::cmyk::NAME).unwrap();
         assert_eq!(profile, Profile::DisplayP3);
         assert_eq!(icc.unwrap().0.space, Space::Cmyk);
-        assert!(is_cmyk_profile(procraft_engine::cmyk::NAME.to_owned()));
+        assert!(is_cmyk_profile(prostudio_engine::cmyk::NAME.to_owned()));
         assert!(!is_cmyk_profile("Display P3".to_owned()));
         assert_eq!(resolve("sRGB IEC61966-2.1"), Some((Profile::Srgb, None)));
         assert!(resolve("no such profile").is_none());
@@ -242,7 +242,7 @@ mod tests {
     fn a_cmyk_canvas_shows_through_a_table() {
         let mut doc = Document::new(4, 4);
         assert!(display_table(&doc, Profile::Srgb).is_none() && table_key(&doc, Profile::Srgb).is_none());
-        let (profile, icc) = resolve(procraft_engine::cmyk::NAME).unwrap();
+        let (profile, icc) = resolve(prostudio_engine::cmyk::NAME).unwrap();
         doc.change_to(profile, icc);
         let table = display_table(&doc, Profile::DisplayP3).unwrap();
         // the press dulls a pure green; white stays white
@@ -258,7 +258,7 @@ mod tests {
         let p3_red = convert_color(0xFF0000, "sRGB IEC61966-2.1".to_owned(), "Display P3".to_owned());
         assert_eq!(p3_red, Profile::Srgb.convert_rgb(0xFF0000, Profile::DisplayP3));
         // a CMYK profile's colours are Display P3's
-        let same = convert_color(0x12AB34, "Display P3".to_owned(), procraft_engine::cmyk::NAME.to_owned());
+        let same = convert_color(0x12AB34, "Display P3".to_owned(), prostudio_engine::cmyk::NAME.to_owned());
         assert!((same >> 16).abs_diff(0x12) <= 1 && ((same >> 8) & 0xFF).abs_diff(0xAB) <= 1, "{same:06x}");
         assert_eq!(convert_color(0x123456, "nothing".to_owned(), "Display P3".to_owned()), 0x123456);
     }
@@ -266,7 +266,7 @@ mod tests {
     #[test]
     fn the_panel_s_p3_colours_go_into_srgb_canvases_only() {
         assert!(colours_in_p3("Display P3".to_owned()));
-        assert!(colours_in_p3(procraft_engine::cmyk::NAME.to_owned()));
+        assert!(colours_in_p3(prostudio_engine::cmyk::NAME.to_owned()));
         assert!(!colours_in_p3("sRGB IEC61966-2.1".to_owned()));
     }
 
@@ -275,7 +275,7 @@ mod tests {
         let utf16 = |s: &str| s.encode_utf16().flat_map(u16::to_be_bytes).collect::<Vec<u8>>();
         let (from, to) = (utf16("Display P3"), utf16(name));
         assert_eq!(from.len(), to.len());
-        let mut icc = procraft_engine::icc::icc(Profile::DisplayP3);
+        let mut icc = prostudio_engine::icc::icc(Profile::DisplayP3);
         let at = icc.windows(from.len()).position(|w| w == from).unwrap();
         icc[at..at + to.len()].copy_from_slice(&to);
         icc
@@ -283,7 +283,7 @@ mod tests {
 
     #[test]
     fn an_imported_profile_is_kept_and_read_again_but_not_a_write_cut_short() {
-        let dir = std::env::temp_dir().join(format!("procraft-profiles-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-profiles-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         // what a write cut short before its rename left

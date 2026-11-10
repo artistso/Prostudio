@@ -13,7 +13,7 @@ use egui::text::{LayoutJob, TextFormat, TextWrapping};
 use egui::{
     Align2, Color32, Id, Order, Pos2, Rect, ScrollArea, Sense, Stroke, TextureHandle, Ui, UiBuilder, Vec2, pos2, vec2,
 };
-use procraft_core::{
+use prostudio_core::{
     ArtworkStore, CanvasPreset, GalleryArtwork, GalleryEntry, P3, preset_label, presets_from_json, profile_chip,
 };
 
@@ -171,7 +171,7 @@ impl ShareRow {
 
 /// Share's formats, as their list shows them, the animated ones last.
 const SHARE_ROWS: [ShareRow; 11] = [
-    ShareRow::Still(crate::files::Format::Procraft),
+    ShareRow::Still(crate::files::Format::Prostudio),
     ShareRow::Still(crate::files::Format::Package),
     ShareRow::Still(crate::files::Format::Psd),
     ShareRow::Still(crate::files::Format::Pdf),
@@ -395,7 +395,7 @@ impl Gallery {
 
     fn keep_presets(&self) {
         if let Err(e) =
-            crate::files::write_whole(&presets_path(), procraft_core::presets_json(self.presets.clone()).as_bytes())
+            crate::files::write_whole(&presets_path(), prostudio_core::presets_json(self.presets.clone()).as_bytes())
         {
             log::warn!("keeping the presets: {e}");
         }
@@ -634,7 +634,7 @@ impl Gallery {
     fn select_header(&mut self, ui: &Ui, look: &mut Look, screen: Rect) {
         let painter = ui.painter();
         let top = screen.top();
-        let title = self.stack.as_ref().map_or("ProCraft", |s| s.1.as_str()).to_owned();
+        let title = self.stack.as_ref().map_or("ProStudio", |s| s.1.as_str()).to_owned();
         text(
             painter,
             pos2(screen.left() + 32.0, top + 11.0),
@@ -869,7 +869,7 @@ impl Gallery {
     /// field, its name and its version; the round button at the top right (or Escape) closes it.
     fn about(&mut self, ctx: &egui::Context, screen: Rect) {
         if self.mark.is_none() {
-            let bytes = include_bytes!("../../android/app/src/main/res/drawable-nodpi/procraft_mark.png");
+            let bytes = include_bytes!("../../android/app/src/main/res/drawable-nodpi/prostudio_mark.png");
             let image = crate::files::png_rgba(bytes)
                 .map(|(w, h, rgba)| egui::ColorImage::from_rgba_unmultiplied([w as usize, h as usize], &rgba));
             self.mark = image.map(|i| ctx.load_texture("app mark", i, egui::TextureOptions::LINEAR));
@@ -889,12 +889,12 @@ impl Gallery {
                 ui.painter(),
                 pos2(field.center().x, field.bottom() + 12.0),
                 Align2::CENTER_TOP,
-                "ProCraft",
+                "ProStudio",
                 64.0,
                 Weight::Bold,
                 Color32::WHITE,
             );
-            let version = concat!("Version ", env!("PROCRAFT_VERSION"));
+            let version = concat!("Version ", env!("PROSTUDIO_VERSION"));
             text(
                 ui.painter(),
                 pos2(field.center().x, name.bottom() + 14.0),
@@ -1125,7 +1125,7 @@ impl Gallery {
                 painter,
                 pos2(screen.left() + 32.0, top + 11.0),
                 Align2::LEFT_TOP,
-                "ProCraft",
+                "ProStudio",
                 36.0,
                 Weight::Bold,
                 argb(TITLE).gamma_multiply(title_in),
@@ -2023,10 +2023,10 @@ const PLAYED_MOST: f64 = 256e6;
 
 /// An artwork's frames as read for Preview, and how they play.
 struct PlayedFrames {
-    pictures: Vec<procraft_core::ThumbnailImage>,
+    pictures: Vec<prostudio_core::ThumbnailImage>,
     order: Vec<u32>,
     fps: u32,
-    playback: procraft_core::AnimationPlayback,
+    playback: prostudio_core::AnimationPlayback,
 }
 
 /// An animated artwork in Preview: being read, then played.
@@ -2036,7 +2036,7 @@ struct Played {
     frames: Vec<TextureHandle>,
     order: Vec<u32>,
     fps: u32,
-    playback: procraft_core::AnimationPlayback,
+    playback: prostudio_core::AnimationPlayback,
     at: u32,
     step: i32,
     due: Option<Instant>,
@@ -2046,7 +2046,7 @@ impl Played {
     /// Starts reading the artwork in `dir`, if it plays, at no more than `side` pixels.
     fn start(dir: String, side: u32) -> Played {
         let (done, read) = std::sync::mpsc::channel();
-        let (from, plays) = (dir.clone(), procraft_core::artwork_plays(dir.clone()));
+        let (from, plays) = (dir.clone(), prostudio_core::artwork_plays(dir.clone()));
         if plays {
             std::thread::spawn(move || _ = done.send(read_frames(from, side)));
         }
@@ -2056,7 +2056,7 @@ impl Played {
             frames: Vec::new(),
             order: Vec::new(),
             fps: 1,
-            playback: procraft_core::AnimationPlayback::Loop,
+            playback: prostudio_core::AnimationPlayback::Loop,
             at: 0,
             step: 1,
             due: None,
@@ -2096,7 +2096,7 @@ impl Played {
             return;
         }
         let len = u32::try_from(self.order.len()).unwrap_or(0);
-        match procraft_core::animation_next_step(self.playback, len, self.at, self.step) {
+        match prostudio_core::animation_next_step(self.playback, len, self.at, self.step) {
             Some(next) => {
                 (self.at, self.step) = (next.at, next.step);
                 self.due = Some(now + frame);
@@ -2116,7 +2116,7 @@ impl Played {
 
 /// The frames of the artwork in `dir`, at no more than `side` pixels and [`PLAYED_MOST`] together.
 fn read_frames(dir: String, side: u32) -> Option<PlayedFrames> {
-    let session = procraft_core::CanvasSession::open(dir).ok()?;
+    let session = prostudio_core::CanvasSession::open(dir).ok()?;
     // a model goes round
     if session.model_info().is_some() {
         if !session.draw_without_window() {
@@ -2126,7 +2126,7 @@ fn read_frames(dir: String, side: u32) -> Option<PlayedFrames> {
         let fit = (PLAYED_MOST / 4.0 / f64::from(count.max(1))).sqrt() as u32;
         let pictures: Vec<_> = (0..count).filter_map(|i| session.model_preview_picture(i, side.min(fit))).collect();
         let order = (0..pictures.len() as u32).collect();
-        let (fps, playback) = (session.model_preview_fps(), procraft_core::AnimationPlayback::Loop);
+        let (fps, playback) = (session.model_preview_fps(), prostudio_core::AnimationPlayback::Loop);
         return Some(PlayedFrames { pictures, order, fps, playback });
     }
     let settings = session.animation_settings().filter(|s| !s.pages)?;

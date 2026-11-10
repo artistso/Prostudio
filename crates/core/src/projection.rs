@@ -20,7 +20,7 @@ impl CanvasSession {
             }
             let shared = std::sync::Arc::clone(&self.shared);
             let handle = std::thread::Builder::new()
-                .name("procraft-projection".to_owned())
+                .name("prostudio-projection".to_owned())
                 .spawn(move || crate::render::project(shared, native))
                 .map_err(|e| MobileError::Window { reason: e.to_string() })?;
             *self.shared.projection.lock().unwrap_or_else(|e| e.into_inner()) = Some(handle);

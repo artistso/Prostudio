@@ -8,7 +8,7 @@
 //! (pour.rs). Undo takes back the open fill first, and a
 //! redo makes it again over what it brings back (lib.rs's `undo`, `redo`).
 
-use procraft_engine::geom::Vec2;
+use prostudio_engine::geom::Vec2;
 
 use crate::CanvasSession;
 
@@ -164,8 +164,8 @@ impl CanvasSession {
 
 #[cfg(test)]
 mod tests {
-    use procraft_engine::geom::Affine;
-    use procraft_engine::view::View;
+    use prostudio_engine::geom::Affine;
+    use prostudio_engine::view::View;
 
     use crate::CanvasSession;
 

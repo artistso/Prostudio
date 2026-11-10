@@ -4,7 +4,7 @@
 //! surface as it goes.
 
 use egui::{Color32, Id, LayerId, Order, Stroke, pos2};
-use procraft_core::CanvasSession;
+use prostudio_core::CanvasSession;
 
 use crate::icons;
 use crate::look::Look;

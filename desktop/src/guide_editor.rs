@@ -5,7 +5,7 @@
 //! is the core's (guide.rs).
 
 use egui::{Align2, Color32, Id, Order, Pos2, Rect, Sense, Stroke, pos2, vec2};
-use procraft_core::{CanvasSession, GuideInfo, GuideType, GuideUnit, SymmetryType};
+use prostudio_core::{CanvasSession, GuideInfo, GuideType, GuideUnit, SymmetryType};
 
 use crate::adjust_panels::{kinds_switch, option_slider, options_choices, options_menu, panel, panel_rect, shown};
 use crate::icons;

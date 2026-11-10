@@ -1,13 +1,13 @@
 //! 3D painting's view of a model: its triangles drawn textured (each part's albedo over its base
 //! colour) and lit, seen by a camera orbiting it, into a target with a depth buffer of its own.
 
-use procraft_engine::geom::IRect;
-use procraft_engine::mesh::Mesh;
+use prostudio_engine::geom::IRect;
+use prostudio_engine::mesh::Mesh;
 use wgpu::util::DeviceExt;
 
 use crate::lighting::{CUBE_LEVELS, Lighting};
 use crate::{Gpu, GpuError, SelectionLook, SurroundGrid, read_texture};
-use procraft_engine::environment::Equirect;
+use prostudio_engine::environment::Equirect;
 
 const DEPTH: wgpu::TextureFormat = wgpu::TextureFormat::Depth32Float;
 const ALBEDO: wgpu::TextureFormat = wgpu::TextureFormat::Rgba8Unorm;

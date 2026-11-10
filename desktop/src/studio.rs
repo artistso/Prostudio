@@ -10,7 +10,7 @@ use std::time::{Duration, Instant};
 use egui::{
     Align2, Color32, Id, Order, Pos2, Rect, Sense, Stroke, TextureHandle, TextureId, Ui, UiBuilder, pos2, vec2,
 };
-use procraft_core::{CanvasSession, PenSample, PointerKind, SourceKind, slider_extras};
+use prostudio_core::{CanvasSession, PenSample, PointerKind, SourceKind, slider_extras};
 
 use crate::icons::{self, Icon};
 use crate::look::{Look, Themed, Weight, argb, pc, text};
@@ -878,7 +878,7 @@ impl Studio {
                 }
             }
             let mode = session.studio_combine_mode();
-            let name = procraft_core::combine_blend_modes()
+            let name = prostudio_core::combine_blend_modes()
                 .into_iter()
                 .find(|m| m.id == mode)
                 .map_or(String::new(), |m| m.name);
@@ -1757,7 +1757,8 @@ impl Studio {
             Some(t) => circle_image(ui, t.id(), face, 48.0),
             None => look.icon(ui, &icons::BRUSH, face, 56.0, argb(DIM)),
         }
-        let name = format!("Made by {}", if about.author.trim().is_empty() { "ProCraft" } else { about.author.trim() });
+        let name =
+            format!("Made by {}", if about.author.trim().is_empty() { "ProStudio" } else { about.author.trim() });
         let at = pos2(card.center().x, face.y + 48.0 + 21.0 + 12.0);
         text(ui.painter(), at, Align2::CENTER_CENTER, &name, 20.0, Weight::Regular, argb(ABOUT_NAME));
         // the signature in grey, whatever its own colour
@@ -1872,11 +1873,11 @@ fn brush_preview(ctx: &egui::Context, session: &CanvasSession) -> Option<Texture
 /// leaves out).
 fn blend_name(key: &str, value: f32) -> String {
     let modes =
-        if key == "grain_blend" { procraft_core::grain_blend_modes() } else { procraft_core::brush_blend_modes() };
+        if key == "grain_blend" { prostudio_core::grain_blend_modes() } else { prostudio_core::brush_blend_modes() };
     let n = value.round() as u32;
     modes
         .into_iter()
-        .chain(procraft_core::blend_modes())
+        .chain(prostudio_core::blend_modes())
         .find(|m| m.id == n)
         .map_or_else(|| "Normal".to_owned(), |m| m.name)
 }
@@ -2474,9 +2475,9 @@ impl Studio {
         let Some((key, centre, fresh)) = self.blend_list else { return };
         let combining = key == COMBINE_MODE;
         let modes = match key {
-            "grain_blend" => procraft_core::grain_blend_modes(),
-            COMBINE_MODE => procraft_core::combine_blend_modes(),
-            _ => procraft_core::brush_blend_modes(),
+            "grain_blend" => prostudio_core::grain_blend_modes(),
+            COMBINE_MODE => prostudio_core::combine_blend_modes(),
+            _ => prostudio_core::brush_blend_modes(),
         };
         let current = if combining { session.studio_combine_mode() } else { self.value(key).round() as u32 };
         let chosen = modes.iter().position(|m| m.id == current).unwrap_or(0);

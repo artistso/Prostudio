@@ -1,6 +1,6 @@
 # Writing a plugin
 
-A plugin is a `.procraft-plugin` file. Someone imports it on the Plugins page, and it has a card there
+A plugin is a `.prostudio-plugin` file. Someone imports it on the Plugins page, and it has a card there
 with Turn on, Turn off and Remove. With none on, the app is as it always was.
 
 For now the samples in [`plugins/`](../plugins) also come inside the app, packed: see
@@ -14,6 +14,13 @@ A plugin holds one or both of these:
 
 The samples are in [`plugins/`](../plugins). `touch-offset` is the smallest with code and `gap-closing`
 the largest. `extract-lines`, `posterise` and `outline` are filters.
+
+## What a plugin from before the rename needs
+
+Nothing. The app is ProStudio now, and a `.procraft-plugin` file — or a manifest whose `compat`
+says `"procraft"` — still imports and runs, exactly as before. Files the app saves and writes
+itself (artworks, plugins it packs from `plugins/`) use the new names from here on, and an id
+starting with `procraft.` is refused as one of the app's own, just as `prostudio.` is.
 
 ## What you write
 
@@ -34,7 +41,7 @@ A folder under `plugins/` holding a `craft-extension.json`, and for each thing i
   "holds": ["hooks"],
   "publisher": { "name": "Example" },
   "description": "One sentence on what it does.",
-  "compat": { "procraft": { "interface": 1 } },
+  "compat": { "prostudio": { "interface": 1 } },
   "permissions": [],
   "hooks": ["position"],
   "controls": [
@@ -50,8 +57,8 @@ plugin do.
 
 `hooks` lists the hooks the code uses, and only a plugin that holds `"hooks"` may have it.
 
-`id` must have at least two dotted parts, and can't start with `procraft.` or end with `.stopped`.
-`permissions` has to be empty, as there are none to give.
+`id` must have at least two dotted parts, and can't start with `prostudio.` or `procraft.` (the app's
+own before the rename) or end with `.stopped`. `permissions` has to be empty, as there are none to give.
 
 A plugin that only holds a filter starts on, as that changes nothing already in the app. Any other
 starts off, until someone taps Turn on. One the app adds by itself starts off, whatever it holds.
@@ -102,13 +109,13 @@ static ACROSS: AtomicU32 = AtomicU32::new(0);
 
 /// A control's value, by its place in the manifest.
 #[unsafe(no_mangle)]
-pub extern "C" fn procraft_control(_index: i32, value: f32) {
+pub extern "C" fn prostudio_control(_index: i32, value: f32) {
     ACROSS.store(value.to_bits(), Ordering::Relaxed);
 }
 
 /// Where a sample at (x, y) lands: x's bits in the low half, y's in the high.
 #[unsafe(no_mangle)]
-pub extern "C" fn procraft_position(x: f32, y: f32) -> i64 {
+pub extern "C" fn prostudio_position(x: f32, y: f32) -> i64 {
     let moved = x + f32::from_bits(ACROSS.load(Ordering::Relaxed));
     (u64::from(moved.to_bits()) | u64::from(y.to_bits()) << 32) as i64
 }
@@ -123,7 +130,7 @@ The crate is a `cdylib`, kept out of the app's workspace by an empty `[workspace
 is its folder's. Copy the `Cargo.toml` of a sample: its release profile keeps the module small, and a
 module can be 1 MiB at most.
 
-A plugin with code and any controls must export `procraft_control(index: i32, value: f32)`. It's told
+A plugin with code and any controls must export `prostudio_control(index: i32, value: f32)`. It's told
 each value by its place in the list as the code starts, then each as it changes. A switch is 0 or 1.
 
 Every function a hook names has to be exported, with exactly these types, or the file is refused.
@@ -133,7 +140,7 @@ Every function a hook names has to be exported, with exactly these types, or the
 Where a stroke's samples land, in window pixels.
 
 ```
-procraft_position(x: f32, y: f32) -> i64
+prostudio_position(x: f32, y: f32) -> i64
 ```
 
 The result holds x's bits in the low half and y's in the high. An answer that isn't a finite number,
@@ -145,7 +152,7 @@ one after another, in order of id, each given what the last one said.
 Whether the eyedropper reads the current layer (not 0) or the canvas as it looks (0).
 
 ```
-procraft_pick_layer() -> i32
+prostudio_pick_layer() -> i32
 ```
 
 ### `interface_scale`
@@ -153,7 +160,7 @@ procraft_pick_layer() -> i32
 How big the interface shows, where 1 is its usual size, in a window of that many points at 1.
 
 ```
-procraft_interface_scale(width: f32, height: f32) -> f32
+prostudio_interface_scale(width: f32, height: f32) -> f32
 ```
 
 An answer outside .5 to 2 stops the plugin. The app may show less than the answer, so that every page
@@ -165,13 +172,13 @@ Whether a picture pasted with a mask current goes into the mask. If it does, the
 the plugin a row at a time, and the module must export its `memory`.
 
 ```
-procraft_paste_mask() -> i32
-procraft_row_buffer(bytes: i32) -> i32
-procraft_paste_row(at: i32, width: i32)
+prostudio_paste_mask() -> i32
+prostudio_row_buffer(bytes: i32) -> i32
+prostudio_paste_row(at: i32, width: i32)
 ```
 
-`procraft_row_buffer` says where in `memory` a row of that many bytes can go. Each row is written
-there as RGBA, premultiplied, top row first, and `procraft_paste_row` changes its `width` pixels in
+`prostudio_row_buffer` says where in `memory` a row of that many bytes can go. Each row is written
+there as RGBA, premultiplied, top row first, and `prostudio_paste_row` changes its `width` pixels in
 place into what the mask should hold. Only one plugin has a picture: the first on the hook.
 
 ### `fill_mask`
@@ -180,18 +187,18 @@ What a ColorDrop fill keeps. The fill goes through as bits on a thread of its ow
 take a while, and the module must export its `memory`.
 
 ```
-procraft_fill_mask() -> i32
-procraft_fill_begin(width: i32, height: i32, seed_x: i32, seed_y: i32) -> i32
-procraft_fill_row(y: i32)
-procraft_fill_run() -> i32
-procraft_fill_out(y: i32)
+prostudio_fill_mask() -> i32
+prostudio_fill_begin(width: i32, height: i32, seed_x: i32, seed_y: i32) -> i32
+prostudio_fill_row(y: i32)
+prostudio_fill_run() -> i32
+prostudio_fill_out(y: i32)
 ```
 
-`procraft_fill_mask` says whether there's anything to do. `procraft_fill_begin` says where in `memory`
+`prostudio_fill_mask` says whether there's anything to do. `prostudio_fill_begin` says where in `memory`
 a row goes: `width` bits in 64-bit words, low bit first, a set bit being filled. The box has a pixel of
-no fill around it, and `seed` is where the fill started. `procraft_fill_row` takes each row as it's
-written there, `procraft_fill_run` works it out and says whether anything comes out (not 0), and
-`procraft_fill_out` puts each row of what comes out in the same place.
+no fill around it, and `seed` is where the fill started. `prostudio_fill_row` takes each row as it's
+written there, `prostudio_fill_run` works it out and says whether anything comes out (not 0), and
+`prostudio_fill_out` puts each row of what comes out in the same place.
 
 A plugin can only take away: a bit it sets comes out of the fill, and it can't add any. The seed has to
 stay in the fill, or the plugin stops.
@@ -305,7 +312,7 @@ rustup target add wasm32-unknown-unknown
 python tools/pack_plugin.py nudge --out somewhere
 ```
 
-That writes `nudge.procraft-plugin`. Only code needs the `rustup` line. To try it, import it through
+That writes `nudge.prostudio-plugin`. Only code needs the `rustup` line. To try it, import it through
 the Plugins page, and tap Turn on if it starts off. A file packed again from the same folder comes out
 the same, byte for byte.
 
@@ -333,7 +340,7 @@ python tools/pack_plugin.py --bundle
 ```
 
 That also writes `sources.txt` beside them, a digest of each folder as it was packed. The core's
-tests (`cargo test -p procraft-core bundled`) check each packed file against its folder, the digest
+tests (`cargo test -p prostudio-core bundled`) check each packed file against its folder, the digest
 too, so a change not packed again fails them. A new plugin needs its line in `bundled.rs` as well.
 
 To ship the app without them, take out `bundled.rs` (its test with it), its `mod` line and the folder,
@@ -347,4 +354,4 @@ written here, and the app keeps every interface's template, so a plugin goes on 
 written.
 
 Something that needs more uses a newer interface number, and an older app says it needs a newer
-ProCraft. So does an app that doesn't have a hook a plugin lists, or something `holds` names.
+ProStudio. So does an app that doesn't have a hook a plugin lists, or something `holds` names.

@@ -12,7 +12,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use egui::{Align2, Color32, Id, Pos2, Rect, Sense, Stroke, Ui, pos2, vec2};
-use procraft_core::{BlobShape, CanvasSession, ColourBlob, ColourDrag, DragStep, Fill};
+use prostudio_core::{BlobShape, CanvasSession, ColourBlob, ColourDrag, DragStep, Fill};
 
 use crate::colours::{of_hex, srgb};
 use crate::look::{Themed, Weight, argb, pc, text};

@@ -1,12 +1,12 @@
 {
   "schema": 1,
-  "id": "io.github.artcraftandroid.paste-into-masks",
+  "id": "io.github.artistso.paste-into-masks",
   "name": "Paste into masks",
   "version": "1.0.0",
   "holds": ["hooks"],
-  "publisher": { "name": "ProCraft" },
+  "publisher": { "name": "ProStudio" },
   "description": "With a mask selected, Paste puts the picture's brightness into the mask.",
-  "compat": { "procraft": { "interface": 1 } },
+  "compat": { "prostudio": { "interface": 1 } },
   "permissions": [],
   "hooks": ["paste_mask"],
   "controls": [

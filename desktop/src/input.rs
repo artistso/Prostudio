@@ -8,7 +8,7 @@
 
 use std::time::{Duration, Instant};
 
-use procraft_core::{CanvasSession, KeyDrag, PenSample, PointerKind, TouchCommand};
+use prostudio_core::{CanvasSession, KeyDrag, PenSample, PointerKind, TouchCommand};
 use winit::event::{ElementState, KeyEvent, MouseButton, MouseScrollDelta, Touch, TouchPhase, WindowEvent};
 use winit::keyboard::{Key, KeyCode, NamedKey, PhysicalKey};
 
@@ -621,7 +621,7 @@ mod tests {
     #[test]
     fn a_pinch_with_finger_painting_on_leaves_no_stroke_and_zooms_however_hard_the_fingers_press() {
         let (session, mut input) = (shown(), Input::default());
-        session.set_touch_settings(procraft_core::TouchSettings::default());
+        session.set_touch_settings(prostudio_core::TouchSettings::default());
         let before = view(&session).0;
         // the first paints until the second lands, each move its own event, as the system's frames
         // give them
@@ -643,7 +643,7 @@ mod tests {
     #[test]
     fn a_finger_the_system_takes_back_leaves_no_stroke() {
         let (session, mut input) = (shown(), Input::default());
-        session.set_touch_settings(procraft_core::TouchSettings::default());
+        session.set_touch_settings(prostudio_core::TouchSettings::default());
         send(&mut input, &session, &finger(9003, TouchPhase::Started, 300.0, 300.0));
         send(&mut input, &session, &finger(9003, TouchPhase::Moved, 340.0, 320.0));
         assert!(painted(&input), "a finger paints as it lands");

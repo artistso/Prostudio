@@ -1,12 +1,12 @@
 {
   "schema": 1,
-  "id": "io.github.artcraftandroid.touch-offset",
+  "id": "io.github.artistso.touch-offset",
   "name": "Touch position offset",
   "version": "1.0.0",
   "holds": ["hooks"],
-  "publisher": { "name": "ProCraft" },
+  "publisher": { "name": "ProStudio" },
   "description": "Moves where your strokes land, for a pen whose ink doesn't sit under its tip.",
-  "compat": { "procraft": { "interface": 1 } },
+  "compat": { "prostudio": { "interface": 1 } },
   "permissions": [],
   "hooks": ["position"],
   "controls": [

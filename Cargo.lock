@@ -3020,14 +3020,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "procraft-bindgen"
+name = "prostudio-bindgen"
 version = "0.0.1"
 dependencies = [
  "uniffi",
 ]
 
 [[package]]
-name = "procraft-core"
+name = "prostudio-core"
 version = "0.0.1"
 dependencies = [
  "android_logger",
@@ -3040,8 +3040,8 @@ dependencies = [
  "parking_lot",
  "png",
  "pollster",
- "procraft-engine",
- "procraft-gpu",
+ "prostudio-engine",
+ "prostudio-gpu",
  "raw-window-handle",
  "serde",
  "serde_json",
@@ -3054,7 +3054,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "procraft-desktop"
+name = "prostudio-desktop"
 version = "0.0.1"
 dependencies = [
  "arboard",
@@ -3077,9 +3077,9 @@ dependencies = [
  "objc2-core-video",
  "objc2-foundation 0.3.2",
  "png",
- "procraft-core",
- "procraft-engine",
- "procraft-gpu",
+ "prostudio-core",
+ "prostudio-engine",
+ "prostudio-gpu",
  "resvg",
  "rfd",
  "rustix 1.1.5",
@@ -3095,7 +3095,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "procraft-engine"
+name = "prostudio-engine"
 version = "0.0.1"
 dependencies = [
  "miniz_oxide 0.8.9",
@@ -3104,13 +3104,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "procraft-gpu"
+name = "prostudio-gpu"
 version = "0.0.1"
 dependencies = [
  "bytemuck",
  "log",
  "pollster",
- "procraft-engine",
+ "prostudio-engine",
  "thiserror 2.0.21",
  "wgpu",
 ]

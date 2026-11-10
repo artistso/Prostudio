@@ -92,7 +92,7 @@ pub fn draw_pages(path: &Path, pages: &Path) -> Result<(u32, u32, u32), Box<dyn 
     };
     let (w, h) = canvas_size(points(&pdf.GetPage(0)?)?);
     // more pages than a canvas this size holds as layers: none drawn, as none will be taken
-    if count > procraft_core::layers_for(w, h) {
+    if count > prostudio_core::layers_for(w, h) {
         return Ok((count, w, h));
     }
     for i in 0..count {
@@ -151,7 +151,7 @@ mod system {
         let page = |n: u32| CGPDFDocument::page(Some(&pdf), n as usize).ok_or("a page is missing");
         let (w, h) = super::canvas_size(points(&*page(1)?));
         // more pages than a canvas this size holds as layers: none drawn, as none will be taken
-        if count > procraft_core::layers_for(w, h) {
+        if count > prostudio_core::layers_for(w, h) {
             return Ok((count, w, h));
         }
         for n in 1..=count {
@@ -232,7 +232,7 @@ pub fn draw_pages(path: &Path, pages: &Path) -> Result<(u32, u32, u32), Box<dyn 
     let &first = sizes.first().ok_or("no pages")?;
     let (w, h) = canvas_size(first);
     // more pages than a canvas this size holds as layers: none drawn, as none will be taken
-    if count > procraft_core::layers_for(w, h) {
+    if count > prostudio_core::layers_for(w, h) {
         return Ok((count, w, h));
     }
     for (i, &size) in sizes.iter().enumerate() {
@@ -279,8 +279,8 @@ mod tests {
         // two pages 144 points square (2 inches at 72 dpi): red, then blue
         let page = |rgb: [u8; 3]| -> Vec<u8> { [rgb[0], rgb[1], rgb[2], 255].repeat(144 * 144) };
         let (red, blue) = (page([255, 0, 0]), page([0, 0, 255]));
-        let bytes = procraft_engine::formats::pdf(144, 144, 72.0, &[], &[&red, &blue], 100, None);
-        let dir = std::env::temp_dir().join(format!("procraft-pdf-test-{}", std::process::id()));
+        let bytes = prostudio_engine::formats::pdf(144, 144, 72.0, &[], &[&red, &blue], 100, None);
+        let dir = std::env::temp_dir().join(format!("prostudio-pdf-test-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         let pages = dir.join("pages");
         std::fs::create_dir_all(&pages).unwrap();

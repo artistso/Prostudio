@@ -165,7 +165,7 @@ impl CurveEditor {
         if off {
             return changed;
         }
-        let samples = procraft_core::curve_samples(curve.iter().flatten().copied().collect(), 129);
+        let samples = prostudio_core::curve_samples(curve.iter().flatten().copied().collect(), 129);
         let last = samples.len().saturating_sub(1).max(1) as f32;
         let line: Vec<Pos2> = samples
             .iter()

@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 
-use procraft_engine::brush::{Brush, FullGrain};
+use prostudio_engine::brush::{Brush, FullGrain};
 
 /// The folder beside the library the grains' files are in.
 const FOLDER: &str = "grains";
@@ -150,16 +150,16 @@ fn write(folder: &Path, id: u64, pixels: &[u8]) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use procraft_engine::brush::{FULL_GRAIN_MOST, GrainFile, GrainMode, ResetPoint, Source};
-    use procraft_engine::brushfile::{self, Pictures};
-    use procraft_engine::textures::TEXTURE_SIZE;
+    use prostudio_engine::brush::{FULL_GRAIN_MOST, GrainFile, GrainMode, ResetPoint, Source};
+    use prostudio_engine::brushfile::{self, Pictures};
+    use prostudio_engine::textures::TEXTURE_SIZE;
 
     use super::*;
     use crate::CanvasSession;
     use crate::brush_files::sized_gray_png;
 
     fn folder(name: &str) -> PathBuf {
-        let dir = std::env::temp_dir().join(format!("procraft-grains-{name}-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-grains-{name}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         dir
     }
@@ -230,7 +230,7 @@ mod tests {
         let mut b = Brush { name: "Grainy".to_owned(), ..Brush::round_pen() };
         b.grain.mode = mode;
         b.grain.depth = 1.0;
-        b.grain.scale = procraft_engine::studio::MAX_GRAIN_SCALE * (0.75f32 / 16.0).sqrt();
+        b.grain.scale = prostudio_engine::studio::MAX_GRAIN_SCALE * (0.75f32 / 16.0).sqrt();
         let side = 1500u32;
         let pixels: Vec<u8> = (0..side * side).map(|i| (i % 251) as u8).collect();
         let (shape, grain) = (sized_gray_png(8, 8, &[255; 64]), sized_gray_png(side, side, &pixels));
@@ -345,7 +345,7 @@ mod tests {
 
     #[test]
     fn a_stroke_and_its_second_read_a_file_s_shape_at_its_own_size() {
-        let Ok(gpu) = procraft_gpu::Gpu::headless() else { return };
+        let Ok(gpu) = prostudio_gpu::Gpu::headless() else { return };
         let s = CanvasSession::new(64, 64);
         s.use_gpu(gpu.clone());
         let set = s.import_brushes(shaped_file()).unwrap();
@@ -366,7 +366,7 @@ mod tests {
         let index = s.brush_library()[set as usize].brushes.iter().position(|b| b.name == "Shaped").unwrap();
         assert!(s.select_brush(set, index as u32));
         s.studio_begin();
-        let side = procraft_engine::textures::TEXTURE_SIZE;
+        let side = prostudio_engine::textures::TEXTURE_SIZE;
         assert_eq!(s.studio_source_picture(crate::studio::SourceKind::Shape).len(), 1024 * 1024);
         assert_eq!(s.studio_source(crate::studio::SourceKind::Shape).len(), side * side);
         // what isn't a file's shape goes on as it was
@@ -386,7 +386,7 @@ mod tests {
         s.import_brushes(shaped_file()).unwrap();
         let mut b = shaped(&s);
         assert!(b.shape_file_now().is_some());
-        b.shape.source = procraft_engine::brush::Source::new(vec![9; procraft_engine::textures::TEXTURE_SIZE.pow(2)]);
+        b.shape.source = prostudio_engine::brush::Source::new(vec![9; prostudio_engine::textures::TEXTURE_SIZE.pow(2)]);
         assert!(b.shape_file_now().is_none());
     }
 
@@ -471,7 +471,7 @@ mod tests {
     #[test]
     fn a_stroke_reads_the_user_s_own_big_shape_and_grain_at_their_own_size() {
         use crate::studio::SourceKind::{Grain, Shape};
-        let Ok(gpu) = procraft_gpu::Gpu::headless() else { return };
+        let Ok(gpu) = prostudio_gpu::Gpu::headless() else { return };
         let s = CanvasSession::new(64, 64);
         s.use_gpu(gpu.clone());
         s.studio_begin();
@@ -621,7 +621,7 @@ mod tests {
 
     #[test]
     fn a_stroke_reads_a_file_s_grain_at_its_own_size_whichever_way_it_moves() {
-        let Ok(gpu) = procraft_gpu::Gpu::headless() else { return };
+        let Ok(gpu) = prostudio_gpu::Gpu::headless() else { return };
         for mode in [GrainMode::Texturized, GrainMode::Moving] {
             let s = CanvasSession::new(64, 64);
             s.use_gpu(gpu.clone());

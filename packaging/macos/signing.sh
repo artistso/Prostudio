@@ -12,8 +12,8 @@
 #   APPLE_API_ISSUER             its issuer ID
 set -euo pipefail
 
-KEYCHAIN="${RUNNER_TEMP:-/tmp}/procraft-signing.keychain-db"
-KEY_FILE="${RUNNER_TEMP:-/tmp}/procraft-notary-key.p8"
+KEYCHAIN="${RUNNER_TEMP:-/tmp}/prostudio-signing.keychain-db"
+KEY_FILE="${RUNNER_TEMP:-/tmp}/prostudio-notary-key.p8"
 summary() { [ -n "${GITHUB_STEP_SUMMARY:-}" ] && echo "$1" >>"$GITHUB_STEP_SUMMARY"; echo "$1"; }
 
 case "${1:-}" in
@@ -24,7 +24,7 @@ case "${1:-}" in
   fi
   : "${APPLE_CERTIFICATE_PASSWORD:?set APPLE_CERTIFICATE_PASSWORD with APPLE_CERTIFICATE_P12}"
   password="$(openssl rand -hex 24)"
-  certificate="${RUNNER_TEMP:-/tmp}/procraft-signing.p12"
+  certificate="${RUNNER_TEMP:-/tmp}/prostudio-signing.p12"
   printf '%s' "$APPLE_CERTIFICATE_P12" | base64 --decode >"$certificate"
   security create-keychain -p "$password" "$KEYCHAIN"
   security set-keychain-settings -lut 21600 "$KEYCHAIN"

@@ -8,7 +8,7 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 use std::sync::mpsc::{Receiver, TryRecvError, channel};
 
-use procraft_core::ThumbnailImage;
+use prostudio_core::ThumbnailImage;
 
 /// One look at a time: the clipboard's connection is shared.
 static LOOKING: Mutex<()> = Mutex::new(());

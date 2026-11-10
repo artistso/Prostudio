@@ -5,7 +5,7 @@
 //! is picked on the compact picker.
 
 use egui::{Align2, Color32, Id, Order, Pos2, Rect, Sense, Stroke, UiBuilder, pos2, vec2};
-use procraft_core::{
+use prostudio_core::{
     CanvasPreset, Palettes, SRGB, cmyk_profiles, color_profiles, is_cmyk_profile, layers_for, per_inch, preset_height,
     preset_number, preset_width,
 };
@@ -336,7 +336,7 @@ impl CustomCanvas {
         if let Some(pick) = self.picking.as_mut() {
             let size = pick.size();
             let rect = Rect::from_min_size(pos2(screen.right() - size.x, screen.top() + 168.0), size);
-            let p3 = procraft_core::colours_in_p3(self.profile.clone());
+            let p3 = prostudio_core::colours_in_p3(self.profile.clone());
             match pick.show(ctx, look, rect, rect.left() + 200.0, palettes, harmony, p3) {
                 Some(Picked::Colour(rgb)) => self.background = rgb,
                 Some(Picked::Closed) => self.picking = None,

@@ -307,7 +307,7 @@ fn can_do(manifest: &Manifest) -> String {
 pub(crate) struct FilterToOpen {
     pub name: String,
     pub controls: Vec<PluginControl>,
-    pub code: procraft_gpu::FilterCode,
+    pub code: prostudio_gpu::FilterCode,
 }
 
 #[derive(Debug)]
@@ -553,7 +553,7 @@ impl Plugins {
         let store = self.store.as_deref().ok_or_else(|| FILTER_DAMAGED.to_owned())?;
         let read = plugin_file::read_filter_code(store, id, &plugin.version);
         let (manifest, text) = read.ok_or_else(|| FILTER_DAMAGED.to_owned())?;
-        let code = procraft_gpu::read_filter(&text, &plugin_file::value_names(&manifest.controls));
+        let code = prostudio_gpu::read_filter(&text, &plugin_file::value_names(&manifest.controls));
         let code = code.map_err(|why| {
             log::warn!("a kept filter's code was refused: {why}");
             FILTER_DAMAGED.to_owned()
@@ -905,7 +905,7 @@ mod tests {
 
     /// A folder of its own, empty, for a test's plugins.
     fn store(name: &str) -> String {
-        let dir = std::env::temp_dir().join(format!("procraft-plugins-{name}-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-plugins-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         dir.to_string_lossy().into_owned()
     }
@@ -1101,7 +1101,7 @@ mod tests {
 
     /// A file of a plugin with code and the slider `key`, at `version`.
     fn slider_file(id: &str, key: &str, version: &str) -> Vec<u8> {
-        let module = position_module(r#"(func (export "procraft_control") (param i32 f32))"#, "(i64.const 0)");
+        let module = position_module(r#"(func (export "prostudio_control") (param i32 f32))"#, "(i64.const 0)");
         let mut manifest = coded(id, &module);
         manifest["version"] = json!(version);
         manifest["controls"] = json!([{
@@ -1153,7 +1153,7 @@ mod tests {
         // nothing was kept by asking
         assert!(filters(&plugins).is_empty());
         let refused = plugins.inspect(b"nothing".to_vec());
-        assert_eq!(refused.refused.as_deref(), Some("This isn't a ProCraft plugin."));
+        assert_eq!(refused.refused.as_deref(), Some("This isn't a ProStudio plugin."));
         assert!(refused.name.is_empty());
     }
 
@@ -1174,8 +1174,8 @@ mod tests {
 
     /// A plugin taking over the moved eyedropper setting, as a file.
     fn eyedropper_file(id: &str) -> Vec<u8> {
-        let text = r#"(module (func (export "procraft_control") (param i32 f32))
-            (func (export "procraft_pick_layer") (result i32) (i32.const 0)))"#;
+        let text = r#"(module (func (export "prostudio_control") (param i32 f32))
+            (func (export "prostudio_pick_layer") (result i32) (i32.const 0)))"#;
         let module = wat::parse_str(text).unwrap();
         let mut manifest = coded(id, &module);
         manifest["hooks"] = json!(["pick_layer"]);
@@ -1281,7 +1281,7 @@ mod tests {
 
     /// A file holding a filter and the code `answer` for every sample, with the filter's controls.
     fn both_file(answer: &str) -> Vec<u8> {
-        let module = position_module(r#"(func (export "procraft_control") (param i32 f32))"#, answer);
+        let module = position_module(r#"(func (export "prostudio_control") (param i32 f32))"#, answer);
         let mut manifest = filter(BOTH);
         manifest["holds"] = json!(["filter", "hooks"]);
         manifest["hooks"] = json!(["position"]);
@@ -1384,12 +1384,12 @@ mod tests {
         assert!(!offer.message.contains("your layers"), "its filter changes one: {offer:?}");
     }
 
-    /// The files in the folder `PROCRAFT_PLUGIN_DIR`, as the packer leaves them: each is taken, and
+    /// The files in the folder `PROSTUDIO_PLUGIN_DIR`, as the packer leaves them: each is taken, and
     /// turns on and off. `--ignored --nocapture`.
     #[test]
     #[ignore]
     fn packed_files_are_taken_and_turn_on_and_off() {
-        let Ok(folder) = std::env::var("PROCRAFT_PLUGIN_DIR") else { return };
+        let Ok(folder) = std::env::var("PROSTUDIO_PLUGIN_DIR") else { return };
         let dir = store("packed");
         let plugins = at(&dir);
         let mut files = 0;
@@ -1440,7 +1440,7 @@ mod tests {
         let mut asks = filter("org.example.filter");
         asks["permissions"] = json!(["network"]);
         let said = plugins.install(filter_file(&asks));
-        assert_eq!(said.as_deref(), Some("This plugin asks for permissions ProCraft doesn't give."));
+        assert_eq!(said.as_deref(), Some("This plugin asks for permissions ProStudio doesn't give."));
         assert!(filters(&plugins).is_empty());
         assert!(!dir_holds(&dir, "org.example.filter"));
         let _ = std::fs::remove_dir_all(&dir);
@@ -1452,12 +1452,12 @@ mod tests {
         assert_eq!(Plugins::new().install(file).as_deref(), Some("This plugin couldn't be saved."));
     }
 
-    const POSTERISE: &str = "io.github.artcraftandroid.posterise";
-    const GAP: &str = "io.github.artcraftandroid.gap-closing";
-    const SIZE: &str = "io.github.artcraftandroid.interface-size";
-    const EYEDROPPER: &str = "io.github.artcraftandroid.eyedropper-layer";
-    const PASTE: &str = "io.github.artcraftandroid.paste-into-masks";
-    const TOUCH: &str = "io.github.artcraftandroid.touch-offset";
+    const POSTERISE: &str = "io.github.artistso.posterise";
+    const GAP: &str = "io.github.artistso.gap-closing";
+    const SIZE: &str = "io.github.artistso.interface-size";
+    const EYEDROPPER: &str = "io.github.artistso.eyedropper-layer";
+    const PASTE: &str = "io.github.artistso.paste-into-masks";
+    const TOUCH: &str = "io.github.artistso.touch-offset";
 
     /// The app's plugins kept in `dir`, what it comes with added.
     fn app_at(dir: &str) -> Arc<Plugins> {
@@ -1651,7 +1651,7 @@ mod tests {
         // an older one is updated
         let touch = card(&plugins, TOUCH);
         assert_eq!((touch.version.as_str(), touch.on), ("1.0.0", false));
-        assert!(!card(&plugins, "io.github.artcraftandroid.outline").on);
+        assert!(!card(&plugins, "io.github.artistso.outline").on);
         let _ = std::fs::remove_dir_all(&dir);
     }
 

@@ -5,7 +5,7 @@
 //! (crop_edit.rs).
 
 use egui::{Align2, Color32, Id, Order, Pos2, Rect, Sense, Stroke, Ui, UiBuilder, pos2, vec2};
-use procraft_core::{CanvasSession, CropShown};
+use prostudio_core::{CanvasSession, CropShown};
 
 use crate::icons;
 use crate::look::{Look, Themed, Weight, argb, pc, text};

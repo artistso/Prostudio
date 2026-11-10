@@ -5,7 +5,7 @@
 use std::time::{Duration, Instant};
 
 use egui::{Align2, Color32, Id, Order, Pos2, Rect, ScrollArea, Sense, Shape, Stroke, UiBuilder, pos2, vec2};
-use procraft_core::{
+use prostudio_core::{
     BrushInfo, CanvasSession, QuickAction, QuickMenuSet, quick_action_label, quick_actions_listed,
     quick_adjustments_listed, quick_menu_active_after, quick_menu_added, quick_menus, quick_menus_saved,
 };
@@ -274,7 +274,7 @@ impl QuickMenu {
                     if !*held && since.elapsed() >= HOLD {
                         *held = true;
                         self.choosing = Some(i);
-                        let adjusts = slots.get(i).copied().is_some_and(procraft_core::quick_action_adjusts);
+                        let adjusts = slots.get(i).copied().is_some_and(prostudio_core::quick_action_adjusts);
                         self.page = if adjusts { Page::Adjustments } else { Page::Actions };
                         self.scroll_to = true;
                     } else if !*held {

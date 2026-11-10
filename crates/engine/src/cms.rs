@@ -907,12 +907,12 @@ mod tests {
         assert!(IccProfile::parse(&lab).is_none(), "a Lab device space isn't one we use");
     }
 
-    /// Prints how the profile in `PROCRAFT_ICC` turns a few Display P3 colours, for comparing with
-    /// other colour programs: `cargo test -p procraft-engine cms -- --ignored --nocapture`.
+    /// Prints how the profile in `PROSTUDIO_ICC` turns a few Display P3 colours, for comparing with
+    /// other colour programs: `cargo test -p prostudio-engine cms -- --ignored --nocapture`.
     #[test]
     #[ignore]
     fn print_conversions() {
-        let Ok(path) = std::env::var("PROCRAFT_ICC") else { return };
+        let Ok(path) = std::env::var("PROSTUDIO_ICC") else { return };
         let target = IccProfile::parse(&std::fs::read(path).unwrap()).unwrap();
         let p3 = ours(Profile::DisplayP3);
         println!("{} {:?}", target.name, target.space);

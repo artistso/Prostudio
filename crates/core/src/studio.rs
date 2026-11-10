@@ -3,14 +3,14 @@
 
 use std::sync::Arc;
 
-use procraft_engine::brush::{
+use prostudio_engine::brush::{
     Brush, FULL_GRAIN_MOST, FullGrain, GrainFile, MaterialSource, ResetPoint, ShapeFile, Source, StockImage,
 };
-use procraft_engine::curve::Curve;
-use procraft_engine::geom::{Affine, Vec2};
-use procraft_engine::studio::{MAX_GRAIN_SCALE, SliderCurve};
-use procraft_engine::textures;
-use procraft_gpu::{SphereLook, SpherePreview, wgpu};
+use prostudio_engine::curve::Curve;
+use prostudio_engine::geom::{Affine, Vec2};
+use prostudio_engine::studio::{MAX_GRAIN_SCALE, SliderCurve};
+use prostudio_engine::textures;
+use prostudio_gpu::{SphereLook, SpherePreview, wgpu};
 
 use crate::{CanvasSession, PenSample, PointerKind, State, ToolKind};
 
@@ -143,7 +143,7 @@ pub struct SliderExtrasInfo {
 /// The keypad extras of the slider for studio control `key`.
 #[uniffi::export]
 pub fn slider_extras(key: String) -> SliderExtrasInfo {
-    let e = procraft_engine::studio::slider_extras(&key);
+    let e = prostudio_engine::studio::slider_extras(&key);
     SliderExtrasInfo {
         pressure: e.curve.is_some(),
         tilt: e.tilt.is_some(),
@@ -290,7 +290,7 @@ impl CanvasSession {
         }
     }
 
-    /// The values the controls `keys` show (see `procraft_engine::studio`).
+    /// The values the controls `keys` show (see `prostudio_engine::studio`).
     pub fn studio_settings(&self, keys: Vec<String>) -> Vec<f32> {
         let mut guard = self.shared.lock();
         let st = &mut *guard;
@@ -404,7 +404,7 @@ impl CanvasSession {
         let mut guard = self.shared.lock();
         let st = &mut *guard;
         let Some(brush) = st.studio_brush() else { return Vec::new() };
-        let curve = match procraft_engine::studio::slider_extras(&key).curve {
+        let curve = match prostudio_engine::studio::slider_extras(&key).curve {
             Some(SliderCurve::Own(kind)) => brush.pressure_curves.get(kind),
             // the size's and opacity's own responses: on unless straight
             Some(SliderCurve::Size) => Some(&brush.size_curve).filter(|c| **c != Curve::linear()),
@@ -423,7 +423,7 @@ impl CanvasSession {
         });
         let mut st = self.shared.lock();
         let Some(brush) = st.studio_change() else { return };
-        match procraft_engine::studio::slider_extras(&key).curve {
+        match prostudio_engine::studio::slider_extras(&key).curve {
             Some(SliderCurve::Own(kind)) => brush.pressure_curves.set(kind, curve),
             Some(SliderCurve::Size) => brush.size_curve = curve.unwrap_or_else(Curve::linear),
             Some(SliderCurve::Opacity) => brush.opacity_curve = curve.unwrap_or_else(Curve::linear),
@@ -464,7 +464,7 @@ impl CanvasSession {
         let unit = |v: f32| if v.is_finite() { v.clamp(0.0, 1.0) } else { 0.0 };
         let pts: Vec<Vec2> = curve.as_chunks::<2>().0.iter().map(|&[x, y]| Vec2::new(unit(x), unit(y))).collect();
         let mut st = self.shared.lock();
-        st.input = procraft_engine::stroke::InputSettings {
+        st.input = prostudio_engine::stroke::InputSettings {
             stabilization: unit(stabilization),
             motion_filtering: unit(motion_filtering),
             motion_expression: unit(motion_expression),
@@ -511,7 +511,7 @@ impl CanvasSession {
         st.finish_stroke();
         st.tool = crate::ToolKind::Paint;
         // the size slider's place for the size the pad draws at
-        let size = procraft_engine::preview::pad_size_share(&brush).powf(1.0 / procraft_engine::brush::SIZE_CURVE);
+        let size = prostudio_engine::preview::pad_size_share(&brush).powf(1.0 / prostudio_engine::brush::SIZE_CURVE);
         let (set, index) = st.paint_brush;
         if let Some(slot) = st.library.get_mut(set).and_then(|s| s.brushes.get_mut(index)) {
             *slot = brush;
@@ -781,7 +781,7 @@ impl State {
     }
 }
 
-/// The studio's About page: who made the brush ("" for ProCraft's own) with their picture and
+/// The studio's About page: who made the brush ("" for ProStudio's own) with their picture and
 /// signature (PNG) if it has them, and when its reset point was made (seconds since 1970).
 #[derive(uniffi::Record)]
 pub struct StudioAbout {

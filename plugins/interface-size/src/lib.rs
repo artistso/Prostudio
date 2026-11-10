@@ -1,5 +1,5 @@
 //! Interface size: the whole interface a little bigger or smaller, for a screen it doesn't suit.
-//! It's a plugin, not part of the app: `tools/pack_plugin.py` makes a `.procraft-plugin` file of it.
+//! It's a plugin, not part of the app: `tools/pack_plugin.py` makes a `.prostudio-plugin` file of it.
 //!
 //! The app asks how big to show and draws at that number. The slider, its range and the rule that
 //! fits a bigger size to the window are all here. The interface is written down at the top of
@@ -31,13 +31,13 @@ fn fitted(chosen: f32, width: f32, height: f32) -> f32 {
 
 /// The slider's value (the only control, so `index` says nothing).
 #[unsafe(no_mangle)]
-pub extern "C" fn procraft_control(_index: i32, value: f32) {
+pub extern "C" fn prostudio_control(_index: i32, value: f32) {
     CHOSEN.store(value.to_bits(), Ordering::Relaxed);
 }
 
 /// How big the interface shows in a window `width` × `height` points at 100%.
 #[unsafe(no_mangle)]
-pub extern "C" fn procraft_interface_scale(width: f32, height: f32) -> f32 {
+pub extern "C" fn prostudio_interface_scale(width: f32, height: f32) -> f32 {
     fitted(f32::from_bits(CHOSEN.load(Ordering::Relaxed)), width, height)
 }
 

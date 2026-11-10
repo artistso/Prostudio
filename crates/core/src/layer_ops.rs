@@ -1,9 +1,9 @@
 //! A layer's own actions from its options: selecting what is on it, copying it, filling it with the
 //! colour, inverting it, and making it the reference layer.
 
-use procraft_engine::document::LayerId;
-use procraft_engine::geom::IRect;
-use procraft_engine::selection::Mask;
+use prostudio_engine::document::LayerId;
+use prostudio_engine::geom::IRect;
+use prostudio_engine::selection::Mask;
 
 use crate::layers::ThumbnailImage;
 use crate::{CanvasSession, State};
@@ -68,7 +68,7 @@ pub(crate) fn mask_rect(mask: &Mask) -> Option<IRect> {
 }
 
 /// The rectangle around the pixels of a picture `width` wide (RGBA) that aren't clear; none when
-/// all are (as the GPU's [`procraft_gpu::Canvas::painted_boxes`] finds a layer's).
+/// all are (as the GPU's [`prostudio_gpu::Canvas::painted_boxes`] finds a layer's).
 pub(crate) fn painted_rect(pixels: &[u8], width: u32) -> Option<IRect> {
     let row_len = width as usize * 4;
     if row_len == 0 {

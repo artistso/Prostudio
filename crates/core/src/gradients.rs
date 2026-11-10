@@ -19,7 +19,7 @@ pub struct GradientInfo {
     pub stops: Vec<GradientStop>,
 }
 
-/// ProCraft's own gradients.
+/// ProStudio's own gradients.
 fn ours() -> Vec<GradientInfo> {
     let g = |name: &str, stops: &[(f32, u32)]| GradientInfo {
         name: name.to_owned(),
@@ -261,7 +261,7 @@ mod tests {
 
     #[test]
     fn edits_keep_a_gradient_whole() {
-        let dir = std::env::temp_dir().join(format!("procraft-gradients-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-gradients-{}", std::process::id()));
         let _ = std::fs::create_dir_all(&dir);
         let path = dir.join("gradients.json");
         let _ = std::fs::remove_file(&path);

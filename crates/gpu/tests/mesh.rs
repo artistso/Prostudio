@@ -1,8 +1,8 @@
 //! 3D painting's model view: drawn with depth, textured and lit.
 #![allow(clippy::unwrap_used, clippy::indexing_slicing)]
 
-use procraft_engine::mesh::read_obj;
-use procraft_gpu::{Gpu, MeshView, Orbit, read_texture, wgpu};
+use prostudio_engine::mesh::read_obj;
+use prostudio_gpu::{Gpu, MeshView, Orbit, read_texture, wgpu};
 use wgpu::util::DeviceExt;
 
 fn gpu() -> Option<Gpu> {
@@ -97,10 +97,10 @@ fn a_framed_model_fills_the_view_with_room_round_it() {
 
 #[test]
 fn a_stroke_on_the_screen_paints_the_surface_it_lands_on() {
-    use procraft_engine::document::Document;
-    use procraft_engine::geom::{IRect, Vec2};
-    use procraft_engine::stroke::Stamp;
-    use procraft_gpu::{Canvas, StrokeStyle, StrokeTool};
+    use prostudio_engine::document::Document;
+    use prostudio_engine::geom::{IRect, Vec2};
+    use prostudio_engine::stroke::Stamp;
+    use prostudio_gpu::{Canvas, StrokeStyle, StrokeTool};
     let Some(gpu) = gpu() else { return };
     let mesh = read_obj(QUADS, None).unwrap();
     let mut view = MeshView::new(&gpu, &mesh, 16, wgpu::TextureFormat::Rgba8Unorm);
@@ -180,10 +180,10 @@ fn colours_go_into_the_targets_space_but_pictures_keep_their_own() {
 
 #[test]
 fn a_projected_stroke_grows_a_little_past_its_island() {
-    use procraft_engine::document::Document;
-    use procraft_engine::geom::{IRect, Vec2};
-    use procraft_engine::stroke::Stamp;
-    use procraft_gpu::{Canvas, StrokeStyle, StrokeTool};
+    use prostudio_engine::document::Document;
+    use prostudio_engine::geom::{IRect, Vec2};
+    use prostudio_engine::stroke::Stamp;
+    use prostudio_gpu::{Canvas, StrokeStyle, StrokeTool};
     let Some(gpu) = gpu() else { return };
     // one square facing the camera, its texture's middle half its island (texels 4 to 11)
     let island = "v -1 -1 0\nv 1 -1 0\nv 1 1 0\nv -1 1 0\nvt 0.25 0.25\nvt 0.75 0.25\nvt 0.75 0.75\nvt 0.25 0.75\nf 1/1 2/2 3/3 4/4\n";
@@ -225,10 +225,10 @@ fn a_projected_stroke_grows_a_little_past_its_island() {
 
 #[test]
 fn a_strokes_roughness_or_metalness_takes_its_coverage_and_the_brushs_amount() {
-    use procraft_engine::document::Document;
-    use procraft_engine::geom::{IRect, Vec2};
-    use procraft_engine::stroke::Stamp;
-    use procraft_gpu::{Canvas, MaterialLook, StrokeStyle, StrokeTool, material_source};
+    use prostudio_engine::document::Document;
+    use prostudio_engine::geom::{IRect, Vec2};
+    use prostudio_engine::stroke::Stamp;
+    use prostudio_gpu::{Canvas, MaterialLook, StrokeStyle, StrokeTool, material_source};
     let Some(gpu) = gpu() else { return };
     assert!(material_source(&gpu, 2, &[0; 3]).is_none());
     let island = "v -1 -1 0
@@ -343,10 +343,10 @@ fn a_far_surface_shows_its_texture_filtered() {
 
 #[test]
 fn painting_through_reaches_hidden_surfaces() {
-    use procraft_engine::document::Document;
-    use procraft_engine::geom::{IRect, Vec2};
-    use procraft_engine::stroke::Stamp;
-    use procraft_gpu::{Canvas, StrokeStyle, StrokeTool};
+    use prostudio_engine::document::Document;
+    use prostudio_engine::geom::{IRect, Vec2};
+    use prostudio_engine::stroke::Stamp;
+    use prostudio_gpu::{Canvas, StrokeStyle, StrokeTool};
     let Some(gpu) = gpu() else { return };
     let mesh = read_obj(QUADS, None).unwrap();
     let mut view = MeshView::new(&gpu, &mesh, 16, wgpu::TextureFormat::Rgba8Unorm);
@@ -379,10 +379,10 @@ fn painting_through_reaches_hidden_surfaces() {
 
 #[test]
 fn surfaces_turned_away_take_less_paint() {
-    use procraft_engine::document::Document;
-    use procraft_engine::geom::{IRect, Vec2};
-    use procraft_engine::stroke::Stamp;
-    use procraft_gpu::{Canvas, StrokeStyle, StrokeTool};
+    use prostudio_engine::document::Document;
+    use prostudio_engine::geom::{IRect, Vec2};
+    use prostudio_engine::stroke::Stamp;
+    use prostudio_gpu::{Canvas, StrokeStyle, StrokeTool};
     let Some(gpu) = gpu() else { return };
     let square = "v -1 -1 0\nv 1 -1 0\nv 1 1 0\nv -1 1 0\nvt 0 0\nvt 1 0\nvt 1 1\nvt 0 1\nf 1/1 2/2 3/3 4/4\n";
     let mesh = read_obj(square, None).unwrap();
@@ -425,8 +425,8 @@ fn surfaces_turned_away_take_less_paint() {
 
 #[test]
 fn a_mirror_reflects_what_is_behind_the_camera() {
-    use procraft_engine::environment::Equirect;
-    use procraft_gpu::Lighting;
+    use prostudio_engine::environment::Equirect;
+    use prostudio_gpu::Lighting;
     let Some(gpu) = gpu() else { return };
     let square = "v -1 -1 0\nv 1 -1 0\nv 1 1 0\nv -1 1 0\nvt 0 0\nvt 1 0\nvt 1 1\nvt 0 1\nf 1/1 2/2 3/3 4/4\n";
     let mesh = read_obj(square, None).unwrap();
@@ -462,7 +462,7 @@ fn without_its_environment_the_model_stands_on_the_surround_grid() {
     let mut view = MeshView::new(&gpu, &mesh, 4, wgpu::TextureFormat::Rgba8Unorm);
     view.orbit = Orbit { target: [0.0, 0.0, 0.0], rotation: Orbit::rotation_of(0.0, 0.0), distance: 6.0, fov: 0.9 };
     // lines 2 pixels wide every 8, from 4 down
-    view.set_grid(Some(procraft_gpu::SurroundGrid {
+    view.set_grid(Some(prostudio_gpu::SurroundGrid {
         spacing: 8.0,
         origin: [0.0, 4.0],
         top: 4.0,
@@ -485,7 +485,7 @@ fn the_studio_shows_each_light_as_a_cube_and_moves_it_across_the_screen() {
     let Some(gpu) = gpu() else { return };
     let mesh = read_obj(QUADS, None).unwrap();
     let mut view = MeshView::new(&gpu, &mesh, 4, wgpu::TextureFormat::Rgba8Unorm);
-    view.lights = vec![procraft_gpu::Light { place: [-2.0, 2.0, 1.0], color: [1.0, 0.0, 0.0], intensity: 0.5 }];
+    view.lights = vec![prostudio_gpu::Light { place: [-2.0, 2.0, 1.0], color: [1.0, 0.0, 0.0], intensity: 0.5 }];
     let orbit = view.studio_orbit();
     let [x, y, reach] = view.light_on_screen(&orbit, 0, SIDE, SIDE).unwrap();
     assert!(x > 0.0 && x < SIDE as f32 / 2.0 && y > 0.0 && y < SIDE as f32 / 2.0, "up and left: {x} {y}");
@@ -587,7 +587,7 @@ fn a_metalness_painted_over_the_material_changes_how_it_shades() {
 
 #[test]
 fn a_models_own_normal_and_occlusion_maps_shade_it() {
-    use procraft_gpu::SurfaceMap;
+    use prostudio_gpu::SurfaceMap;
     let Some(gpu) = gpu() else { return };
     let square = "v -1 -1 0\nv 1 -1 0\nv 1 1 0\nv -1 1 0\nvt 0 0\nvt 1 0\nvt 1 1\nvt 0 1\nf 1/1 2/2 3/3 4/4\n";
     let mesh = read_obj(square, None).unwrap();
@@ -620,7 +620,7 @@ fn a_models_own_normal_and_occlusion_maps_shade_it() {
 
 #[test]
 fn a_normal_map_leans_the_surface_along_its_texture_coordinates() {
-    use procraft_gpu::{Light, SurfaceMap};
+    use prostudio_gpu::{Light, SurfaceMap};
     let Some(gpu) = gpu() else { return };
     // a square facing the camera, u running to its right (+x) and v up (+y)
     let square = "v -1 -1 0
@@ -654,14 +654,14 @@ f 1/1 2/2 3/3 4/4
 
 #[test]
 fn a_strokes_grain_is_read_along_the_models_axes() {
-    use procraft_gpu::{GrainLook, material_source};
+    use prostudio_gpu::{GrainLook, material_source};
     let Some(gpu) = gpu() else { return };
     // a square facing up over the whole texture (its far edge at the texture's top), and the
     // same facing down
     let up = "v -1 0 1\nv 1 0 1\nv 1 0 -1\nv -1 0 -1\nvt 0 0\nvt 1 0\nvt 1 1\nvt 0 1\nf 1/1 2/2 3/3 4/4\n";
     let down = "v -1 0 1\nv 1 0 1\nv 1 0 -1\nv -1 0 -1\nvt 0 0\nvt 1 0\nvt 1 1\nvt 0 1\nf 4/4 3/3 2/2 1/1\n";
     // a grain whose grey goes once round a wave down the image, the same across it
-    let n = procraft_engine::textures::TEXTURE_SIZE;
+    let n = prostudio_engine::textures::TEXTURE_SIZE;
     let wave = |t: f32| 128.0 + 127.0 * (std::f32::consts::TAU * t).sin();
     let pixels: Vec<u8> = (0..n * n).map(|i| wave(((i / n) as f32 + 0.5) / n as f32).round() as u8).collect();
     let source = material_source(&gpu, n as u32, &pixels).unwrap();

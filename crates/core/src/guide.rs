@@ -1,11 +1,11 @@
 //! The drawing guide: set from the guide editor, drawn over the canvas as lines, and followed by
 //! strokes with assisted drawing on (kept to the guide's directions, or mirrored by symmetry).
 
-use procraft_engine::geom::{Affine, Vec2};
-use procraft_engine::guide::{Guide, GuideKind, LengthUnit, SymmetryKind, bar_color};
-use procraft_engine::input::Sample;
-use procraft_engine::stroke::Stamp;
-use procraft_engine::view::View;
+use prostudio_engine::geom::{Affine, Vec2};
+use prostudio_engine::guide::{Guide, GuideKind, LengthUnit, SymmetryKind, bar_color};
+use prostudio_engine::input::Sample;
+use prostudio_engine::stroke::Stamp;
+use prostudio_engine::view::View;
 
 use crate::{CanvasSession, State};
 
@@ -173,7 +173,7 @@ impl State {
                         a
                     }
                 };
-                s.pos = procraft_engine::guide::assist_along(start, s.pos, heading);
+                s.pos = prostudio_engine::guide::assist_along(start, s.pos, heading);
             }
         }
         samples
@@ -182,7 +182,7 @@ impl State {
     /// The canvas's dots per inch, the usual where it has none that can be used.
     fn dpi(&self) -> f32 {
         let dpi = self.doc.dpi;
-        if dpi.is_finite() && dpi > 0.0 { dpi } else { procraft_engine::formats::DPI as f32 }
+        if dpi.is_finite() && dpi > 0.0 { dpi } else { prostudio_engine::formats::DPI as f32 }
     }
 
     fn guide_info(&self) -> GuideInfo {
@@ -306,7 +306,7 @@ impl CanvasSession {
         let st = &mut *guard;
         let current = st.doc.current();
         let owner = match st.doc.layer(current) {
-            Some(l) if l.kind == procraft_engine::document::LayerKind::Mask => l.parent.unwrap_or(current),
+            Some(l) if l.kind == prostudio_engine::document::LayerKind::Mask => l.parent.unwrap_or(current),
             _ => current,
         };
         if st.doc.layer(owner).is_some_and(|l| l.assisted != assisted) {

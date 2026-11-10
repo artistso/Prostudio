@@ -494,11 +494,11 @@ pub enum ZipKind {
 
 #[uniffi::export]
 pub fn zip_file_kind(path: String) -> ZipKind {
-    let Some(names) = procraft_engine::zip::names_in_file(Path::new(&path)) else { return ZipKind::NotZip };
+    let Some(names) = prostudio_engine::zip::names_in_file(Path::new(&path)) else { return ZipKind::NotZip };
     let names = || names.iter().map(String::as_str);
     if crate::brush_files::brush_names(names()) {
         ZipKind::Brushes
-    } else if names().any(|n| n.rsplit('/').next() == Some(procraft_engine::palette::SWATCHES_ENTRY)) {
+    } else if names().any(|n| n.rsplit('/').next() == Some(prostudio_engine::palette::SWATCHES_ENTRY)) {
         ZipKind::Swatches
     } else if crate::scene3d::is_model_artwork(names()) {
         ZipKind::ModelArtwork
@@ -515,10 +515,10 @@ mod tests {
 
     #[test]
     fn a_zip_file_is_told_by_its_names() {
-        let dir = std::env::temp_dir().join(format!("procraft-zip-kind-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-zip-kind-{}", std::process::id()));
         let _ = fs::create_dir_all(&dir);
         let zip = |file: &str, entries: &[&str]| {
-            let mut w = procraft_engine::zip::ZipWriter::new();
+            let mut w = prostudio_engine::zip::ZipWriter::new();
             for e in entries {
                 w.add(e, b"x");
             }
@@ -618,7 +618,7 @@ mod tests {
 
     #[test]
     fn recovery_stacks_artworks_the_gallery_cannot_show() {
-        let root = std::env::temp_dir().join(format!("procraft-recover-{}-{}", std::process::id(), fresh_name()));
+        let root = std::env::temp_dir().join(format!("prostudio-recover-{}-{}", std::process::id(), fresh_name()));
         let store = ArtworkStore::open(root.to_string_lossy().into_owned());
         artwork(&store, "Shown", None);
         // nothing lost: nothing done
@@ -658,7 +658,7 @@ mod tests {
     fn gallery_work_at_random_loses_no_artwork_and_never_nests_a_stack() {
         for seed in 0u64..20 {
             let root =
-                std::env::temp_dir().join(format!("procraft-gallery-fuzz-{}-{}", std::process::id(), fresh_name()));
+                std::env::temp_dir().join(format!("prostudio-gallery-fuzz-{}-{}", std::process::id(), fresh_name()));
             let store = ArtworkStore::open(root.to_string_lossy().into_owned());
             let mut state = seed.wrapping_mul(0x9E37_79B9_7F4A_7C15) | 1;
             let mut next = |n: usize| {
@@ -810,7 +810,7 @@ mod tests {
 
     #[test]
     fn artworks_are_listed_stacked_moved_duplicated_and_renamed() {
-        let root = std::env::temp_dir().join(format!("procraft-gallery-{}-{}", std::process::id(), fresh_name()));
+        let root = std::env::temp_dir().join(format!("prostudio-gallery-{}-{}", std::process::id(), fresh_name()));
         let store = ArtworkStore::open(root.to_string_lossy().into_owned());
         let a = artwork(&store, "A", None);
         let b = artwork(&store, "B", None);
