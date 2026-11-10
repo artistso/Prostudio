@@ -5,9 +5,10 @@
 <h1 align="center">ProStudio</h1>
 
 <p align="center">
-  <sub>Formerly ProCraft — the same open-source painting app, renamed as of v0.0.5-beta. Artworks
-  (<code>.procraft</code>), plugins (<code>.procraft-plugin</code>) and settings from before the rename
-  open and carry over; new files use the <code>.prostudio</code> names.</sub>
+  <b>ProStudio is the merger of two projects by the same author: <a href="https://github.com/artistso/inkframesv5">InkFrame&nbsp;v5</a> and <b>ProCraft</b> — renamed to ProStudio as of v0.0.5-beta.</b><br>
+  ProCraft brought the Rust engine, the Android app and the desktop;<br>
+  InkFrame v5 brought the interface — <i>the Glass Horizon</i>: a rose-and-plum world, the wordmark out in the open, optical orbs, frosted glass, the perimeter frame board.<br>
+  <sub>Old <code>.procraft</code> artworks, plugins and settings open and carry over; new files use the <code>.prostudio</code> names.</sub>
 </p>
 
 <p align="center">
@@ -181,7 +182,21 @@ Build time dependencies:
 
 <br>
 
+## For AI agents (and the people who use them)
+
+If you are an AI assistant in this repository — Arena.ai Agent Mode or anything else —
+read **[AGENTS.md](AGENTS.md)** first. It explains what this project is (the ProCraft →
+ProStudio → InkFrame v5 merger), which codebase is authoritative for drawing and which is
+the visual reference, how CI works (CI is the only compiler for Android), and the branch
+and attribution rules. The short version: the **engine of ProStudio is authoritative** for
+what the artwork becomes; **InkFrame v5** (a sibling repository,
+[`artistso/inkframesv5`](https://github.com/artistso/inkframesv5)) is the binding
+*visual and interaction* reference for the Glass Horizon interface — the rose/plum world,
+the wordmark, the orbs, the perimeter board — being rebuilt on Android. Nothing may be
+called done until the owner approves device screenshots.
+
 ## Misc info for myself
 
 Try to use [semantic commit](https://kapeli.com/cheat_sheets/Semantic_Commits.docset/Contents/Resources/Documents/index)
-messages. Use `feat:` / `fix:` / `chore:` / `docs:` / etc.
+messages. Use `feat:` / `fix:` / `chore:` / `docs:` / etc. Contribution rules for humans
+and AI both live in [AGENTS.md](AGENTS.md).
