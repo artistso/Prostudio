@@ -661,6 +661,19 @@ private fun StudioPagesCard(vm: CanvasViewModel) {
                     Text(tab.name, color = if (on) Color.White else StudioPageInk, fontSize = 15.5.sp, maxLines = 1)
                 }
             }
+            // the gremlin files his review of your brushes, unprompted, at the foot of the rail
+            val review = remember { GremlinReviews.random() }
+            Column(
+                Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 8.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Color(0x14BB0037))
+                    .border(1.dp, Ps.Accent.copy(alpha = 0.4f), RoundedCornerShape(14.dp))
+                    .padding(10.dp),
+            ) {
+                Text("GREMLIN REVIEW", color = Ps.Accent, fontSize = 9.sp, fontWeight = FontWeight.Black, letterSpacing = 1.5.sp, maxLines = 1)
+                Text("“${review.first}”", color = StudioPageInk, fontSize = 11.sp, lineHeight = 15.sp, modifier = Modifier.padding(top = 4.dp))
+                Text("— ${review.second}", color = StudioDim, fontSize = 9.sp, modifier = Modifier.padding(top = 3.dp), maxLines = 1)
+            }
         }
     }
 }

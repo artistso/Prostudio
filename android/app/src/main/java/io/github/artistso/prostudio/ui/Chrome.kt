@@ -60,6 +60,7 @@ fun SideBar(vm: CanvasViewModel, modifier: Modifier = Modifier, right: Boolean =
     // its glass slides out with it as the interface hides
     val aside = with(androidx.compose.ui.platform.LocalDensity.current) { Ps.SideBarWidth.toPx() } * (1f - shown) * if (right) 1f else -1f
     val moved = Offset(aside, 0f)
+    val look = rememberGooglyDrift(4200)
     val body = BarGlass(shown, moved, pastLeft = if (right) 0.dp else Ps.SideBarCorner, pastRight = if (right) Ps.SideBarCorner else 0.dp)
     val track = BarGlass(shown, moved, window = true)
     Box(
@@ -82,7 +83,7 @@ fun SideBar(vm: CanvasViewModel, modifier: Modifier = Modifier, right: Boolean =
                 drawPath(body, Glass.RimInner.copy(alpha = 0.4f), style = Stroke(1.dp.toPx()))
             },
     ) {
-        BrushSlider(vm.size, vm::changeSize, Modifier.offset(x(SliderLeft, Ps.SliderWidth), SizeTrackTop).then(rememberFrost(Ps.SliderCorner, track)), panel(vm, CanvasViewModel.SliderPanel.SIZE), vm.sizeNotches, trackHeight)
+        BrushSlider(vm.size, vm::changeSize, Modifier.offset(x(SliderLeft, Ps.SliderWidth), SizeTrackTop).then(rememberFrost(Ps.SliderCorner, track)), panel(vm, CanvasViewModel.SliderPanel.SIZE), vm.sizeNotches, trackHeight, look)
         // the modify button: the next touch on the canvas picks a colour
         Box(
             Modifier.offset(x(5.dp, 40.dp), 191.dp - shorter).size(40.dp, 41.dp).pointerInput(Unit) {
@@ -110,7 +111,7 @@ fun SideBar(vm: CanvasViewModel, modifier: Modifier = Modifier, right: Boolean =
                 },
             )
         }
-        BrushSlider(vm.opacity, vm::changeOpacity, Modifier.offset(x(SliderLeft, Ps.SliderWidth), opacityTop).then(rememberFrost(Ps.SliderCorner, track)), panel(vm, CanvasViewModel.SliderPanel.OPACITY), vm.opacityNotches, trackHeight)
+        BrushSlider(vm.opacity, vm::changeOpacity, Modifier.offset(x(SliderLeft, Ps.SliderWidth), opacityTop).then(rememberFrost(Ps.SliderCorner, track)), panel(vm, CanvasViewModel.SliderPanel.OPACITY), vm.opacityNotches, trackHeight, look)
         // beside the slider it belongs to, a little above it, outside the bar
         vm.sliderPanel?.let { which ->
             val top = if (which == CanvasViewModel.SliderPanel.SIZE) SizeTrackTop else opacityTop
@@ -210,7 +211,7 @@ private fun SliderPanel(vm: CanvasViewModel, which: CanvasViewModel.SliderPanel,
  * it, and a tap on one goes there. On a notch, the thumb shows a blue bar.
  */
 @Composable
-fun BrushSlider(value: Float, onChange: (Float) -> Unit, modifier: Modifier = Modifier, panel: SliderPanelHooks? = null, notches: List<Float> = emptyList(), height: Dp = Ps.SliderHeight) {
+fun BrushSlider(value: Float, onChange: (Float) -> Unit, modifier: Modifier = Modifier, panel: SliderPanelHooks? = null, notches: List<Float> = emptyList(), height: Dp = Ps.SliderHeight, look: Float = 0f) {
     val current by rememberUpdatedState(value)
     val change by rememberUpdatedState(onChange)
     val hooks by rememberUpdatedState(panel)
@@ -298,6 +299,15 @@ fun BrushSlider(value: Float, onChange: (Float) -> Unit, modifier: Modifier = Mo
                 drawPath(Path().apply { addRoundRect(knob) }, Ps.SliderThumb)
                 if (notches.any { kotlin.math.abs(it - value) < 1e-4f }) {
                     drawRoundRect(Ps.Accent, Offset((size.width - bar.width) / 2f, at.y + (thumb.height - bar.height) / 2f), bar, CornerRadius(bar.height / 2f))
+                }
+                // the thumb has eyes; it watches its own track
+                val eyeY = at.y + thumb.height / 2f
+                for (side in listOf(-1f, 1f)) {
+                    val ex = at.x + thumb.width / 2f + side * 7.dp.toPx()
+                    drawCircle(Color.White, 4.1.dp.toPx(), Offset(ex, eyeY))
+                    val px = ex + kotlin.math.sin(look + side * 1.7f) * 1.25.dp.toPx()
+                    val py = eyeY + kotlin.math.cos(look * 0.9f + side) * 1.25.dp.toPx()
+                    drawCircle(Color(0xFF1B0A14), 1.9.dp.toPx(), Offset(px, py))
                 }
             },
     )

@@ -48,11 +48,37 @@ import io.github.artistso.prostudio.R
 import kotlinx.coroutines.delay
 import kotlin.math.sin
 import kotlin.math.cos
+import kotlin.math.PI
 
 /**
  * The studio, unhinged: what the empty gallery shows when nobody is watching. None of this touches
  * the engine, the canvas, or the paint — it only makes the front door a little more alive.
  */
+
+/** What the launch roast says while the easel wakes up. One per cold start, tap to skip the ceremony. */
+private val LaunchRoasts = listOf(
+    "loading your next masterpiece… statistically, that's a curse.",
+    "booting the easel. it was reluctant.",
+    "summoning the canvas… it was napping.",
+    "preparing the paint. it has notes for you.",
+    "warming up the gremlins.",
+    "opening the studio. wipe your feet on the ego.",
+    "your portfolio is loading. be brave.",
+)
+
+/** What the gremlin says about your work. He does not do nuance. */
+internal val GremlinReviews = listOf(
+    "You paint like a cat with a grudge." to "The Canvas · 4/5 beans",
+    "Compositionally confusing. Emotionally devastating." to "A Critic · 5/5 beans",
+    "The eraser asked me to intervene. I will not be intervening." to "Moisture Control · 3/5 beans",
+    "Some strokes are crimes. Yours are misdemeanor-adjacent." to "The Museum · 2/5 beans",
+    "Your whites are wounded. I respect it." to "Colour Dept. · 4/5 beans",
+    "I have seen worse. Once. In 1987." to "An Old Frame · 5/5 beans",
+    "The paint is confident. The painting is unsure." to "The Gremlin · 5/5 beans",
+    "I laughed, I cried, I filed a report." to "Studio Security · 1/5 beans",
+    "Bold silhouette. Terrible decisions." to "Composition Dept. · 3/5 beans",
+    "Keep going. The wall is almost ready for this." to "The Wall · 2/5 beans",
+)
 
 private val DerangedTaglines = listOf(
     "The canvas knows what you did.",
@@ -161,7 +187,16 @@ internal fun ChaosEmptyState(onNew: () -> Unit) {
     }
 }
 
-/** A googly bean, bouncing off the walls forever, pupils wandering as they do. */
+private data class BeanSpec(val colors: List<Color>, val sizeDp: Float, val speed: Float, val phase: Float)
+
+/** the pride: small ones are faster, the pink one has seen things */
+private val Beans = listOf(
+    BeanSpec(listOf(Color(0xFFFF8A3D), Color(0xFFBB0037)), 64f, 0.21f, 0f),
+    BeanSpec(listOf(Color(0xFFF7CAC9), Color(0xFF8A1030)), 42f, 0.27f, 1.7f),
+    BeanSpec(listOf(Color(0xFFFFD23F), Color(0xFFBB0037)), 30f, 0.34f, 3.1f),
+)
+
+/** A pride of googly beans, bouncing off the walls forever, pupils wandering as they do. */
 @Composable
 private fun GooglyBean() {
     var tick by remember { mutableIntStateOf(0) }
@@ -173,64 +208,65 @@ private fun GooglyBean() {
     }
     Canvas(Modifier.fillMaxSize()) {
         val t = tick * 0.016f
-        val beanW = 64.dp.toPx()
-        val beanH = 46.dp.toPx()
-        val margin = beanW
-        val spanX = (size.width - margin).coerceAtLeast(1f)
-        val spanY = (size.height - beanH).coerceAtLeast(1f)
-        val x = bounce(t * 0.21f, spanX) + margin / 2f
-        val y = bounce(t * 0.27f + 0.37f, spanY) + beanH / 2f
-        val eyeR = 8.5.dp.toPx()
-        val pupilR = 3.4.dp.toPx()
-        val pupilWander = 2.6.dp.toPx()
-        rotate(degrees = sin(t * 1.9f) * 26f, pivot = androidx.compose.ui.geometry.Offset(x, y)) {
-            // body: the orange going mean, with a dark rim
-            drawOval(
-                brush = Brush.radialGradient(
-                    listOf(Color(0xFFFF8A3D), Color(0xFFBB0037)),
-                    center = androidx.compose.ui.geometry.Offset(x, y - beanH * 0.15f),
-                    radius = beanW * 0.62f,
-                ),
-                topLeft = androidx.compose.ui.geometry.Offset(x - beanW / 2f, y - beanH / 2f),
-                size = androidx.compose.ui.geometry.Size(beanW, beanH),
-            )
-            drawOval(
-                Color(0xFF2A001A),
-                topLeft = androidx.compose.ui.geometry.Offset(x - beanW / 2f, y - beanH / 2f),
-                size = androidx.compose.ui.geometry.Size(beanW, beanH),
-                style = androidx.compose.ui.graphics.drawscope.Stroke(2.dp.toPx()),
-            )
-            val eyeDx = beanW * 0.19f
-            val eyeY = y - beanH * 0.08f
-            for (side in listOf(-1f, 1f)) {
-                val ex = x + side * eyeDx + sin(t * 2.3f + side) * 2.dp.toPx()
-                drawCircle(Color.White, eyeR, androidx.compose.ui.geometry.Offset(ex, eyeY))
-                val px = ex + sin(t * 1.35f + side * 2.1f) * pupilWander
-                val py = eyeY + cos(t * 1.7f + side * 1.3f) * pupilWander
-                drawCircle(Color(0xFF1B0A14), pupilR, androidx.compose.ui.geometry.Offset(px, py))
+        for (spec in Beans) {
+            val beanW = spec.sizeDp.dp.toPx()
+            val beanH = (spec.sizeDp * 0.72f).dp.toPx()
+            val spanX = (size.width - beanW).coerceAtLeast(1f)
+            val spanY = (size.height - beanH).coerceAtLeast(1f)
+            val x = bounce(t * spec.speed + spec.phase, spanX) + beanW / 2f
+            val y = bounce(t * spec.speed * 1.31f + spec.phase * 1.7f, spanY) + beanH / 2f
+            val eyeR = beanW * 0.132f
+            val pupilR = beanW * 0.054f
+            val pupilWander = beanW * 0.042f
+            rotate(degrees = sin(t * 1.9f + spec.phase) * 26f, pivot = androidx.compose.ui.geometry.Offset(x, y)) {
+                // body, going mean, with a dark rim
+                drawOval(
+                    brush = Brush.radialGradient(
+                        spec.colors,
+                        center = androidx.compose.ui.geometry.Offset(x, y - beanH * 0.15f),
+                        radius = beanW * 0.62f,
+                    ),
+                    topLeft = androidx.compose.ui.geometry.Offset(x - beanW / 2f, y - beanH / 2f),
+                    size = androidx.compose.ui.geometry.Size(beanW, beanH),
+                )
+                drawOval(
+                    Color(0xFF2A001A),
+                    topLeft = androidx.compose.ui.geometry.Offset(x - beanW / 2f, y - beanH / 2f),
+                    size = androidx.compose.ui.geometry.Size(beanW, beanH),
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(2.dp.toPx()),
+                )
+                val eyeDx = beanW * 0.19f
+                val eyeY = y - beanH * 0.08f
+                for (side in listOf(-1f, 1f)) {
+                    val ex = x + side * eyeDx + sin(t * 2.3f + side + spec.phase) * 2.dp.toPx()
+                    drawCircle(Color.White, eyeR, androidx.compose.ui.geometry.Offset(ex, eyeY))
+                    val px = ex + sin(t * 1.35f + side * 2.1f + spec.phase) * pupilWander
+                    val py = eyeY + cos(t * 1.7f + side * 1.3f + spec.phase) * pupilWander
+                    drawCircle(Color(0xFF1B0A14), pupilR, androidx.compose.ui.geometry.Offset(px, py))
+                }
+                // a small, worried, straight line of a mouth
+                drawLine(
+                    Color(0xFF1B0A14),
+                    androidx.compose.ui.geometry.Offset(x - beanW * 0.11f, y + beanH * 0.24f),
+                    androidx.compose.ui.geometry.Offset(x + beanW * 0.11f, y + beanH * 0.24f),
+                    2.dp.toPx(),
+                    cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                )
             }
-            // a small, worried, straight line of a mouth
-            drawLine(
-                Color(0xFF1B0A14),
-                androidx.compose.ui.geometry.Offset(x - 7.dp.toPx(), y + beanH * 0.24f),
-                androidx.compose.ui.geometry.Offset(x + 7.dp.toPx(), y + beanH * 0.24f),
-                2.dp.toPx(),
-                cap = androidx.compose.ui.graphics.StrokeCap.Round,
-            )
         }
     }
 }
 
 /** Two googly eyes that drift on their own, dilate on command. The orbs are looking at you. */
 @Composable
-internal fun GooglyEyes(drift: Float, dilated: Boolean, modifier: Modifier = Modifier) {
-    Canvas(modifier.size(30.dp, 14.dp)) {
-        val eyeR = 5.3.dp.toPx()
-        val pupilR = if (dilated) 3.4.dp.toPx() else 2.3.dp.toPx()
-        val wander = 1.55.dp.toPx()
+internal fun GooglyEyes(drift: Float, dilated: Boolean, modifier: Modifier = Modifier, unit: Float = 1f) {
+    Canvas(modifier.size(30.dp * unit, 14.dp * unit)) {
+        val eyeR = 5.3.dp.toPx() * unit
+        val pupilR = (if (dilated) 3.4.dp.toPx() else 2.3.dp.toPx()) * unit
+        val wander = 1.55.dp.toPx() * unit
         val y = size.height / 2f
         for (side in listOf(-1f, 1f)) {
-            val ex = center.x + side * 8.4.dp.toPx()
+            val ex = center.x + side * 8.4.dp.toPx() * unit
             drawCircle(Color.White, eyeR, androidx.compose.ui.geometry.Offset(ex, y))
             val px = ex + sin(drift + side * 1.7f) * wander
             val py = y + cos(drift * 0.9f + side * 1.1f) * wander
@@ -238,6 +274,18 @@ internal fun GooglyEyes(drift: Float, dilated: Boolean, modifier: Modifier = Mod
             drawCircle(Color(0xCCFFFFFF), pupilR * 0.32f, androidx.compose.ui.geometry.Offset(px - pupilR * 0.3f, py - pupilR * 0.3f))
         }
     }
+}
+
+/** One slow, shared clock for every pair of eyes in the app: the drift comes back around every few seconds. */
+@Composable
+internal fun rememberGooglyDrift(durationMs: Int = 3600): Float {
+    val drift by rememberInfiniteTransition(label = "googly").animateFloat(
+        initialValue = 0f,
+        targetValue = PI.toFloat() * 2f,
+        animationSpec = infiniteRepeatable(tween(durationMs, easing = androidx.compose.animation.core.LinearEasing), RepeatMode.Restart),
+        label = "drift",
+    )
+    return drift
 }
 
 /** triangle-wave bounce: 0..spanNorm..0, forever */
@@ -278,10 +326,53 @@ internal fun GremlinTab(modifier: Modifier = Modifier, onClick: () -> Unit) {
     }
 }
 
+/** The cold-start ceremony: the studio name in brand ink over a roast. Tap anywhere to skip the theatre. */
+@Composable
+internal fun LaunchRoast(modifier: Modifier = Modifier, onTap: () -> Unit) {
+    val roast = remember { LaunchRoasts.random() }
+    Box(
+        modifier
+            .fillMaxSize()
+            .background(Ps.GalleryBackground)
+            .clickable(onClick = onTap),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                "BROBEANS",
+                style = TextStyle(brush = Ps.Brand, fontSize = 46.sp, fontWeight = FontWeight.Black),
+                maxLines = 1,
+            )
+            Text(
+                "S T U D I O",
+                color = Ps.GalleryText,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 8.sp,
+            )
+            Text(
+                roast,
+                color = Ps.GalleryText,
+                fontSize = 13.sp,
+                modifier = Modifier.padding(top = 16.dp),
+            )
+        }
+    }
+}
+
 /** The studio gremlin: management, at last. Everything here is real. Do not press anything. */
 @Composable
 internal fun GremlinPanel(onClose: () -> Unit) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val prefs = remember { context.getSharedPreferences("brobeans", android.content.Context.MODE_PRIVATE) }
+    var lifetimeBeans by remember { mutableIntStateOf(prefs.getInt("lifetime_beans", 0)) }
     var beans by remember { mutableIntStateOf(4) }
+    var review by remember { mutableStateOf(GremlinReviews.random()) }
+    fun feed(n: Int) {
+        beans += n
+        lifetimeBeans += n
+        prefs.edit().putInt("lifetime_beans", lifetimeBeans).apply()
+    }
     var taste by remember { mutableStateOf(true) }
     var moisture by remember { mutableStateOf(false) }
     var morals by remember { mutableStateOf(false) }
@@ -331,6 +422,10 @@ internal fun GremlinPanel(onClose: () -> Unit) {
                 Text("Beans in stock", color = Color(0xFFCFC9BC), fontSize = 14.sp)
                 Text("$beans", color = Color(0xFFFF8A3D), fontSize = 14.sp, fontWeight = FontWeight.Black)
             }
+            Row(Modifier.fillMaxWidth().padding(top = 2.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text("Lifetime beans", color = Color(0xFF8F897E), fontSize = 12.sp)
+                Text("$lifetimeBeans", color = Color(0xFF8F897E), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            }
             Box(
                 Modifier
                     .padding(top = 12.dp)
@@ -338,7 +433,7 @@ internal fun GremlinPanel(onClose: () -> Unit) {
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
                     .background(Color(0xFFFF6B4A))
-                    .clickable { beans += 1 },
+                    .clickable { feed(1) },
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
@@ -349,9 +444,54 @@ internal fun GremlinPanel(onClose: () -> Unit) {
                     letterSpacing = 2.sp,
                 )
             }
+            Spacer(Modifier.height(12.dp))
+            Text(
+                "GREMLIN REVIEWS",
+                color = Color(0xFF8F897E),
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 2.sp,
+            )
+            Box(
+                Modifier.padding(top = 6.dp)
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0xFF2A2531))
+                    .border(1.dp, Color(0x1FF7CAC9), RoundedCornerShape(12.dp))
+                    .padding(12.dp),
+            ) {
+                Column {
+                    Text(
+                        "“${review.first}”",
+                        color = Color(0xFFCFC9BC),
+                        fontSize = 12.sp,
+                        lineHeight = 17.sp,
+                    )
+                    Text(
+                        "— ${review.second}",
+                        color = Color(0xFF8F897E),
+                        fontSize = 10.sp,
+                        modifier = Modifier.padding(top = 6.dp),
+                    )
+                }
+            }
+            Box(
+                Modifier.padding(top = 4.dp)
+                    .height(34.dp)
+                    .fillMaxWidth()
+                    .clickable { review = GremlinReviews.random(); feed(1) },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    "another review (+1 bean)",
+                    color = Color(0xFFD77FA0),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
             Box(
                 Modifier
-                    .padding(top = 8.dp)
+                    .padding(top = 2.dp)
                     .height(40.dp)
                     .fillMaxWidth()
                     .clickable(onClick = onClose),

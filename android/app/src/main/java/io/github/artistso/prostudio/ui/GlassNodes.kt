@@ -1,11 +1,6 @@
 package io.github.artistso.prostudio.ui
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.VectorConverter
@@ -298,11 +293,7 @@ private fun GlassOrb(
 ) {
     val lit = open || nodeActive(node, vm)
     // the gremlin moved into the orbs: the pupils wander, and dilate when the orb wakes
-    val drift by rememberInfiniteTransition(label = "orb-look").animateFloat(
-        initialValue = 0f, targetValue = PI.toFloat() * 2f,
-        animationSpec = infiniteRepeatable(tween(3600, easing = LinearEasing), RepeatMode.Restart),
-        label = "drift",
-    )
+    val drift = rememberGooglyDrift()
     // the long exterior shadow and the open node's accent burn, behind a little extra room
     Box(
         Modifier.size(WrapperSize).drawBehind {

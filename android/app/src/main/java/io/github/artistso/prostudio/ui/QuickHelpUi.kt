@@ -89,6 +89,32 @@ fun QuickHelp(vm: CanvasViewModel) {
                     HelpSectionCard(HelpSections[4], Modifier.weight(1f))
                     HelpSectionCard(HelpSections[5], Modifier.weight(1f))
                 }
+                // the gremlin writes his own section, uninvited, at the bottom
+                Box(
+                    Modifier.fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color(0x1FBB0037))
+                        .border(1.dp, Glass.RimInner.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
+                        .padding(12.dp),
+                ) {
+                    Column {
+                        Text(
+                            "GREMLIN EDITION",
+                            color = Glass.Paper,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 2.sp,
+                            maxLines = 1,
+                        )
+                        Spacer(Modifier.size(6.dp))
+                        Text(
+                            "If this app laughs at you, it was him. He means well. Probably. The half-circle tab on the right edge is his doorbell — ring it when the painting fights back. Beans in stock are legally binding.",
+                            color = Glass.RoseDim,
+                            fontSize = 13.sp,
+                            lineHeight = 18.sp,
+                        )
+                    }
+                }
             }
             Spacer(Modifier.size(14.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {

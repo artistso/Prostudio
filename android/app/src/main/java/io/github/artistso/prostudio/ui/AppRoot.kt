@@ -50,6 +50,13 @@ fun AppRoot(vm: CanvasViewModel) {
     val interfaceSize = fittedInterfaceSize(vm.plugins, vm.pluginList)
     androidx.compose.runtime.SideEffect { vm.interfaceShownAt(interfaceSize) }
     ProStudioTheme(interfaceSize) {
+        // the launch roast: a cold-start ceremony the gremlin insists on; one roast, then gone
+        var roastGone by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+        androidx.compose.runtime.LaunchedEffect(Unit) {
+            kotlinx.coroutines.delay(2800)
+            roastGone = true
+        }
+        Box(Modifier.fillMaxSize()) {
         if (vm.screen == Screen.GALLERY) {
             ZoomingGallery(vm, overlay = false)
             // a share from the gallery shows its card there, and a file brought in its own
@@ -57,7 +64,11 @@ fun AppRoot(vm: CanvasViewModel) {
             ImportProgress(vm.importShown, vm::cancelImport)
             PluginOfferAlert(vm)
             WrongBuildAlert(vm)
-            return@ProStudioTheme
+            // the roast rides over gallery, canvas, everything; tap to skip
+            if (!roastGone) {
+                LaunchRoast(Modifier.fillMaxSize(), onTap = { roastGone = true })
+            }
+            return@Box
         }
         // back closes an open panel first, then leaves the artwork for the gallery
         BackHandler {
@@ -367,6 +378,11 @@ fun AppRoot(vm: CanvasViewModel) {
                 // a colour dragged out goes over everything
                 DropDot(vm)
             }
+        }
+        // and over the world once more, briefly: the studio's idea of good morning
+        if (!roastGone) {
+            LaunchRoast(Modifier.fillMaxSize(), onTap = { roastGone = true })
+        }
         }
     }
 }

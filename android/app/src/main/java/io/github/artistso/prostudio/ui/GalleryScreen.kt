@@ -1645,7 +1645,15 @@ private fun NewCanvasPanel(
                 color = Ps.LightText,
                 fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(start = 23.dp, top = 21.dp, bottom = 20.dp),
+                modifier = Modifier.padding(start = 23.dp, top = 21.dp),
+            )
+            Text(
+                "all sizes certified haunted",
+                color = Ps.LightText.copy(alpha = 0.55f),
+                fontSize = 10.sp,
+                letterSpacing = 1.6.sp,
+                modifier = Modifier.padding(start = 23.dp, top = 1.dp, bottom = 16.dp),
+                maxLines = 1,
             )
             // the button that makes a custom canvas
             Box(
@@ -1665,6 +1673,8 @@ private fun NewCanvasPanel(
             }
         }
         PresetRow("Screen Size", "$sw × ${sh}px", CanvasPreset.P3, Modifier.padding(horizontal = 9.dp).height(38.dp).clip(CircleShape).background(Ps.LightRowStrong)) { onScreenSize(sw, sh) }
+        // the quantity the studio cannot stop mentioning, pre-counted for your convenience
+        PresetRow("Bean-Shaped", "142 × 97 px", CanvasPreset.P3, Modifier.padding(horizontal = 9.dp).height(38.dp).clip(CircleShape).background(Ps.LightRowStrong)) { onScreenSize(142, 97) }
         // the presets scroll past 376 tall
         Column(
             Modifier.padding(start = 9.dp, end = 9.dp, top = 9.5.dp, bottom = 30.dp).heightIn(max = 376.dp).clip(RoundedCornerShape(24.dp)).background(Ps.LightRow)
