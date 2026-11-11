@@ -425,7 +425,7 @@ fun RadialBrushSlider(value: Float, onChange: (Float) -> Unit, modifier: Modifie
                         val half = dial.toPx() / 2f
                         val dx = down.position.x - half
                         val dy = down.position.y - half
-                        var ang = Math.toDegrees(kotlin.math.atan2(dy, dx)).toFloat()
+                        var ang = Math.toDegrees(kotlin.math.atan2(dy.toDouble(), dx.toDouble())).toFloat()
                         if (ang < 0f) ang += 360f
                         var v = (ang - start) / sweep
                         if (ang < start) v = (ang + 360f - start) / sweep
