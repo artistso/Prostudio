@@ -383,6 +383,9 @@ fun AppRoot(vm: CanvasViewModel) {
         if (!roastGone) {
             LaunchRoast(Modifier.fillMaxSize(), onTap = { roastGone = true })
         }
+        // the app is self-aware now; it demands consent and an update dialog appears daily
+        GremlinConsent()
+        FakeUpdate()
         }
     }
 }

@@ -1819,6 +1819,13 @@ private fun AboutApp(onRecover: () -> Unit, onClose: () -> Unit) {
                 modifier = Modifier.padding(top = 2.dp),
             )
             Text(
+                "Your cookies (dessert) were waived by the house.",
+                color = AboutInkDim,
+                fontSize = 10.sp,
+                maxLines = 1,
+                modifier = Modifier.padding(top = 2.dp),
+            )
+            Text(
                 "Buttons enchanted by licensed wizards. Dark elves on standby.",
                 color = AboutInkDim,
                 fontSize = 10.sp,

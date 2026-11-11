@@ -147,6 +147,8 @@ private val DerangedLabels = listOf(
     "✦ BREAK THE SEAL",
     "I'LL BE BACK",
     "HASTA LA VISTA",
+    "FEED ME",
+    "THE GREMLIN BIDS YOU",
 )
 
 private data class Spark(val x: Float, val y: Float, val bornTick: Int, val vx: Float, val vy: Float, val gold: Boolean)
@@ -571,6 +573,12 @@ internal fun GremlinPanel(onClose: () -> Unit) {
     var enchanted by remember { mutableStateOf(true) }
     var darkElves by remember { mutableStateOf(false) }
     var skynet by remember { mutableStateOf(true) }
+    var rgbChaos by remember { mutableStateOf(false) }
+    val rgbHue by rememberInfiniteTransition(label = "rgb").animateFloat(
+        initialValue = 0f, targetValue = 360f,
+        animationSpec = infiniteRepeatable(tween(1400, easing = androidx.compose.animation.core.LinearEasing), RepeatMode.Restart),
+        label = "hue",
+    )
     var judgment by remember { mutableStateOf(false) }
     LaunchedEffect(judgment) {
         if (judgment) {
@@ -609,7 +617,7 @@ internal fun GremlinPanel(onClose: () -> Unit) {
         ) {
             Text(
                 "STUDIO GREMLIN",
-                color = Color(0xFFF7CAC9),
+                color = if (rgbChaos) Color.hsv(rgbHue, 0.85f, 1f) else Color(0xFFF7CAC9),
                 fontSize = 17.sp,
                 fontWeight = FontWeight.Black,
                 letterSpacing = 3.sp,
@@ -629,6 +637,7 @@ internal fun GremlinPanel(onClose: () -> Unit) {
             GremlinToggle("Enchant all buttons", enchanted) { enchanted = !enchanted }
             GremlinToggle("Dark elf temperaments", darkElves) { darkElves = !darkElves }
             GremlinToggle("Skynet oversight", skynet) { skynet = !skynet }
+            GremlinToggle("RGB (chaotic) gremlin", rgbChaos) { rgbChaos = !rgbChaos }
             Spacer(Modifier.height(12.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("Beans in stock", color = Color(0xFFCFC9BC), fontSize = 14.sp)
@@ -797,6 +806,160 @@ private fun GremlinToggle(label: String, on: Boolean, onToggle: () -> Unit) {
                     .clip(CircleShape)
                     .background(Color(0xFFF7CAC9)),
             )
+        }
+    }
+}
+
+/** The consent gremlin: drafted the dessert cookie law himself; legal reviewed it and hid. */
+@Composable
+internal fun GremlinConsent() {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val prefs = remember { context.getSharedPreferences("brobeans", android.content.Context.MODE_PRIVATE) }
+    var declined by remember { mutableIntStateOf(0) }
+    var visible by remember { mutableStateOf(!prefs.getBoolean("consent_v1", false)) }
+    if (!visible) return
+    val drift = rememberGooglyDrift(2600)
+    Box(
+        Modifier.fillMaxSize().background(Color(0xCC12060E)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            Modifier
+                .width(340.dp)
+                .clip(RoundedCornerShape(22.dp))
+                .background(Color(0xFF241F2B))
+                .border(1.dp, Color(0x2EF7CAC9), RoundedCornerShape(22.dp))
+                .padding(22.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            GooglyEyes(drift = drift, dilated = declined > 0)
+            Spacer(Modifier.height(10.dp))
+            Text(
+                "COOKIE CONSENT",
+                color = Color(0xFFFFD23F),
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 3.sp,
+            )
+            Text(
+                "(the dessert kind)",
+                color = Color(0xFF8F897E),
+                fontSize = 10.sp,
+            )
+            Spacer(Modifier.height(12.dp))
+            Text(
+                if (declined == 0)
+                    "By using BroBeans you agree the gremlin may judge your brushwork, the beans may be counted, and the cookies you consented to (dessert) are hereby transferred to him."
+                else
+                    "Declined. The gremlin respects your autonomy (in beans). This dialog only knows how to close one way.",
+                color = Color(0xFFCFC9BC),
+                fontSize = 12.sp,
+                lineHeight = 17.sp,
+            )
+            Spacer(Modifier.height(14.dp))
+            Box(
+                Modifier.fillMaxWidth().height(44.dp).clip(RoundedCornerShape(12.dp))
+                    .background(Ps.Accent)
+                    .clickable {
+                        prefs.edit().putBoolean("consent_v1", true).apply()
+                        visible = false
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    if (declined == 0) "I CONSENT (OBVIOUSLY)" else "ACCEPT, OBVIOUSLY",
+                    color = Color.White,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 1.sp,
+                    maxLines = 1,
+                )
+            }
+            Box(
+                Modifier.padding(top = 6.dp).fillMaxWidth().height(34.dp)
+                    .clickable { declined += 1 },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text("Decline", color = Color(0xFF8F897E), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+            }
+        }
+    }
+}
+
+/** The update that never installs. It ships once a day, as the law of the land demands. */
+@Composable
+internal fun FakeUpdate() {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val prefs = remember { context.getSharedPreferences("brobeans", android.content.Context.MODE_PRIVATE) }
+    val dayKey = remember { java.text.SimpleDateFormat("yyyyMMdd", java.util.Locale.US).format(java.util.Date()) }
+    var shown by remember { mutableStateOf(prefs.getString("update_seen", "") != dayKey) }
+    var installing by remember { mutableStateOf(false) }
+    if (!shown) return
+    fun dismiss() {
+        prefs.edit().putString("update_seen", dayKey).apply()
+        shown = false
+    }
+    LaunchedEffect(installing) {
+        if (installing) {
+            delay(2600)
+            dismiss()
+        }
+    }
+    val drift = rememberGooglyDrift(2200)
+    Box(
+        Modifier.fillMaxSize().background(Color(0xCC0A0812)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            Modifier.width(340.dp).clip(RoundedCornerShape(22.dp))
+                .background(Color(0xFF1F1C28))
+                .border(1.dp, Color(0x40FFD23F), RoundedCornerShape(22.dp))
+                .padding(22.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                "UPDATE READY",
+                color = Color(0xFFFFD23F),
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 3.sp,
+            )
+            Spacer(Modifier.height(8.dp))
+            GooglyEyes(drift = drift, dilated = installing)
+            Spacer(Modifier.height(10.dp))
+            Text(
+                if (installing)
+                    "Installation deferred. The gremlin holds the signing keys."
+                else
+                    "BroBeans 2.0 (Nacho Edition) is downloaded and waiting. A bigger, angrier easel.",
+                color = Color(0xFFCFC9BC),
+                fontSize = 12.sp,
+                lineHeight = 17.sp,
+            )
+            Spacer(Modifier.height(14.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(
+                    Modifier.weight(1f).height(40.dp).clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFF2A2531))
+                        .clickable { dismiss() },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text("Later", color = Color(0xFFCFC9BC), fontWeight = FontWeight.SemiBold)
+                }
+                Box(
+                    Modifier.weight(1.2f).height(40.dp).clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFFFFD23F))
+                        .clickable { if (!installing) installing = true },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        if (installing) "DOWNLOADING…" else "Install",
+                        color = Color(0xFF1B0A14),
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 1.sp,
+                    )
+                }
+            }
         }
     }
 }
