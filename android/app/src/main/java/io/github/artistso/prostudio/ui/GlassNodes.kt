@@ -353,14 +353,15 @@ private fun ChildrenFan(
     val centre = Offset(cx.value, cy.value)
     val toCentre = Offset(w.value / 2f - centre.x, h.value / 2f - centre.y)
     val base = atan2(toCentre.y, toCentre.x)
-    // the seeds of a sunflower: the golden angle apart, the radius growing with the square root of the index
-    val k = (150f / kotlin.math.sqrt(children.size.coerceAtLeast(5).toFloat())).coerceIn(30f, 46f)
+    // the seeds of a sunflower: the golden angle apart, the radius growing with the square root of the index —
+    // an orb is a big seed, not a grain of wheat: the first child must clear the parent's rim entirely
+    val k = (170f / kotlin.math.sqrt(children.size + 1f)).coerceIn(56f, 88f)
     val seats = children.indices.map { i ->
         val a = base + i * GOLDEN_ANGLE
         val r = k * kotlin.math.sqrt(i + 1f)
         Offset(
-            (centre.x + cos(a) * r).coerceIn(ChildHalf.value + 4f, w.value - ChildHalf.value - 4f),
-            (centre.y + sin(a) * r).coerceIn(ChildHalf.value + 4f, h.value - ChildHalf.value - 4f),
+            (centre.x + cos(a) * r).coerceIn(40f, w.value - 40f),
+            (centre.y + sin(a) * r).coerceIn(34f, h.value - 34f),
         )
     }
     // where each orb actually is (its seat, plus any drag), and which have let go of their connector
@@ -377,7 +378,7 @@ private fun ChildrenFan(
             val seat = positions[i] ?: seats[i]
             val toward = seat - centre
             val len = toward.getDistance()
-            val start = centre + if (len < 0.001f) Offset.Zero else toward * (26f / len) // from under the parent's rim
+            val start = centre + if (len < 0.001f) Offset.Zero else toward * (30f / len) // from the parent's rim, underneath it
             val s = start * u
             val e = seat * u
             val dist = (e - s).getDistance()
