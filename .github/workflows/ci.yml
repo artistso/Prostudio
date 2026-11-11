@@ -75,11 +75,17 @@ jobs:
           set -o pipefail
           if ! ./gradlew --no-daemon :app:assembleRelease :app:lintRelease 2>&1 | tee build.log; then
             # the build log is all there is to go on; surface the useful lines as annotations
-            grep -E "^e:|error:|Error:|FAILED|What went wrong|Lint found|failed, see" build.log | tail -50 | sed 's/%/%25/g; s/\r/%0D/g; s/\n/%0A/g' | sed 's/^/::error::/'
+            grep -i -E "error|exception|FAILED" build.log | tail -60 | sed 's/%/%25/g; s/\r/%0D/g; s/\n/%0A/g' | sed 's/^/::error::/'
             # whatever lint left in its report: id, message and where
             if [ -f app/build/reports/lint-results-release.xml ]; then
-              grep -o -E '<issue[^>]*severity="Error"[^>]*>' app/build/reports/lint-results-release.xml | head -10 | sed -E 's/.*id="([^"]*)".*message="([^"]*)".*/::error::lint \1 — \2/' | head -10
-              grep -o -E '<location[^>]*>' app/build/reports/lint-results-release.xml | head -10 | sed -E 's/.*file="([^"]*)"[^>]*line="([^"]*)".*/::error::at \1 line \2/' | head -10
+              echo "::error::lint report, first 1500 bytes for context:"
+              head -c 1500 app/build/reports/lint-results-release.xml | sed 's/%/%25/g; s/\r/%0D/g; s/\n/%0A/g' | sed 's/^/::error::/'
+              grep -o -E '<issue [^>]*severity="Error"[^>]*>' app/build/reports/lint-results-release.xml | head -10 | while read -r tag; do
+                id=$(printf '%s' "$tag" | sed -E 's/.*id="([^"]*)".*/\1/')
+                msg=$(printf '%s' "$tag" | sed -E 's/.*message="([^"]*)".*/\1/')
+                printf '::error::lint %s — %s\n' "$id" "$msg"
+              done
+              grep -o -E '<location file="[^"]*" line="[0-9]+"[^>]*>' app/build/reports/lint-results-release.xml | head -10 | sed -E 's/.*file="([^"]*)" line="([0-9]+)".*/::error::at \1 line \2/'
             fi
             echo "::error::Release APK and lint failed — see the annotations above this one"
             exit 1
