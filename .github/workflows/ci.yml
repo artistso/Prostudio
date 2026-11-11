@@ -72,6 +72,7 @@ jobs:
       - name: Release APK and lint
         working-directory: android
         run: |
+          set -o pipefail
           if ! ./gradlew --no-daemon :app:assembleRelease :app:lintRelease 2>&1 | tee build.log; then
             # the build log is all there is to go on; surface the useful lines as annotations
             grep -E "^e:|error:|FAILED|What went wrong|Lint found|failed, see" build.log | tail -50 | sed 's/%/%25/g; s/\r/%0D/g; s/\n/%0A/g' | sed 's/^/::error::/'
@@ -81,6 +82,7 @@ jobs:
       - name: Unit tests
         working-directory: android
         run: |
+          set -o pipefail
           if ! ./gradlew --no-daemon :app:testDebugUnitTest -Pprostudio.abis=x86_64 2>&1 | tee build-tests.log; then
             # the step's log is all there is to go on; surface the useful lines as annotations
             grep -E "^e:|FAILED|> [a-z]+ FAILED|tests? (failed|completed)|What went wrong" build-tests.log | tail -40 | sed 's/%/%25/g; s/\r/%0D/g; s/\n/%0A/g' | sed 's/^/::error::/'
@@ -92,6 +94,9 @@ jobs:
       - name: 16 KB pages
         run: |
           apk=android/app/build/outputs/apk/release/app-release.apk
+          echo "apk candidates:"
+          find android/app/build/outputs -name '*.apk' -exec ls -la {} \; 2>/dev/null | sed 's/^/::error::/' || true
+          df -h . | tail -1 | sed 's/^/::error::/'
           tools="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
           echo "using build-tools: $tools"
           if ! "$tools/zipalign" -c -P 16 -v 4 "$apk" > zipalign.log 2>&1; then
