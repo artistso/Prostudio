@@ -8,6 +8,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -39,6 +40,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -69,6 +73,10 @@ private val LaunchRoasts = listOf(
     "stretching for the canvas. the cheese is watching.",
     "entering the riñg. your muse has been sold.",
     "nah-cho talent detected. none found. proceeding anyway.",
+    "swish swish swickity swickity swish. beans are involved.",
+    "riiiiiiiickles. it's time to get swickity.",
+    "two words: bean magic.",
+    "wishes cost extra. so does breathing.",
 )
 
 /** What the gremlin says about your work. He does not do nuance. */
@@ -105,6 +113,9 @@ private val DerangedTaglines = listOf(
     "El campeón never misses a stroke. He misses constantly.",
     "If you can dodge a canvas, you can dodge a critic.",
     "Nachos taste better after victory.",
+    "Swickity swickity swish — your wish has been documented.",
+    "The wand is out of batteries. The beans are not.",
+    "Wish wisely. The canvas grants nothing.",
 )
 
 private val DerangedLabels = listOf(
@@ -117,6 +128,32 @@ private val DerangedLabels = listOf(
     "DO IT",
     "Don't blame me",
 )
+
+private data class Spark(val x: Float, val y: Float, val bornTick: Int, val vx: Float, val vy: Float, val gold: Boolean)
+
+/** What the gremlin says when you ask the bean for a wish. One wish in three is honored. In beans. */
+private val WishDenials = listOf(
+    "your wish has been granted: nothing.",
+    "granted. the cost: one bean.",
+    "granted. it cost you one stare from the gremlin.",
+    "granted: you are now legally a bean.",
+    "denied. the gremlin counters with: no.",
+    "granted. your wish has been forwarded to the canvas. it declined.",
+    "granted: a lifetime supply of paint fumes.",
+    "granted. the bean is unionized. the answer came back no.",
+)
+
+/** the four-pointed star of stage magic, drawn as two lines and a prayer */
+private fun DrawScope.drawSparkle(center: Offset, radius: Float, color: Color, alpha: Float) {
+    val c = color.copy(alpha = alpha)
+    val w = 1.6.dp.toPx()
+    drawLine(c, center - Offset(radius, 0f), center + Offset(radius, 0f), w, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+    drawLine(c, center - Offset(0f, radius), center + Offset(0f, radius), w, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+    val d = radius * 0.42f
+    drawLine(c, center - Offset(d, d), center + Offset(d, d), 1.1.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round)
+    drawLine(c, center - Offset(d, -d), center + Offset(-d, d), 1.1.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round)
+    drawCircle(Color(0xFFFFFFFF), 1.15.dp.toPx(), center, alpha = alpha)
+}
 
 /** The gallery's empty state, deranged: the cursed mark wobbles, a googly bean bounces behind it, the button has opinions. */
 @Composable
@@ -140,8 +177,46 @@ internal fun ChaosEmptyState(onNew: () -> Unit) {
         }
     }
     val tagline = remember { DerangedTaglines.random() }
-    BoxWithConstraints(Modifier.fillMaxSize()) {
+    // magic: sparkles burst where the finger lands, and the mark sneezes one on its own every so often
+    val sparks = remember { androidx.compose.runtime.mutableStateListOf<Spark>() }
+    var sparkTick by remember { mutableIntStateOf(0) }
+    fun spawnSparks(at: Offset) {
+        repeat(12) {
+            val angle = (Math.random() * 2.0 * Math.PI).toFloat()
+            val speed = (60f + Math.random() * 150f).toFloat()
+            sparks += Spark(at.x, at.y, sparkTick, cos(angle) * speed, sin(angle) * speed - 40f, gold = Math.random() < 0.4)
+        }
+    }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(32)
+            sparkTick++
+            if (sparks.isNotEmpty() && sparkTick % 36 == 0) {
+                val now = sparkTick
+                sparks.removeAll { now - it.bornTick > 36 }
+            }
+        }
+    }
+    BoxWithConstraints(Modifier.fillMaxSize().pointerInput(Unit) { detectTapGestures { spawnSparks(it) } }) {
         GooglyBean()
+        Canvas(Modifier.fillMaxSize()) {
+            // the mark sneezes one ambient sparkle every nine seconds, just to keep up appearances
+            val cycle = (sparkTick * 32L % 9000L) / 1000f
+            if (cycle < 1.3f) {
+                val a = sin(cycle / 1.3f * PI).toFloat().coerceIn(0f, 1f)
+                val tx = size.width * 0.5f + sin(sparkTick / 34f) * 24.dp.toPx()
+                drawSparkle(Offset(tx, size.height * 0.285f), 12.dp.toPx(), Color(0xFFFFE98A), a)
+            }
+            for (spark in sparks) {
+                val age = ((sparkTick - spark.bornTick) * 32f) / 1150f
+                if (age >= 1f) continue
+                val ease = kotlin.math.sin(age * PI).toFloat()
+                val cx = spark.x + spark.vx * age
+                val cy = spark.y + spark.vy * age + age * age * 60f
+                val color = if (spark.gold) Color(0xFFFFD23F) else Color(0xFFF7CAC9)
+                drawSparkle(Offset(cx, cy), (10.dp.toPx() * ease + 2.dp.toPx()), color, (1f - age).coerceIn(0f, 1f))
+            }
+        }
         Column(
             Modifier.align(Alignment.Center)
                 .graphicsLayer { rotationZ = -1.6f },
@@ -445,6 +520,13 @@ internal fun GremlinPanel(onClose: () -> Unit) {
     var morals by remember { mutableStateOf(false) }
     var undoTheUndo by remember { mutableStateOf(true) }
     var nachoJustice by remember { mutableStateOf(true) }
+    var wish by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(wish) {
+        if (wish != null) {
+            delay(2400)
+            wish = null
+        }
+    }
     Box(
         Modifier
             .fillMaxSize()
@@ -556,6 +638,29 @@ internal fun GremlinPanel(onClose: () -> Unit) {
                     color = Color(0xFFD77FA0),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
+                )
+            }
+            // one wish in three is honored. in beans.
+            Box(
+                Modifier.padding(top = 2.dp)
+                    .height(34.dp)
+                    .fillMaxWidth()
+                    .clickable {
+                        if ((0..2).random() == 0) {
+                            feed(1)
+                            wish = "granted. the gremlin is amused. +1 bean."
+                        } else {
+                            wish = WishDenials.random()
+                        }
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    wish ?: "wish upon a bean (grants 0 beans, probably)",
+                    color = Color(0xFFE8C15A),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 2,
                 )
             }
             Box(
