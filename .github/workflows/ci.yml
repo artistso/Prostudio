@@ -71,7 +71,13 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Release APK and lint
         working-directory: android
-        run: ./gradlew --no-daemon :app:assembleRelease :app:lintRelease
+        run: |
+          if ! ./gradlew --no-daemon :app:assembleRelease :app:lintRelease 2>&1 | tee build.log; then
+            # the build log is all there is to go on; surface the useful lines as annotations
+            grep -E "^e:|error:|FAILED|What went wrong|Lint found|failed, see" build.log | tail -50 | sed 's/%/%25/g; s/\r/%0D/g; s/\n/%0A/g' | sed 's/^/::error::/'
+            echo "::error::Release APK and lint failed — see the annotations above this one"
+            exit 1
+          fi
       - name: Unit tests
         working-directory: android
         run: ./gradlew --no-daemon :app:testDebugUnitTest -Pprostudio.abis=x86_64
