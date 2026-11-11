@@ -165,7 +165,7 @@ object Ps {
     val SliderThumb: Color get() = pick(0xFFB9B4A8, 0xFFFCFAF3)
     val SideGlyph: Color get() = pick(0xFF98928A, 0xFF5B564D)
     val SideGlyphDisabled: Color get() = pick(0x1AF5F1E8, 0x3326221F)
-    val SideBarWidth = 51.dp
+    val SideBarWidth = 92.dp
     val SideBarHeight = 519.dp
     val SideBarCorner = 20.dp
     /** Where the side bar's centre sits, as a fraction of the screen height. */

@@ -30,6 +30,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -41,22 +42,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.artistso.prostudio.canvas.CanvasViewModel
 
-private val SliderLeft = 5.dp
-private val SizeTrackTop = 6.dp
-private val OpacityTrackTop = 248.dp
+private val DialSize = 84.dp
+private val DialMargin = 4.dp
+private val SizeDialTop = 4.dp
+private val ModifyTop = 100.dp
+private val OpacityDialTop = 148.dp
+private val PlankHeight = 240.dp
 
 /**
  * The size and opacity capsule floating in the world (the right one, [right]-handed): brush
- * size, the modify button, opacity, its tracks [trackHeight] long. On the right everything is
+ * size, the modify button, opacity, as dials of the horizon's own making. On the right everything is
  * mirrored but the glyphs.
  */
 @Composable
-fun SideBar(vm: CanvasViewModel, modifier: Modifier = Modifier, right: Boolean = false, trackHeight: Dp = Ps.SliderHeight, shown: Float = 1f) {
+fun SideBar(vm: CanvasViewModel, modifier: Modifier = Modifier, right: Boolean = false, shown: Float = 1f) {
     // a control's left edge, mirrored on the right
     fun x(left: Dp, width: Dp) = if (right) Ps.SideBarWidth - left - width else left
-    // shorter tracks bring what is under each up with them
-    val shorter = Ps.SliderHeight - trackHeight
-    val opacityTop = OpacityTrackTop - shorter
     // its glass slides out with it as the interface hides
     val aside = with(androidx.compose.ui.platform.LocalDensity.current) { Ps.SideBarWidth.toPx() } * (1f - shown) * if (right) 1f else -1f
     val moved = Offset(aside, 0f)
@@ -64,29 +65,19 @@ fun SideBar(vm: CanvasViewModel, modifier: Modifier = Modifier, right: Boolean =
     val body = BarGlass(shown, moved, pastLeft = if (right) 0.dp else Ps.SideBarCorner, pastRight = if (right) Ps.SideBarCorner else 0.dp)
     val track = BarGlass(shown, moved, window = true)
     Box(
-        Modifier.then(rememberFrost(Ps.SideBarCorner, body)).then(modifier).size(Ps.SideBarWidth, opacityTop + trackHeight + 14.dp)
+        Modifier.then(rememberFrost(Ps.SideBarCorner, body)).then(modifier).size(Ps.SideBarWidth, PlankHeight)
             .drawBehind {
-                // translucent, with windows where the slider tracks are: they show what is behind
+                // translucent slab of horizon-lit glass; the dials are their own discs now
                 val r = Ps.SideBarCorner.toPx()
-                val track = Size(Ps.SliderWidth.toPx(), trackHeight.toPx())
-                val trackR = CornerRadius(Ps.SliderCorner.toPx())
-                val body = Path().apply {
-                    fillType = PathFillType.EvenOdd
-                    addRoundRect(RoundRect(0f, 0f, size.width, size.height, CornerRadius(r), CornerRadius(r), CornerRadius(r), CornerRadius(r)))
-                    for (top in listOf(SizeTrackTop, opacityTop)) {
-                        val o = Offset(x(SliderLeft, Ps.SliderWidth).toPx(), top.toPx())
-                        addRoundRect(RoundRect(o.x, o.y, o.x + track.width, o.y + track.height, trackR))
-                    }
-                }
-                drawPath(body, Glass.Gradient)
-                // the glass's rim: the horizon catching the edge, tracks rimmed too
-                drawPath(body, Glass.RimInner.copy(alpha = 0.4f), style = Stroke(1.dp.toPx()))
+                drawRoundRect(Glass.Gradient, size = size, cornerRadius = CornerRadius(r))
+                // the glass's rim: the horizon catching the edge
+                drawRoundRect(Glass.RimInner.copy(alpha = 0.4f), size = size, cornerRadius = CornerRadius(r), style = Stroke(1.dp.toPx()))
             },
     ) {
-        BrushSlider(vm.size, vm::changeSize, Modifier.offset(x(SliderLeft, Ps.SliderWidth), SizeTrackTop).then(rememberFrost(Ps.SliderCorner, track)), panel(vm, CanvasViewModel.SliderPanel.SIZE), vm.sizeNotches, trackHeight, look)
+        RadialBrushSlider(vm.size, vm::changeSize, Modifier.offset(x(DialMargin, DialSize), SizeDialTop).then(rememberFrost(44.dp, track)), panel(vm, CanvasViewModel.SliderPanel.SIZE), vm.sizeNotches, DialSize, look)
         // the modify button: the next touch on the canvas picks a colour
         Box(
-            Modifier.offset(x(5.dp, 40.dp), 191.dp - shorter).size(40.dp, 41.dp).pointerInput(Unit) {
+            Modifier.offset(x(26.dp, 40.dp), ModifyTop).size(40.dp, 41.dp).pointerInput(Unit) {
                 // held, it changes what a canvas touch does; tapped, it does what Tap □ is set to
                 awaitEachGesture {
                     awaitFirstDown().consume()
@@ -111,11 +102,11 @@ fun SideBar(vm: CanvasViewModel, modifier: Modifier = Modifier, right: Boolean =
                 },
             )
         }
-        BrushSlider(vm.opacity, vm::changeOpacity, Modifier.offset(x(SliderLeft, Ps.SliderWidth), opacityTop).then(rememberFrost(Ps.SliderCorner, track)), panel(vm, CanvasViewModel.SliderPanel.OPACITY), vm.opacityNotches, trackHeight, look)
+        RadialBrushSlider(vm.opacity, vm::changeOpacity, Modifier.offset(x(DialMargin, DialSize), OpacityDialTop).then(rememberFrost(44.dp, track)), panel(vm, CanvasViewModel.SliderPanel.OPACITY), vm.opacityNotches, DialSize, look)
         // beside the slider it belongs to, a little above it, outside the bar
         vm.sliderPanel?.let { which ->
-            val top = if (which == CanvasViewModel.SliderPanel.SIZE) SizeTrackTop else opacityTop
-            SliderPanel(vm, which, Modifier.offset(x(SliderLeft + Ps.SliderWidth + SliderPanelGap, SliderPanelSide), top - SliderPanelRise))
+            val top = if (which == CanvasViewModel.SliderPanel.SIZE) SizeDialTop else OpacityDialTop
+            SliderPanel(vm, which, Modifier.offset(x(DialMargin + DialSize + SliderPanelGap, SliderPanelSide), top - SliderPanelRise))
         }
     }
 }
@@ -379,4 +370,113 @@ fun BrushCursor(vm: CanvasViewModel) {
             }
         }
     }
+}
+
+/**
+ * The dial age: the brush pickers, round now. Drag anywhere on the disc — up grows, down shrinks; a tap
+ * jumps by angle. Saved positions ring the arc as ticks; on one, the knob's rim burns accent. The eyes
+ * ride the knob, and on the machine's interval they flush red.
+ */
+@Composable
+fun RadialBrushSlider(value: Float, onChange: (Float) -> Unit, modifier: Modifier = Modifier, panel: SliderPanelHooks? = null, notches: List<Float> = emptyList(), dial: Dp = 84.dp, look: Float = 0f) {
+    val current by rememberUpdatedState(value)
+    val change by rememberUpdatedState(onChange)
+    val hooks by rememberUpdatedState(panel)
+    val marks by rememberUpdatedState(notches)
+    fun near(v: Float, reach: Float = CanvasViewModel.NOTCH_NEAR) =
+        marks.filter { kotlin.math.abs(it - v) < reach }.minByOrNull { kotlin.math.abs(it - v) }
+    val sweep = 240f
+    val start = 150f
+    Box(
+        modifier.size(dial)
+            .pointerInput(dial) {
+                val travel = dial.toPx() * 1.6f
+                awaitEachGesture {
+                    val down = awaitFirstDown()
+                    down.consume()
+                    var last = down.position.y
+                    var moved = false
+                    var lifted = false
+                    var taken = false
+                    var raw = current
+                    suspend fun AwaitPointerEventScope.follow(): Boolean {
+                        val c = awaitPointerEvent().changes.firstOrNull { it.id == down.id } ?: return true
+                        if (!c.pressed) {
+                            taken = c.isConsumed
+                            return false
+                        }
+                        val dy = c.position.y - last
+                        if (dy != 0f) {
+                            if (!moved) hooks?.show(false)
+                            moved = true
+                            last = c.position.y
+                            raw = (raw - dy / travel).coerceIn(0f, 1f)
+                            change(near(raw) ?: raw)
+                        }
+                        c.consume()
+                        return true
+                    }
+                    withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+                        while (!lifted && !moved) lifted = !follow()
+                    }
+                    if (!lifted && !moved) hooks?.show(true)
+                    // a clean tap jumps by angle, snapped to a saved position
+                    if (lifted && !moved && !taken) {
+                        val half = dial.toPx() / 2f
+                        val dx = down.position.x - half
+                        val dy = down.position.y - half
+                        var ang = Math.toDegrees(kotlin.math.atan2(dy, dx)).toFloat()
+                        if (ang < 0f) ang += 360f
+                        var v = (ang - start) / sweep
+                        if (ang < start) v = (ang + 360f - start) / sweep
+                        v = v.coerceIn(0f, 1f)
+                        change(near(v) ?: v)
+                    }
+                    while (!lifted) lifted = !follow()
+                    if (taken) hooks?.show(true) else if (moved) hooks?.hide()
+                }
+            }
+            .drawBehind {
+                val half = size.width / 2f
+                val center = Offset(half, half)
+                val stroke = 7.dp.toPx()
+                val arcR = half - stroke / 2f - 1.dp.toPx()
+                val topLeft = Offset(half - arcR, half - arcR)
+                val arcSize = Size(arcR * 2, arcR * 2)
+                // the face: a deep disc, the world showing through softly
+                drawCircle(Ps.SliderTrack.copy(alpha = 0.25f), arcR - stroke / 2f - 1.dp.toPx(), center)
+                // the rim under the track, then the track, then the value as a stroke of ember
+                drawArc(Ps.SliderRim, start, sweep, false, topLeft, arcSize, style = Stroke(stroke + 2.2.dp.toPx()))
+                drawArc(Ps.SliderTrack, start, sweep, false, topLeft, arcSize, style = Stroke(stroke))
+                drawArc(Ps.Accent, start, sweep * value, false, topLeft, arcSize, style = Stroke(stroke, cap = StrokeCap.Round))
+                // saved positions ring the arc as ticks
+                for (n in notches) {
+                    val a = Math.toRadians((start + sweep * n).toDouble())
+                    val cx = kotlin.math.cos(a).toFloat()
+                    val sy = kotlin.math.sin(a).toFloat()
+                    val inner = arcR - stroke / 2f - 3.5.dp.toPx()
+                    val outer = arcR + stroke / 2f + 1.5.dp.toPx()
+                    drawLine(NotchMark, Offset(center.x + cx * inner, center.y + sy * inner), Offset(center.x + cx * outer, center.y + sy * outer), 2.2.dp.toPx())
+                }
+                // the knob rides the arc; the eyes ride the knob
+                val a = Math.toRadians((start + sweep * value).toDouble())
+                val kx = center.x + kotlin.math.cos(a).toFloat() * arcR
+                val ky = center.y + kotlin.math.sin(a).toFloat() * arcR
+                val knob = Offset(kx, ky)
+                val knobR = 8.6.dp.toPx()
+                drawCircle(Color(0x73000000), knobR + 1.dp.toPx(), knob + Offset(0.5.dp.toPx(), 1.6.dp.toPx()))
+                drawCircle(Ps.SliderThumb, knobR, knob)
+                val onNotch = notches.any { kotlin.math.abs(it - value) < 1e-4f }
+                drawCircle(if (onNotch) Ps.Accent else Ps.SliderRim, knobR, knob, style = Stroke(if (onNotch) 2.2.dp.toPx() else 1.2.dp.toPx()))
+                val eyeY = ky - 0.5.dp.toPx()
+                for (side in listOf(-1f, 1f)) {
+                    val ex = kx + side * 3.9.dp.toPx()
+                    drawCircle(Color.White, 3.15.dp.toPx(), Offset(ex, eyeY))
+                    val px = ex + kotlin.math.sin(look + side * 1.7f) * 1.05.dp.toPx()
+                    val py = eyeY + kotlin.math.cos(look * 0.9f + side) * 1.05.dp.toPx()
+                    val enthralled = kotlin.math.sin(look * 0.52f) > 0.965f
+                    drawCircle(if (enthralled) Color(0xFFFF1A1A) else Color(0xFF1B0A14), 1.5.dp.toPx(), Offset(px, py))
+                }
+            },
+    )
 }

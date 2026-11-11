@@ -154,6 +154,20 @@ private enum class GlassNode(val label: String) {
     TOOLS("Tools"), LINE("Line"), BRUSHES("Brushes"), COLOR("Color"), LAYERS("Layers"),
     ACTIONS("Actions"), FRAMES("Frames"), STUDIO("Studio"), GALLERY("Gallery");
 
+    /** The badge stitched onto every orb: a count that means nothing, sent by the machine. */
+    val badge: String
+        get() = when (this) {
+            TOOLS -> "3"
+            LINE -> "!"
+            BRUSHES -> "99+"
+            COLOR -> "7"
+            LAYERS -> "12"
+            ACTIONS -> "1"
+            FRAMES -> "0"
+            STUDIO -> "★"
+            GALLERY -> "2"
+        }
+
     /** Where it floats by default, as a fraction of the stage. */
     val defaultPlace: Offset
         get() = when (this) {
@@ -341,6 +355,16 @@ private fun GlassOrb(
                     )
                     glyph != null -> GlassGlyph(glyph, 13.dp)
                 }
+            }
+            // and the badge: the machine's unsolicited count, gold on the orb's shoulder
+            Box(
+                Modifier.align(Alignment.TopEnd).offset(x = 1.dp, y = 1.dp).size(19.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFFFD23F))
+                    .border(1.dp, Color(0xFF1B0A14), CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(node.badge, color = Color(0xFF1B0A14), fontSize = 9.sp, fontWeight = FontWeight.Black, maxLines = 1)
             }
         }
     }

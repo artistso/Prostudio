@@ -8,6 +8,9 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.ui.layout.offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -248,6 +251,8 @@ internal fun ChaosEmptyState(onNew: () -> Unit) {
                 drawSparkle(Offset(cx, cy), (10.dp.toPx() * ease + 2.dp.toPx()), color, (1f - age).coerceIn(0f, 1f))
             }
         }
+        // the promised 1987 interface, hanging above the void like a gift
+        SynthwaveTimeline(Modifier.align(Alignment.BottomCenter).padding(start = 18.dp, end = 18.dp, bottom = 22.dp).height(132.dp))
         Column(
             Modifier.align(Alignment.Center)
                 .graphicsLayer { rotationZ = -1.6f },
@@ -310,6 +315,16 @@ internal fun ChaosEmptyState(onNew: () -> Unit) {
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
                 )
+                // a notification badge the button does not deserve
+                Box(
+                    Modifier.align(Alignment.TopEnd).offset(x = 8.dp, y = (-7).dp).size(20.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFFFD23F))
+                        .border(1.dp, Color(0xFF1B0A14), CircleShape),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text("1", color = Color(0xFF1B0A14), fontSize = 10.sp, fontWeight = FontWeight.Black)
+                }
             }
         }
     }
@@ -629,15 +644,15 @@ internal fun GremlinPanel(onClose: () -> Unit) {
                 modifier = Modifier.padding(top = 2.dp),
             )
             Spacer(Modifier.height(12.dp))
-            GremlinToggle("Enable taste", taste) { taste = !taste }
-            GremlinToggle("Moisture control", moisture) { moisture = !moisture }
-            GremlinToggle("Moral compass", morals) { morals = !morals }
-            GremlinToggle("Undo the undo", undoTheUndo) { undoTheUndo = !undoTheUndo }
-            GremlinToggle("Nacho justice", nachoJustice) { nachoJustice = !nachoJustice }
-            GremlinToggle("Enchant all buttons", enchanted) { enchanted = !enchanted }
-            GremlinToggle("Dark elf temperaments", darkElves) { darkElves = !darkElves }
-            GremlinToggle("Skynet oversight", skynet) { skynet = !skynet }
-            GremlinToggle("RGB (chaotic) gremlin", rgbChaos) { rgbChaos = !rgbChaos }
+            GremlinToggle("👅 Enable taste", taste) { taste = !taste }
+            GremlinToggle("💧 Moisture control", moisture) { moisture = !moisture }
+            GremlinToggle("🧭 Moral compass", morals) { morals = !morals }
+            GremlinToggle("↩️ Undo the undo", undoTheUndo) { undoTheUndo = !undoTheUndo }
+            GremlinToggle("🌮 Nacho justice", nachoJustice) { nachoJustice = !nachoJustice }
+            GremlinToggle("✨ Enchant all buttons", enchanted) { enchanted = !enchanted }
+            GremlinToggle("🧝 Dark elf temperaments", darkElves) { darkElves = !darkElves }
+            GremlinToggle("👁 Skynet oversight", skynet) { skynet = !skynet }
+            GremlinToggle("🎨 RGB (chaotic) gremlin", rgbChaos) { rgbChaos = !rgbChaos }
             Spacer(Modifier.height(12.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("Beans in stock", color = Color(0xFFCFC9BC), fontSize = 14.sp)
@@ -961,5 +976,140 @@ internal fun FakeUpdate() {
                 }
             }
         }
+    }
+}
+
+private data class Pill(val xFrac: Float, val wFrac: Float, val color: Color, val phase: Float, val row: Int)
+
+private val Pills = listOf(
+    Pill(0.095f, 0.155f, Color(0xFFF48FB1), 0.0f, 0),
+    Pill(0.285f, 0.120f, Color(0xFFF48FB1), 1.7f, 0),
+    Pill(0.735f, 0.165f, Color(0xFFFFB74D), 3.1f, 0),
+    Pill(0.175f, 0.115f, Color(0xFF5C6BC0), 0.6f, 1),
+    Pill(0.375f, 0.170f, Color(0xFF7E57C2), 2.2f, 1),
+    Pill(0.470f, 0.125f, Color(0xFFBA68C8), 4.0f, 2),
+)
+
+/**
+ * The interface that was promised in 1987: five neon frames, a tick-mark ruler, waveform pills, little
+ * speaker-and-lock glyphs on the left, and a red line that never gets where it is going. Pure decoration.
+ * Zero functionality. Infinite vibes.
+ */
+@Composable
+private fun SynthwaveTimeline(modifier: Modifier = Modifier) {
+    var tick by remember { mutableIntStateOf(0) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(16)
+            tick++
+        }
+    }
+    Canvas(modifier) {
+        val w = size.width
+        val h = size.height
+        // the panel: deep violet, rounded like a VHS dream
+        drawRoundRect(
+            Brush.verticalGradient(listOf(Color(0xFF3A1245).copy(alpha = 0.88f), Color(0xFF1C0929).copy(alpha = 0.9f))),
+            cornerRadius = CornerRadius(22.dp.toPx()),
+        )
+        drawRoundRect(
+            Brush.verticalGradient(listOf(Color(0x66FFD9E2), Color(0x114D0A33))),
+            cornerRadius = CornerRadius(22.dp.toPx()),
+            style = androidx.compose.ui.graphics.drawscope.Stroke(1.dp.toPx()),
+        )
+        // the ruler: a decade of ticks above the frames
+        val rulerY = h * 0.075f
+        val tickLong = h * 0.075f
+        for (i in 0..90) {
+            val tx = w * 0.08f + (w * 0.84f) * (i / 90f)
+            val major = i % 9 == 0
+            drawLine(
+                Color(0xFFD8B4E2).copy(alpha = if (major) 0.9f else 0.42f),
+                Offset(tx, rulerY),
+                Offset(tx, rulerY + if (major) tickLong else tickLong * 0.55f),
+                if (major) 1.6.dp.toPx() else 1.dp.toPx(),
+            )
+        }
+        // the frames: five windows onto somewhere better
+        val framesTop = h * 0.175f
+        val frameH = h * 0.35f
+        val frameW = w * 0.192f
+        val gap = w * 0.024f
+        val frameColors = listOf(Color(0xFFFDEFD9), Color(0xFFF8D4E4), Color(0xFFF6C8D8), Color(0xFFFFC9A3), Color(0xFFFFB08A))
+        var fx = (w - (frameW * 5 + gap * 4)) / 2f
+        for (i in 0 until 5) {
+            val rr = CornerRadius(10.dp.toPx())
+            val fc = frameColors[i]
+            drawRoundRect(fc.copy(alpha = 0.25f), topLeft = Offset(fx, framesTop), size = Size(frameW, frameH), cornerRadius = rr, style = androidx.compose.ui.graphics.drawscope.Stroke(6.dp.toPx()))
+            drawRoundRect(fc, topLeft = Offset(fx, framesTop), size = Size(frameW, frameH), cornerRadius = rr, style = androidx.compose.ui.graphics.drawscope.Stroke(1.8.dp.toPx()))
+            // two fake caption lines under every frame
+            val lineWidths = listOf(frameW * 0.62f, frameW * 0.38f)
+            lineWidths.forEachIndexed { li, lw ->
+                val ly = framesTop + frameH + 4.dp.toPx() + li * 5.dp.toPx()
+                drawRoundRect(
+                    fc.copy(alpha = 0.72f),
+                    topLeft = Offset(fx, ly),
+                    size = Size(lw, 2.2.dp.toPx()),
+                    cornerRadius = CornerRadius(2.dp.toPx()),
+                )
+            }
+            fx += frameW + gap
+        }
+        // the left margin: a speaker and a lock per row, as tradition demands
+        val pillH = h * 0.088f
+        val pillGap = h * 0.028f
+        val rowTop0 = h * 0.615f
+        val speakerX = w * 0.035f
+        for (row in 0..2) {
+            val iy = rowTop0 + row * (pillH + pillGap) + pillH / 2f
+            val s = pillH * 0.36f
+            drawPath(
+                Path().apply {
+                    moveTo(speakerX, iy - s / 2f)
+                    lineTo(speakerX + s * 0.7f, iy - s / 2f)
+                    lineTo(speakerX + s * 1.55f, iy - s)
+                    lineTo(speakerX + s * 1.55f, iy + s)
+                    lineTo(speakerX + s * 0.7f, iy + s / 2f)
+                    lineTo(speakerX, iy + s / 2f)
+                    close()
+                },
+                Color(0xFFFFD9E2),
+            )
+            drawArc(Color(0xB0FFD9E2), -45f, 90f, false, Offset(speakerX + s * 1.75f, iy - s * 0.75f), Size(s, s * 1.5f), style = androidx.compose.ui.graphics.drawscope.Stroke(1.1.dp.toPx()))
+            val lx = speakerX + s * 3.1f
+            drawRoundRect(Color(0xFFFFD9E2), topLeft = Offset(lx, iy - s * 0.25f), size = Size(s * 0.85f, s * 0.8f), cornerRadius = CornerRadius(1.4.dp.toPx()))
+            drawArc(Color(0xFFFFD9E2), 180f, 180f, false, Offset(lx + s * 0.12f, iy - s * 0.72f), Size(s * 0.61f, s * 0.72f), style = androidx.compose.ui.graphics.drawscope.Stroke(1.1.dp.toPx()))
+        }
+        // the waveform pills: colored blobs of audio with a sine that never settles
+        for (pill in Pills) {
+            val px = w * pill.xFrac
+            val pw = w * pill.wFrac
+            val py = rowTop0 + pill.row * (pillH + pillGap)
+            drawRoundRect(pill.color.copy(alpha = 0.82f), topLeft = Offset(px, py), size = Size(pw, pillH), cornerRadius = CornerRadius(pillH / 2f))
+            val wave = Path()
+            val steps = (pw / 4f).toInt().coerceAtLeast(4)
+            for (i in 0..steps) {
+                val wx = px + 5.dp.toPx() + (pw - 10.dp.toPx()) * (i / steps.toFloat())
+                val envelope = 0.35f + 0.65f * kotlin.math.abs(kotlin.math.sin(i * 0.55f + pill.phase))
+                val wy = py + pillH / 2f + kotlin.math.sin(i * 1.35f + pill.phase * 3f + tick * 0.09f) * pillH * 0.26f * envelope
+                if (i == 0) wave.moveTo(wx, wy) else wave.lineTo(wx, wy)
+            }
+            drawPath(wave, Color(0xB8FFFFFF), style = androidx.compose.ui.graphics.drawscope.Stroke(1.3.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round))
+        }
+        // the red line: sweeping toward the frames forever
+        val sweepT = ((tick * 16L) % 7000L) / 7000f
+        val playX = sweepT * (w + 140f) - 70f
+        val top = h * 0.045f
+        val bottom = h * 0.955f
+        drawLine(Color(0xFFFF3B30), Offset(playX, top), Offset(playX, bottom), 1.8.dp.toPx())
+        drawPath(
+            Path().apply {
+                moveTo(playX - 4.5.dp.toPx(), top)
+                lineTo(playX + 4.5.dp.toPx(), top)
+                lineTo(playX, top + 5.dp.toPx())
+                close()
+            },
+            Color(0xFFFF3B30),
+        )
     }
 }

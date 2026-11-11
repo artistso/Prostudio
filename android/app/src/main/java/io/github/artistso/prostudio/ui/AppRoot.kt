@@ -183,7 +183,6 @@ fun AppRoot(vm: CanvasViewModel) {
                             vm,
                             Modifier.graphicsLayer { alpha = barsShown }.onGloballyPositioned { vm.sideBarBounds = it.boundsInWindow() },
                             right = vm.rightHanded,
-                            trackHeight = sideBar.track,
                             shown = barsShown,
                         )
                     }
