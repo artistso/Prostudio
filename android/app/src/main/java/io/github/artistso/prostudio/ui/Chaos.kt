@@ -16,7 +16,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -228,7 +227,7 @@ internal fun ChaosEmptyState(onNew: () -> Unit) {
             }
         }
     }
-    BoxWithConstraints(Modifier.fillMaxSize().pointerInput(Unit) { detectTapGestures { spawnSparks(it) } }) {
+    Box(Modifier.fillMaxSize().pointerInput(Unit) { detectTapGestures { spawnSparks(it) } }) {
         GooglyBean()
         Canvas(Modifier.fillMaxSize()) {
             // T-800 vision: a red scan line crawling the void
