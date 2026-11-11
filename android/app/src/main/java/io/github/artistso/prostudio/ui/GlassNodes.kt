@@ -18,24 +18,24 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.input.pointer.pointerInput
@@ -51,9 +51,9 @@ import io.github.artistso.prostudio.canvas.Panel
 import io.github.artistso.prostudio.core.GuideType
 import io.github.artistso.prostudio.core.ToolKind
 import kotlinx.coroutines.launch
-import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.math.PI
 import kotlin.math.roundToInt
 
 /**
@@ -124,19 +124,19 @@ fun GlassNodes(vm: CanvasViewModel, modifier: Modifier = Modifier) {
                     },
                     onDragEnd = { persist(node, placeOf(node)) },
                 )
+                // the label rides bare under the orb, white ink on the plum with a soft halo — as the reference draws it
                 Text(
                     node.label.uppercase(),
-                    color = Glass.Paper.copy(alpha = if (open == node) 1f else 0.92f),
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.2.sp,
+                    color = Color.White.copy(alpha = if (open == node) 1f else 0.92f),
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 1.35.sp,
                     textAlign = TextAlign.Center,
                     maxLines = 1,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(999.dp))
-                        .background(Color(0xA614000E))
-                        .border(1.dp, Glass.RimInner.copy(alpha = 0.22f), RoundedCornerShape(999.dp))
-                        .padding(horizontal = 9.dp, vertical = 3.dp),
+                    style = TextStyle(
+                        shadow = Shadow(Color(0xE62A001A), Offset(0f, 1.5f), blurRadius = 7f),
+                    ),
+                    modifier = Modifier.padding(top = 2.dp),
                 )
             }
             if (open == node && children.isNotEmpty()) {
@@ -316,29 +316,32 @@ private fun GlassOrb(
                     onClick = onTap,
                 )
                 .clip(CircleShape)
-                .background(Brush.linearGradient(listOf(Glass.Strong, Glass.Normal)))
+                .background(Brush.radialGradient(listOf(Glass.Strong, Glass.Normal, Color(0x7714000E))))
                 .border(1.dp, if (lit) Glass.RimInner else Glass.RimInner.copy(alpha = 0.45f), CircleShape),
             contentAlignment = Alignment.Center,
         ) {
-            Box(Modifier.size(40.dp).clip(CircleShape).background(Glass.OpticalCenter), contentAlignment = Alignment.Center) {
-                val glyph = nodeGlyph(node)
-                when {
-                    node == GlassNode.COLOR -> Box(
-                        Modifier.size(22.dp).clip(CircleShape)
-                            .background(Color(0xFF000000.toInt() or vm.colorRgb()))
-                            .border(1.2.dp, Color.White.copy(alpha = 0.6f), CircleShape),
-                    )
-                    glyph != null -> GlassGlyph(glyph, 24.dp)
-                }
+            val glyph = nodeGlyph(node)
+            when {
+                node == GlassNode.COLOR -> Box(
+                    Modifier.size(26.dp).clip(CircleShape)
+                        .background(Color(0xFF000000.toInt() or vm.colorRgb()))
+                        .border(1.2.dp, Color.White.copy(alpha = 0.6f), CircleShape),
+                )
+                glyph != null -> GlassGlyph(glyph, 26.dp)
             }
         }
     }
 }
 
 /** The fan of children an open node blooms toward the middle of the drawing. */
-private const val GOLDEN_ANGLE = 2.3999632f // 137.5078 degrees — the angle between successive sunflower seeds
-private const val DETACH_DP = 130f // how far a child must be dragged from its seat before its connector lets go
+private const val DETACH_DP = 130f // how far a child must be dragged from its seat before it stays out of its seat
 
+/**
+ * The fan of children an open node blooms, straight from the reference: every child orb sits at one shared
+ * radius along an arc that opens toward the middle of the stage — a parent on the left rim sweeps its
+ * children out to the right, and the mirror for the right rim — one orb per command, no connectors. The
+ * spread is the reference's own: 78 dp for a small fan, 118 dp once the fan fills out.
+ */
 @Composable
 private fun ChildrenFan(
     children: List<NodeChild>,
@@ -348,78 +351,31 @@ private fun ChildrenFan(
     w: Dp,
     h: Dp,
 ) {
-    val bloom = remember { Animatable(0f) }
-    LaunchedEffect(Unit) { bloom.animateTo(1f, spring(dampingRatio = 0.52f, stiffness = 230f)) }
     val centre = Offset(cx.value, cy.value)
-    val toCentre = Offset(w.value / 2f - centre.x, h.value / 2f - centre.y)
-    val base = atan2(toCentre.y, toCentre.x)
-    // the seeds of a sunflower: the golden angle apart, the radius growing with the square root of the index —
-    // an orb is a big seed, not a grain of wheat: the first child must clear the parent's rim entirely
-    val k = (170f / kotlin.math.sqrt(children.size + 1f)).coerceIn(56f, 88f)
+    val toTheRight = centre.x <= w.value / 2f
+    val spread = if (children.size <= 4) 78f else 118f
+    val start = if (toTheRight) -58f else 122f
+    val end = if (toTheRight) 58f else 238f
+    val marginX = 34f
+    val marginTop = 30f
+    val marginBottom = 58f // the label rides bare under the orb, so the foot of the stage needs room
     val seats = children.indices.map { i ->
-        val a = base + i * GOLDEN_ANGLE
-        val r = k * kotlin.math.sqrt(i + 1f)
+        val fraction = if (children.size <= 1) 0.5f else i.toFloat() / (children.size - 1).toFloat()
+        val degrees = start + (end - start) * fraction
+        val radians = degrees / 180f * PI.toFloat()
         Offset(
-            (centre.x + cos(a) * r).coerceIn(40f, w.value - 40f),
-            (centre.y + sin(a) * r).coerceIn(34f, h.value - 34f),
+            (centre.x + cos(radians) * spread).coerceIn(marginX, w.value - marginX),
+            (centre.y + sin(radians) * spread).coerceIn(marginTop, h.value - marginBottom),
         )
-    }
-    // where each orb actually is (its seat, plus any drag), and which have let go of their connector
-    // remembered for the fan's lifetime — the fan leaves the tree together, and the maps go with it
-    val positions = remember { mutableStateMapOf<Int, Offset>().apply { seats.forEachIndexed { i, seat -> put(i, seat) } } }
-    val detached = remember { mutableStateMapOf<Int, Boolean>() }
-    // the connectors, behind the orbs, grown out of the parent with the bloom
-    androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
-        val u = size.width / w.value
-        children.indices.forEach { i ->
-            if (detached[i] == true) return@forEach
-            val trim = ((bloom.value - i * 0.09f) / 0.42f).coerceIn(0f, 1f)
-            if (trim <= 0f) return@forEach
-            val seat = positions[i] ?: seats[i]
-            val toward = seat - centre
-            val len = toward.getDistance()
-            val start = centre + if (len < 0.001f) Offset.Zero else toward * (30f / len) // from the parent's rim, underneath it
-            val s = start * u
-            val e = seat * u
-            val dist = (e - s).getDistance()
-            val dir = if (dist < 0.001f) Offset(1f, 0f) else (e - s) / dist
-            val perp = Offset(-dir.y, dir.x)
-            val droop = dist * 0.16f
-            val bow = sin(i * 2.3f + 0.8f) * dist * 0.14f
-            val control = (s + e) / 2f + perp * bow + Offset(0f, droop)
-            // the connector grows out of the parent as the bloom reaches this orb — a curve of straight ink
-            val steps = 20
-            val upto = (steps * trim).roundToInt().coerceAtLeast(2)
-            val points = (0..upto).map { segment -> quadratic(s, control, e, (segment.toFloat() / steps).coerceAtMost(1f)) }
-            val halo = if (children[i].accent) Color(0x59FB8FB3) else Glass.RimInner.copy(alpha = 0.16f)
-            val core = if (children[i].accent) Color(0xCCFFB7CD) else Glass.Paper.copy(alpha = 0.75f)
-            for (segment in 1 until points.size) {
-                drawLine(halo, points[segment - 1], points[segment], 4.6.dp.toPx(), cap = StrokeCap.Round)
-            }
-            for (segment in 1 until points.size) {
-                drawLine(core, points[segment - 1], points[segment], 1.4.dp.toPx(), cap = StrokeCap.Round)
-            }
-        }
     }
     for ((i, child) in children.withIndex()) {
         ChildOrb(
             child,
             vm,
             i,
-            seats[i],
-            onPosition = { index, at -> positions[index] = at },
-            onDetach = { index -> detached[index] = true },
             Modifier.offset(x = (seats[i].x - ChildHalf.value).dp, y = (seats[i].y - ChildHalf.value).dp),
         )
     }
-}
-
-/** A point on a quadratic bezier at [t]. */
-private fun quadratic(p0: Offset, p1: Offset, p2: Offset, t: Float): Offset {
-    val a = (1f - t) * (1f - t)
-    val b = 2f * (1f - t) * t
-    val c = t * t
-    return Offset(a * p0.x + b * p1.x + c * p2.x, a * p0.y + b * p1.y + c * p2.y)
 }
 
 @Composable
@@ -427,16 +383,11 @@ private fun ChildOrb(
     child: NodeChild,
     vm: CanvasViewModel,
     index: Int,
-    seat: Offset,
-    onPosition: (Int, Offset) -> Unit,
-    onDetach: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // the drag of this orb away from its seat (dp), and whether its connector has let go
+    // the drag of this orb away from its seat, and whether it has let go and stays out there
     val drag = remember { Animatable(Offset.Zero, Offset.VectorConverter) }
     var detached by remember { mutableStateOf(false) }
-    // report the drag (and the spring back home) so the connector can follow
-    LaunchedEffect(Unit) { snapshotFlow { drag.value }.collect { onPosition(index, seat + it) } }
     val pop = remember { Animatable(0.35f) }
     LaunchedEffect(Unit) {
         kotlinx.coroutines.delay(index * 45L)
@@ -461,7 +412,6 @@ private fun ChildOrb(
                         val d = drag.value
                         if (!detached && d.x * d.x + d.y * d.y > DETACH_DP * DETACH_DP) {
                             detached = true
-                            onDetach(index)
                         } else if (!detached) {
                             scope.launch { drag.animateTo(Offset.Zero, spring(dampingRatio = 0.32f, stiffness = 720f)) }
                         }
@@ -477,22 +427,23 @@ private fun ChildOrb(
     ) {
         when {
             child.dial -> StreamLineDial(vm, Modifier.size(ChildSize))
-            child.swatch != null -> Box(
-                Modifier.size(ChildSize)
-                    .clickable(
-                        interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
-                        indication = null,
-                        onClick = child.onTap,
-                    )
-                    .drawBehind {
-                        drawCircle(Color(0x73000000), radius = size.minDimension / 2f + 1.dp.toPx(), center = Offset(center.x + 1.dp.toPx(), center.y + 2.dp.toPx()))
-                    }
-                    .clip(CircleShape)
-                    .then(if (child.accent) Modifier.background(Glass.AccentGradient) else Modifier.background(Brush.linearGradient(listOf(Glass.Strong, Glass.Normal))))
-                    .border(2.dp, Glass.Paper.copy(alpha = 0.28f), CircleShape),
-                contentAlignment = Alignment.Center,
-            ) {
-                Box(Modifier.size(25.dp).clip(CircleShape).background(Color(0xFF000000.toInt() or child.swatch)))
+            child.swatch != null -> {
+                val swatchColor = Color(0xFF000000.toInt() or child.swatch)
+                Box(
+                    Modifier.size(ChildSize)
+                        .clickable(
+                            interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                            indication = null,
+                            onClick = child.onTap,
+                        )
+                        .drawBehind {
+                            drawCircle(Color(0x73000000), radius = size.minDimension / 2f + 1.dp.toPx(), center = Offset(center.x + 1.dp.toPx(), center.y + 2.dp.toPx()))
+                        }
+                        .clip(CircleShape)
+                        .background(Brush.radialGradient(listOf(swatchColor.copy(alpha = 0.98f), swatchColor.copy(alpha = 0.58f))))
+                        .border(1.dp, if (child.accent) Glass.RimInner else Glass.RimInner.copy(alpha = 0.45f), CircleShape),
+                    contentAlignment = Alignment.Center,
+                ) {}
             }
             else -> Box(
                 Modifier.size(ChildSize)
@@ -505,7 +456,10 @@ private fun ChildOrb(
                         drawCircle(Color(0x73000000), radius = size.minDimension / 2f + 1.dp.toPx(), center = Offset(center.x + 1.dp.toPx(), center.y + 2.dp.toPx()))
                     }
                     .clip(CircleShape)
-                    .then(if (child.accent) Modifier.background(Glass.AccentGradient) else Modifier.background(Brush.linearGradient(listOf(Glass.Strong, Glass.Normal))))
+                    .background(
+                        if (child.accent) Brush.radialGradient(listOf(Color(0xFFF7CAC9), Glass.Accent))
+                        else Brush.radialGradient(listOf(Glass.Strong, Color(0x9414000E))),
+                    )
                     .border(1.dp, if (child.accent) Glass.RimInner else Glass.RimInner.copy(alpha = 0.45f), CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
@@ -513,19 +467,18 @@ private fun ChildOrb(
             }
         }
         if (child.label.isNotEmpty()) {
+            // bare white ink under the orb, as the reference draws it
             Text(
                 child.label.uppercase(),
-                color = Glass.Paper.copy(alpha = 0.92f),
-                fontSize = 7.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.1.sp,
+                color = Color.White,
+                fontSize = 8.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 0.45.sp,
                 maxLines = 1,
                 textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(999.dp))
-                    .background(Color(0xA614000E))
-                    .border(1.dp, Glass.RimInner.copy(alpha = 0.2f), RoundedCornerShape(999.dp))
-                    .padding(horizontal = 7.dp, vertical = 2.dp),
+                style = TextStyle(
+                    shadow = Shadow(Color(0xE62A001A), Offset(0f, 1f), blurRadius = 5f),
+                ),
             )
         }
     }
