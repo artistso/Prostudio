@@ -1833,6 +1833,13 @@ private fun AboutApp(onRecover: () -> Unit, onClose: () -> Unit) {
                 modifier = Modifier.padding(top = 2.dp),
             )
             Text(
+                "Supervised by the 1927 Solvay Council, Brussels. They agree on nothing.",
+                color = AboutInkDim,
+                fontSize = 10.sp,
+                maxLines = 1,
+                modifier = Modifier.padding(top = 2.dp),
+            )
+            Text(
                 "NACHO LIBRE EDITION — ¡Soy el campeón!",
                 color = Color(0xFFFFD23F),
                 fontSize = 11.sp,

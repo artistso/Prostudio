@@ -385,6 +385,7 @@ fun AppRoot(vm: CanvasViewModel) {
         // the app is self-aware now; it demands consent and an update dialog appears daily
         GremlinConsent()
         FakeUpdate()
+        SolvayCouncil()
         }
     }
 }

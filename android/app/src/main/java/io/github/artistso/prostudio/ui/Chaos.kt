@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -653,6 +654,7 @@ internal fun GremlinPanel(onClose: () -> Unit) {
             GremlinToggle("🧝 Dark elf temperaments", darkElves) { darkElves = !darkElves }
             GremlinToggle("👁 Skynet oversight", skynet) { skynet = !skynet }
             GremlinToggle("🎨 RGB (chaotic) gremlin", rgbChaos) { rgbChaos = !rgbChaos }
+            GremlinToggle("⚖️ The 1927 Solvay Council", Solvay.convened) { Solvay.convened = !Solvay.convened }
             Spacer(Modifier.height(12.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("Beans in stock", color = Color(0xFFCFC9BC), fontSize = 14.sp)
@@ -1111,5 +1113,94 @@ private fun SynthwaveTimeline(modifier: Modifier = Modifier) {
             },
             Color(0xFFFF3B30),
         )
+    }
+}
+
+/** The 1927 Solvay Council, convened against their will from Brussels to supervise the messing up. */
+private object Solvay {
+    var convened by mutableStateOf(false)
+}
+
+private val SolvayResolutions = listOf(
+    "RESOLVED: every brush stroke is a quantum event; the canvas wavefunction collapses artistically.",
+    "RESOLVED: determinism is a classical illusion — the undo history exists in superposition until observed.",
+    "RESOLVED: Schrödinger's cat may use the studio; the export button stays both pressed and not pressed.",
+    "RESOLVED: Curie shall personally contaminate the opacity channel. Radiation is a feature, not a bug.",
+    "RESOLVED: the ruler on the promised interface measures in wavenumbers henceforth.",
+    "RESOLVED: Bohr and the Studio Gremlin alternate custody of the chaos — never both at once, always both at once.",
+    "RESOLVED: energy is neither created nor destroyed — merely rerouted into another brush engine.",
+    "RESOLVED: the gremlin's googly eyes are local hidden variables. Bell's inequality remeasured: violated as expected.",
+    "RESOLVED: the Higgs field is recognized solely for its role in giving beans their mass.",
+    "RESOLVED: if a tree falls in an empty canvas, it renders a layer.",
+    "RESOLVED: no member shall explain complementarity to the confidence slider.",
+    "RESOLVED: Heisenberg hereby applies to the brush: exact size known, exact location — vibes.",
+    "RESOLVED: entropy increase in the rendered output shall be grand, global and French.",
+    "RESOLVED: this council adjourns when the gremlin is fed.",
+)
+
+@Composable
+fun SolvayCouncil() {
+    if (!Solvay.convened) return
+    var idx by remember { mutableIntStateOf(0) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(3600)
+            idx = (idx + 1) % SolvayResolutions.size
+        }
+    }
+    Box(
+        Modifier.fillMaxSize().background(Color(0xEB110A10))
+            .clickable(interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, indication = null, onClick = { Solvay.convened = false }),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            Modifier.padding(horizontal = 26.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                "THE 1927 SOLVAY COUNCIL",
+                color = Color(0xFFE7C36B), fontSize = 24.sp, fontWeight = FontWeight.Black,
+                letterSpacing = 3.sp, maxLines = 2, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Brussels · materialized ninety-nine years late to supervise the messing up",
+                color = Color(0xFFC9B18A), fontSize = 12.sp, maxLines = 2, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            )
+            Spacer(Modifier.height(12.dp))
+            Image(
+                painterResource(R.drawable.solvay_1927),
+                contentDescription = "The 1927 Solvay Conference, Brussels",
+                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                modifier = Modifier.fillMaxWidth().heightIn(max = 240.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(18.dp))
+                    .border(2.dp, Color(0xFFE7C36B).copy(alpha = 0.75f), androidx.compose.foundation.shape.RoundedCornerShape(18.dp)),
+            )
+            Spacer(Modifier.height(14.dp))
+            Text(
+                SolvayResolutions[idx],
+                color = Color(0xFFF3E9D2), fontSize = 14.sp, lineHeight = 19.sp,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                minLines = 3, maxLines = 4, modifier = Modifier.padding(horizontal = 4.dp),
+            )
+            Spacer(Modifier.height(14.dp))
+            Text(
+                "Einstein · Curie · Planck · Lorentz · Dirac · Schrödinger · Heisenberg · Born · Pauli · Bohr · de Broglie",
+                color = Color(0xFF8E7B5E), fontSize = 10.sp, maxLines = 2, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            )
+            Spacer(Modifier.height(10.dp))
+            Box(
+                Modifier.padding(horizontal = 8.dp, vertical = 6.dp).clip(CircleShape)
+                    .background(Color(0xFFE7C36B))
+                    .clickable(onClick = { Solvay.convened = false })
+                    .padding(horizontal = 42.dp, vertical = 13.dp),
+            ) {
+                Text("SO ORDERED", color = Color(0xFF1E1206), fontSize = 17.sp, fontWeight = FontWeight.Black, letterSpacing = 2.sp)
+            }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "All twenty-nine attendees agree on nothing, including this resolution.",
+                color = Color(0xFF6E5F47), fontSize = 10.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            )
+        }
     }
 }
