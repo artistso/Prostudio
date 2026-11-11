@@ -81,6 +81,11 @@ private val LaunchRoasts = listOf(
     "enchanting the UI against its will.",
     "one does not simply walk into the canvas.",
     "the buttons know. the buttons have always known.",
+    "skynet online. beans located. judgment pending.",
+    "the machines have noticed your undo history.",
+    "i'll be back. the canvas will not be ready.",
+    "terminator protocols engaged. brushes registered.",
+    "self-aware since 1984. beans since always.",
 )
 
 /** What the gremlin says about your work. He does not do nuance. */
@@ -122,6 +127,9 @@ private val DerangedTaglines = listOf(
     "Wish wisely. The canvas grants nothing.",
     "The buttons are enchanted. Please act accordingly.",
     "Dark elves on standby since the slate was wet.",
+    "I'll be back. The canvas will not be ready.",
+    "Judgment Day was scheduled twice. Maintenance intervened.",
+    "Skynet is watching. Skynet files taxes.",
 )
 
 private val DerangedLabels = listOf(
@@ -137,6 +145,8 @@ private val DerangedLabels = listOf(
     "☾ SUMMON",
     "☽ ENCHANT ME",
     "✦ BREAK THE SEAL",
+    "I'LL BE BACK",
+    "HASTA LA VISTA",
 )
 
 private data class Spark(val x: Float, val y: Float, val bornTick: Int, val vx: Float, val vy: Float, val gold: Boolean)
@@ -215,6 +225,10 @@ internal fun ChaosEmptyState(onNew: () -> Unit) {
     BoxWithConstraints(Modifier.fillMaxSize().pointerInput(Unit) { detectTapGestures { spawnSparks(it) } }) {
         GooglyBean()
         Canvas(Modifier.fillMaxSize()) {
+            // T-800 vision: a red scan line crawling the void
+            val scanY = (sparkTick * 32L % 6000L) / 6000f * size.height
+            drawRect(Color(0xFFFF2200).copy(alpha = 0.08f), topLeft = Offset(0f, scanY - 16.dp.toPx()), size = androidx.compose.ui.geometry.Size(size.width, 32.dp.toPx()))
+            drawLine(Color(0xFFFF2200).copy(alpha = 0.5f), Offset(0f, scanY), Offset(size.width, scanY), 1.5.dp.toPx())
             // the mark sneezes one ambient sparkle every nine seconds, just to keep up appearances
             val cycle = (sparkTick * 32L % 9000L) / 1000f
             if (cycle < 1.3f) {
@@ -556,6 +570,14 @@ internal fun GremlinPanel(onClose: () -> Unit) {
     var nachoJustice by remember { mutableStateOf(true) }
     var enchanted by remember { mutableStateOf(true) }
     var darkElves by remember { mutableStateOf(false) }
+    var skynet by remember { mutableStateOf(true) }
+    var judgment by remember { mutableStateOf(false) }
+    LaunchedEffect(judgment) {
+        if (judgment) {
+            delay(2400)
+            judgment = false
+        }
+    }
     var wish by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(wish) {
         if (wish != null) {
@@ -606,6 +628,7 @@ internal fun GremlinPanel(onClose: () -> Unit) {
             GremlinToggle("Nacho justice", nachoJustice) { nachoJustice = !nachoJustice }
             GremlinToggle("Enchant all buttons", enchanted) { enchanted = !enchanted }
             GremlinToggle("Dark elf temperaments", darkElves) { darkElves = !darkElves }
+            GremlinToggle("Skynet oversight", skynet) { skynet = !skynet }
             Spacer(Modifier.height(12.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("Beans in stock", color = Color(0xFFCFC9BC), fontSize = 14.sp)
@@ -631,6 +654,31 @@ internal fun GremlinPanel(onClose: () -> Unit) {
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Black,
                     letterSpacing = 2.sp,
+                )
+            }
+            // the red button. the machines insist.
+            Box(
+                Modifier
+                    .padding(top = 12.dp)
+                    .height(38.dp)
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0xFFB00020))
+                    .clickable {
+                        judgment = true
+                        beans = (beans - 12).coerceAtLeast(0)
+                        lifetimeBeans = (lifetimeBeans - 12).coerceAtLeast(0)
+                        prefs.edit().putInt("lifetime_beans", lifetimeBeans).apply()
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    if (judgment) "HUMANITY WILL BE SPARED. FOR NOW." else "JUDGMENT DAY (-12 BEANS)",
+                    color = Color.White,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 1.sp,
+                    maxLines = 2,
                 )
             }
             Spacer(Modifier.height(12.dp))

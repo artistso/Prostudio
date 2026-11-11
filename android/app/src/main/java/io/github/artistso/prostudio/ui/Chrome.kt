@@ -307,7 +307,8 @@ fun BrushSlider(value: Float, onChange: (Float) -> Unit, modifier: Modifier = Mo
                     drawCircle(Color.White, 4.1.dp.toPx(), Offset(ex, eyeY))
                     val px = ex + kotlin.math.sin(look + side * 1.7f) * 1.25.dp.toPx()
                     val py = eyeY + kotlin.math.cos(look * 0.9f + side) * 1.25.dp.toPx()
-                    drawCircle(Color(0xFF1B0A14), 1.9.dp.toPx(), Offset(px, py))
+                    val enthralled = kotlin.math.sin(look * 0.52f) > 0.965f
+                    drawCircle(if (enthralled) Color(0xFFFF1A1A) else Color(0xFF1B0A14), 1.9.dp.toPx(), Offset(px, py))
                     // the glint of old magic, occasionally
                     if (kotlin.math.sin(look * 2.3f + side * 2.9f) > 0.88f) {
                         drawCircle(Color.White, 0.75.dp.toPx(), Offset(px - 0.6.dp.toPx(), py - 0.6.dp.toPx()))
