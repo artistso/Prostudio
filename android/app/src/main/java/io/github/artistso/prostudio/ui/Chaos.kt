@@ -38,6 +38,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -64,6 +65,10 @@ private val LaunchRoasts = listOf(
     "warming up the gremlins.",
     "opening the studio. wipe your feet on the ego.",
     "your portfolio is loading. be brave.",
+    "soy el campeón… of this loading screen.",
+    "stretching for the canvas. the cheese is watching.",
+    "entering the riñg. your muse has been sold.",
+    "nah-cho talent detected. none found. proceeding anyway.",
 )
 
 /** What the gremlin says about your work. He does not do nuance. */
@@ -78,6 +83,9 @@ internal val GremlinReviews = listOf(
     "I laughed, I cried, I filed a report." to "Studio Security · 1/5 beans",
     "Bold silhouette. Terrible decisions." to "Composition Dept. · 3/5 beans",
     "Keep going. The wall is almost ready for this." to "The Wall · 2/5 beans",
+    "He has my back, and he has also taken my last bean." to "The Arena · 5/5 beans",
+    "He taped out in round 3, to a breadstick." to "North Padre Wrestling · 3/5 beans",
+    "The belt is real. The rematch is booked." to "Championship Dept. · 5/5 beans",
 )
 
 private val DerangedTaglines = listOf(
@@ -93,6 +101,10 @@ private val DerangedTaglines = listOf(
     "Screaming is not a brush.",
     "Somewhere, a critic just fainted.",
     "The lights are on. Nobody is home.",
+    "Champion of the painted world.",
+    "El campeón never misses a stroke. He misses constantly.",
+    "If you can dodge a canvas, you can dodge a critic.",
+    "Nachos taste better after victory.",
 )
 
 private val DerangedLabels = listOf(
@@ -157,6 +169,15 @@ internal fun ChaosEmptyState(onNew: () -> Unit) {
                 color = Ps.GalleryText,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Black,
+            )
+            Text(
+                "NACHO LIBRE EDITION",
+                color = Color(0xFFFFD23F),
+                fontSize = 9.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 3.sp,
+                modifier = Modifier.padding(top = 2.dp),
+                maxLines = 1,
             )
             Text(
                 tagline,
@@ -253,6 +274,43 @@ private fun GooglyBean() {
                     cap = androidx.compose.ui.graphics.StrokeCap.Round,
                 )
             }
+        }
+        // one nacho, adrift forever, judging the brushwork
+        val chipW = 44.dp.toPx()
+        val travel = size.width + chipW * 3f
+        val nx = (t * 42f) % travel - chipW * 1.5f
+        val ny = size.height * 0.30f + sin(t * 1.15f) * 22.dp.toPx()
+        val tilt = sin(t * 0.85f) * 14f
+        rotate(degrees = tilt, pivot = androidx.compose.ui.geometry.Offset(nx, ny)) {
+            val triangle = Path().apply {
+                moveTo(nx, ny - chipW * 0.66f)
+                lineTo(nx - chipW * 0.95f, ny + chipW * 0.52f)
+                lineTo(nx + chipW * 0.95f, ny + chipW * 0.52f)
+                close()
+            }
+            drawPath(triangle, Brush.radialGradient(listOf(Color(0xFFFFE08A), Color(0xFFD9A441)), center = androidx.compose.ui.geometry.Offset(nx, ny), radius = chipW * 1.15f))
+            drawPath(triangle, Color(0xFF6E4A12), style = androidx.compose.ui.graphics.drawscope.Stroke(2.dp.toPx()))
+            // salt flecks
+            for (fleck in listOf(-0.38f to 0.18f, 0.05f to -0.14f, 0.42f to 0.24f, -0.10f to 0.34f)) {
+                drawCircle(Color(0xFFFFF6D8), 1.4.dp.toPx(), androidx.compose.ui.geometry.Offset(nx + fleck.first * chipW, ny + fleck.second * chipW))
+            }
+            // googly eyes on a tortilla is still googly
+            for (side in listOf(-1f, 1f)) {
+                val ex = nx + side * 9.dp.toPx()
+                val ey = ny + 2.dp.toPx()
+                drawCircle(Color.White, 4.6.dp.toPx(), androidx.compose.ui.geometry.Offset(ex, ey))
+                val px = ex + sin(t * 1.8f + side) * 1.3.dp.toPx()
+                val py = ey + cos(t * 1.4f + side * 2.1f) * 1.3.dp.toPx()
+                drawCircle(Color(0xFF1B0A14), 2.1.dp.toPx(), androidx.compose.ui.geometry.Offset(px, py))
+            }
+            // a disappointed nacho mouth
+            drawLine(
+                Color(0xFF1B0A14),
+                androidx.compose.ui.geometry.Offset(nx - 6.dp.toPx(), ny + 12.dp.toPx()),
+                androidx.compose.ui.geometry.Offset(nx + 6.dp.toPx(), ny + 12.dp.toPx()),
+                1.6.dp.toPx(),
+                cap = androidx.compose.ui.graphics.StrokeCap.Round,
+            )
         }
     }
 }
@@ -351,6 +409,15 @@ internal fun LaunchRoast(modifier: Modifier = Modifier, onTap: () -> Unit) {
                 letterSpacing = 8.sp,
             )
             Text(
+                "C A M P E Ó N   D E   L O S   B E A N S",
+                color = Color(0xFFFFD23F),
+                fontSize = 9.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 2.sp,
+                modifier = Modifier.padding(top = 2.dp),
+                maxLines = 1,
+            )
+            Text(
                 roast,
                 color = Ps.GalleryText,
                 fontSize = 13.sp,
@@ -377,6 +444,7 @@ internal fun GremlinPanel(onClose: () -> Unit) {
     var moisture by remember { mutableStateOf(false) }
     var morals by remember { mutableStateOf(false) }
     var undoTheUndo by remember { mutableStateOf(true) }
+    var nachoJustice by remember { mutableStateOf(true) }
     Box(
         Modifier
             .fillMaxSize()
@@ -417,6 +485,7 @@ internal fun GremlinPanel(onClose: () -> Unit) {
             GremlinToggle("Moisture control", moisture) { moisture = !moisture }
             GremlinToggle("Moral compass", morals) { morals = !morals }
             GremlinToggle("Undo the undo", undoTheUndo) { undoTheUndo = !undoTheUndo }
+            GremlinToggle("Nacho justice", nachoJustice) { nachoJustice = !nachoJustice }
             Spacer(Modifier.height(12.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("Beans in stock", color = Color(0xFFCFC9BC), fontSize = 14.sp)
@@ -437,7 +506,7 @@ internal fun GremlinPanel(onClose: () -> Unit) {
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    "DO NOT PRESS",
+                    if (beans % 7 == 6) "NACHO LIBRE!" else "DO NOT PRESS",
                     color = Color(0xFF1B0A14),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Black,

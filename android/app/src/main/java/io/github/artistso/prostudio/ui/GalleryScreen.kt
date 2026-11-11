@@ -1811,6 +1811,14 @@ private fun AboutApp(onRecover: () -> Unit, onClose: () -> Unit) {
                 maxLines = 1,
                 modifier = Modifier.padding(top = 2.dp),
             )
+            Text(
+                "NACHO LIBRE EDITION — ¡Soy el campeón!",
+                color = Color(0xFFFFD23F),
+                fontSize = 11.sp,
+                letterSpacing = 1.6.sp,
+                maxLines = 1,
+                modifier = Modifier.padding(top = 6.dp),
+            )
         }
         Box(
             Modifier.align(Alignment.TopCenter).padding(top = AboutButtonTop).size(220.dp, 38.dp).clip(RoundedCornerShape(8.dp))
