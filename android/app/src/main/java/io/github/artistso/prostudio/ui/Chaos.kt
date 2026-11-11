@@ -221,6 +221,25 @@ private fun GooglyBean() {
     }
 }
 
+/** Two googly eyes that drift on their own, dilate on command. The orbs are looking at you. */
+@Composable
+internal fun GooglyEyes(drift: Float, dilated: Boolean, modifier: Modifier = Modifier) {
+    Canvas(modifier.size(30.dp, 14.dp)) {
+        val eyeR = 5.3.dp.toPx()
+        val pupilR = if (dilated) 3.4.dp.toPx() else 2.3.dp.toPx()
+        val wander = 1.55.dp.toPx()
+        val y = size.height / 2f
+        for (side in listOf(-1f, 1f)) {
+            val ex = center.x + side * 8.4.dp.toPx()
+            drawCircle(Color.White, eyeR, androidx.compose.ui.geometry.Offset(ex, y))
+            val px = ex + sin(drift + side * 1.7f) * wander
+            val py = y + cos(drift * 0.9f + side * 1.1f) * wander
+            drawCircle(Color(0xFF1B0A14), pupilR, androidx.compose.ui.geometry.Offset(px, py))
+            drawCircle(Color(0xCCFFFFFF), pupilR * 0.32f, androidx.compose.ui.geometry.Offset(px - pupilR * 0.3f, py - pupilR * 0.3f))
+        }
+    }
+}
+
 /** triangle-wave bounce: 0..spanNorm..0, forever */
 private fun bounce(u: Float, span: Float): Float {
     val period = 2f

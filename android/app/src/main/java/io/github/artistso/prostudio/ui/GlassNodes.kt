@@ -1,7 +1,13 @@
 package io.github.artistso.prostudio.ui
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -9,6 +15,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -55,6 +62,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.PI
 import kotlin.math.roundToInt
+import kotlin.random.Random
 
 /**
  * InkFrame's optical command nodes: circular glass orbs floating around the stage — a bright rim
@@ -289,6 +297,12 @@ private fun GlassOrb(
     onDragEnd: () -> Unit,
 ) {
     val lit = open || nodeActive(node, vm)
+    // the gremlin moved into the orbs: the pupils wander, and dilate when the orb wakes
+    val drift by rememberInfiniteTransition(label = "orb-look").animateFloat(
+        initialValue = 0f, targetValue = PI.toFloat() * 2f,
+        animationSpec = infiniteRepeatable(tween(3600, easing = LinearEasing), RepeatMode.Restart),
+        label = "drift",
+    )
     // the long exterior shadow and the open node's accent burn, behind a little extra room
     Box(
         Modifier.size(WrapperSize).drawBehind {
@@ -320,20 +334,33 @@ private fun GlassOrb(
                 .border(1.dp, if (lit) Glass.RimInner else Glass.RimInner.copy(alpha = 0.45f), CircleShape),
             contentAlignment = Alignment.Center,
         ) {
-            val glyph = nodeGlyph(node)
-            when {
-                node == GlassNode.COLOR -> Box(
-                    Modifier.size(26.dp).clip(CircleShape)
-                        .background(Color(0xFF000000.toInt() or vm.colorRgb()))
-                        .border(1.2.dp, Color.White.copy(alpha = 0.6f), CircleShape),
-                )
-                glyph != null -> GlassGlyph(glyph, 26.dp)
+            // eyes up top, the command's glyph small below them, all of it breathing faintly
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.graphicsLayer { rotationZ = sin(drift) * 1.6f },
+            ) {
+                GooglyEyes(drift = drift, dilated = lit)
+                val glyph = nodeGlyph(node)
+                when {
+                    node == GlassNode.COLOR -> Box(
+                        Modifier.size(13.dp).clip(CircleShape)
+                            .background(Color(0xFF000000.toInt() or vm.colorRgb()))
+                            .border(1.dp, Color.White.copy(alpha = 0.6f), CircleShape),
+                    )
+                    glyph != null -> GlassGlyph(glyph, 13.dp)
+                }
             }
         }
     }
 }
 
 /** The fan of children an open node blooms toward the middle of the drawing. */
+/** The gremlin's vocabulary, for when a fan opens and one orb forgets its name. */
+private val CursedLabels = listOf(
+    "DO IT", "BEANS", "NOPE", "TRUST ME", "WET PAINT",
+    "IT BITES", "YES?", "DO NOT", "5 BEANS", "HOLD TIGHT",
+)
 private const val DETACH_DP = 130f // how far a child must be dragged from its seat before it stays out of its seat
 
 /**
@@ -354,8 +381,15 @@ private fun ChildrenFan(
     val centre = Offset(cx.value, cy.value)
     val toTheRight = centre.x <= w.value / 2f
     val spread = if (children.size <= 4) 78f else 118f
-    val start = if (toTheRight) -58f else 122f
-    val end = if (toTheRight) 58f else 238f
+    val tilt = remember { Random.nextFloat() * 14f - 7f } // the fan never opens the same way twice
+    val start = (if (toTheRight) -58f else 122f) + tilt
+    val end = (if (toTheRight) 58f else 238f) + tilt
+    // the gust: a ring blown out of the parent as the fan blooms, gone before the work resumes
+    val gust = remember { Animatable(0f) }
+    LaunchedEffect(Unit) { gust.animateTo(1f, tween(650)) }
+    // once in a while one orb's label comes out gremlin — the tap still does its one true thing
+    val cursedIndex = remember { if (children.size > 1 && Random.nextFloat() < 0.45f) Random.nextInt(children.size) else -1 }
+    val cursedWord = remember { CursedLabels.random() }
     val marginX = 34f
     val marginTop = 30f
     val marginBottom = 58f // the label rides bare under the orb, so the foot of the stage needs room
@@ -368,12 +402,25 @@ private fun ChildrenFan(
             (centre.y + sin(radians) * spread).coerceIn(marginTop, h.value - marginBottom),
         )
     }
+    // the gust ring, drawn before the orbs so they ride over it
+    androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
+        val u = if (w.value > 0f) size.width / w.value else 1f
+        val progress = gust.value
+        val radius = (26f + progress * 105f) * u
+        drawCircle(
+            Color(0x59FB8FB3).copy(alpha = (1f - progress) * 0.5f),
+            radius = radius,
+            center = Offset(centre.x * u, centre.y * u),
+            style = Stroke((5f - progress * 3.6f).dp.toPx()),
+        )
+    }
     for ((i, child) in children.withIndex()) {
         ChildOrb(
             child,
             vm,
             i,
             Modifier.offset(x = (seats[i].x - ChildHalf.value).dp, y = (seats[i].y - ChildHalf.value).dp),
+            cursedLabel = if (i == cursedIndex) cursedWord else null,
         )
     }
 }
@@ -384,6 +431,7 @@ private fun ChildOrb(
     vm: CanvasViewModel,
     index: Int,
     modifier: Modifier = Modifier,
+    cursedLabel: String? = null,
 ) {
     // the drag of this orb away from its seat, and whether it has let go and stays out there
     val drag = remember { Animatable(Offset.Zero, Offset.VectorConverter) }
@@ -391,7 +439,7 @@ private fun ChildOrb(
     val pop = remember { Animatable(0.35f) }
     LaunchedEffect(Unit) {
         kotlinx.coroutines.delay(index * 45L)
-        pop.animateTo(1f, spring(dampingRatio = 0.5f, stiffness = 420f))
+        pop.animateTo(1f, spring(dampingRatio = 0.38f, stiffness = 420f))
     }
     val tight = child.dial // the dial keeps its own vertical drag
     val density = LocalDensity.current
@@ -469,8 +517,8 @@ private fun ChildOrb(
         if (child.label.isNotEmpty()) {
             // bare white ink under the orb, as the reference draws it
             Text(
-                child.label.uppercase(),
-                color = Color.White,
+                (cursedLabel ?: child.label).uppercase(),
+                color = if (cursedLabel != null) Glass.Accent else Color.White,
                 fontSize = 8.sp,
                 fontWeight = FontWeight.Black,
                 letterSpacing = 0.45.sp,
