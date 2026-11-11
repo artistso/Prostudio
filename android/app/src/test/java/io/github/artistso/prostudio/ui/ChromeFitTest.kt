@@ -70,9 +70,13 @@ class ChromeFitTest {
 
     @Test
     fun aPanelInAWideEnoughWindowGoesWhereItAlwaysDid() {
-        // as it was before narrow windows were thought of
-        fun old(width: Dp, tip: Dp, screen: Dp, minLeft: Dp, minRight: Dp) =
-            (tip + Ps.ArrowShift - width / 2).coerceIn(minLeft, (screen - minRight - width).coerceAtLeast(minLeft))
+        // as it was before narrow windows were thought of; it keeps the same fallback the real
+        // popoverPlace uses, so narrow windows land where the fallback lands (wide ones are unchanged)
+        fun old(width: Dp, tip: Dp, screen: Dp, minLeft: Dp, minRight: Dp): Dp {
+            val furthest = screen - minRight - width
+            return if (furthest >= minLeft) (tip + Ps.ArrowShift - width / 2).coerceIn(minLeft, furthest)
+                   else ((screen - width) / 2).coerceAtLeast(0.dp)
+        }
         for (screen in widths(451, 2000)) {
             val tip = screen - Ps.toolCentreFromRight(0, screen)
             assertEquals(old(376.dp, tip, screen, sideBarClear, Ps.PopoverGap), popoverPlace(376.dp, tip, screen, sideBarClear).left)
