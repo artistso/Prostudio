@@ -108,7 +108,7 @@ fun QuickHelp(vm: CanvasViewModel) {
                         )
                         Spacer(Modifier.size(6.dp))
                         Text(
-                            "If this app laughs at you, it was him. He means well. Probably. The half-circle tab on the right edge is his doorbell — ring it when the painting fights back. Beans in stock are legally binding. He has the belt. The eraser taped out in round 3.",
+                            "If this app laughs at you, it was him. He means well. Probably. The half-circle tab on the right edge is his doorbell — ring it when the painting fights back. Beans in stock are legally binding. He has the belt. The eraser taped out in round 3. The enchantment is reversible. The buttons disagree.",
                             color = Glass.RoseDim,
                             fontSize = 13.sp,
                             lineHeight = 18.sp,

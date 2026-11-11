@@ -77,6 +77,10 @@ private val LaunchRoasts = listOf(
     "riiiiiiiickles. it's time to get swickity.",
     "two words: bean magic.",
     "wishes cost extra. so does breathing.",
+    "wizarding the buttons… the dark elves approve.",
+    "enchanting the UI against its will.",
+    "one does not simply walk into the canvas.",
+    "the buttons know. the buttons have always known.",
 )
 
 /** What the gremlin says about your work. He does not do nuance. */
@@ -116,6 +120,8 @@ private val DerangedTaglines = listOf(
     "Swickity swickity swish — your wish has been documented.",
     "The wand is out of batteries. The beans are not.",
     "Wish wisely. The canvas grants nothing.",
+    "The buttons are enchanted. Please act accordingly.",
+    "Dark elves on standby since the slate was wet.",
 )
 
 private val DerangedLabels = listOf(
@@ -127,6 +133,10 @@ private val DerangedLabels = listOf(
     "New canvas, allegedly",
     "DO IT",
     "Don't blame me",
+    "✦ DO IT ✦",
+    "☾ SUMMON",
+    "☽ ENCHANT ME",
+    "✦ BREAK THE SEAL",
 )
 
 private data class Spark(val x: Float, val y: Float, val bornTick: Int, val vx: Float, val vy: Float, val gold: Boolean)
@@ -168,6 +178,11 @@ internal fun ChaosEmptyState(onNew: () -> Unit) {
         initialValue = 1f, targetValue = 1.13f,
         animationSpec = infiniteRepeatable(tween(270), RepeatMode.Reverse),
         label = "beat",
+    )
+    val glow by transition.animateFloat(
+        initialValue = 0.45f, targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(750), RepeatMode.Reverse),
+        label = "eldritch-glow",
     )
     var buttonIndex by remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) {
@@ -267,6 +282,7 @@ internal fun ChaosEmptyState(onNew: () -> Unit) {
                     .graphicsLayer { rotationZ = wobble * -1.6f }
                     .clip(RoundedCornerShape(22.dp))
                     .background(Ps.Accent)
+                    .border(1.dp, Color(0xFFFFD23F).copy(alpha = glow), RoundedCornerShape(22.dp))
                     .clickable { onNew() }
                     .padding(horizontal = 30.dp),
                 contentAlignment = Alignment.Center,
@@ -463,6 +479,11 @@ internal fun GremlinTab(modifier: Modifier = Modifier, onClick: () -> Unit) {
 @Composable
 internal fun LaunchRoast(modifier: Modifier = Modifier, onTap: () -> Unit) {
     val roast = remember { LaunchRoasts.random() }
+    val ringTurn by rememberInfiniteTransition(label = "rune-ring").animateFloat(
+        initialValue = 0f, targetValue = 360f,
+        animationSpec = infiniteRepeatable(tween(15000, easing = androidx.compose.animation.core.LinearEasing), RepeatMode.Restart),
+        label = "turn",
+    )
     Box(
         modifier
             .fillMaxSize()
@@ -470,6 +491,19 @@ internal fun LaunchRoast(modifier: Modifier = Modifier, onTap: () -> Unit) {
             .clickable(onClick = onTap),
         contentAlignment = Alignment.Center,
     ) {
+        // the covenant circle the buttons swore on
+        Canvas(Modifier.size(228.dp).graphicsLayer { rotationZ = ringTurn }) {
+            val r = size.minDimension / 2f
+            drawCircle(Color(0xFFFFD23F).copy(alpha = 0.55f), r, center, style = androidx.compose.ui.graphics.drawscope.Stroke(1.4.dp.toPx()))
+            drawCircle(Color(0xFFBB0037).copy(alpha = 0.4f), r * 0.78f, center, style = androidx.compose.ui.graphics.drawscope.Stroke(1.dp.toPx()))
+            for (i in 0 until 18) {
+                val a = i / 18f * 2f * PI.toFloat()
+                val inner = Offset(center.x + cos(a) * r * 0.88f, center.y + sin(a) * r * 0.88f)
+                val outer = Offset(center.x + cos(a) * r * 1f, center.y + sin(a) * r * 1f)
+                drawLine(Color(0xFFFFD23F).copy(alpha = 0.9f), inner, outer, 2.dp.toPx())
+                if (i % 3 == 0) drawCircle(Color(0xFFF7CAC9), 1.7.dp.toPx(), Offset(center.x + cos(a) * r * 0.83f, center.y + sin(a) * r * 0.83f))
+            }
+        }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 "BROBEANS",
@@ -520,6 +554,8 @@ internal fun GremlinPanel(onClose: () -> Unit) {
     var morals by remember { mutableStateOf(false) }
     var undoTheUndo by remember { mutableStateOf(true) }
     var nachoJustice by remember { mutableStateOf(true) }
+    var enchanted by remember { mutableStateOf(true) }
+    var darkElves by remember { mutableStateOf(false) }
     var wish by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(wish) {
         if (wish != null) {
@@ -568,6 +604,8 @@ internal fun GremlinPanel(onClose: () -> Unit) {
             GremlinToggle("Moral compass", morals) { morals = !morals }
             GremlinToggle("Undo the undo", undoTheUndo) { undoTheUndo = !undoTheUndo }
             GremlinToggle("Nacho justice", nachoJustice) { nachoJustice = !nachoJustice }
+            GremlinToggle("Enchant all buttons", enchanted) { enchanted = !enchanted }
+            GremlinToggle("Dark elf temperaments", darkElves) { darkElves = !darkElves }
             Spacer(Modifier.height(12.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("Beans in stock", color = Color(0xFFCFC9BC), fontSize = 14.sp)

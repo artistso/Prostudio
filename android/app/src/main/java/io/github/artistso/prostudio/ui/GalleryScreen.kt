@@ -1812,6 +1812,13 @@ private fun AboutApp(onRecover: () -> Unit, onClose: () -> Unit) {
                 modifier = Modifier.padding(top = 2.dp),
             )
             Text(
+                "Buttons enchanted by licensed wizards. Dark elves on standby.",
+                color = AboutInkDim,
+                fontSize = 10.sp,
+                maxLines = 1,
+                modifier = Modifier.padding(top = 2.dp),
+            )
+            Text(
                 "NACHO LIBRE EDITION — ¡Soy el campeón!",
                 color = Color(0xFFFFD23F),
                 fontSize = 11.sp,
