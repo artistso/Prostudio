@@ -93,14 +93,18 @@ jobs:
         run: |
           apk=android/app/build/outputs/apk/release/app-release.apk
           tools="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
-          "$tools/zipalign" -c -P 16 -v 4 "$apk" > /dev/null
+          echo "using build-tools: $tools"
+          if ! "$tools/zipalign" -c -P 16 -v 4 "$apk" > zipalign.log 2>&1; then
+            tail -30 zipalign.log | sed 's/%/%25/g; s/\r/%0D/g; s/\n/%0A/g' | sed 's/^/::error::/'
+            exit 1
+          fi
           readelf="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-readelf"
           dir=$(mktemp -d)
           unzip -q "$apk" 'lib/*' -d "$dir"
           for so in "$dir"/lib/*/*.so; do
             for align in $("$readelf" -lW "$so" | awk '$1 == "LOAD" { print $NF }'); do
               if [ $((align)) -lt 16384 ]; then
-                echo "$so: a segment aligned to $align"
+                echo "::error::$so: a segment aligned to $align"
                 exit 1
               fi
             done
