@@ -148,7 +148,7 @@ private val HelpSections = listOf(
     )),
     HelpSection("This app", listOf(
         "Gesture controls turns every way of touching on or off.",
-        "About ProStudio and the licences are under Actions ▸ Help.",
+        "About BroBeans and the licences are under Actions ▸ Help.",
         "The light interface is under Actions ▸ Prefs ▸ Light interface.",
     )),
 )

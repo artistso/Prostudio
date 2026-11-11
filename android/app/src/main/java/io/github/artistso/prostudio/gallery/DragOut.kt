@@ -121,7 +121,7 @@ private const val DRAG_PICTURE_ALPHA = 204
 fun startArtworkDrag(view: View, a: Artwork, root: File, width: Int, height: Int, touch: Point): Boolean {
     val ctx = view.context
     val prefs = ctx.getSharedPreferences("interface", Context.MODE_PRIVATE)
-    val file = CanvasViewModel.DRAG_FORMATS.getOrElse(prefs.getInt(CanvasViewModel.DRAG_FORMAT, 0)) { "ProStudio" }
+    val file = CanvasViewModel.DRAG_FORMATS.getOrElse(prefs.getInt(CanvasViewModel.DRAG_FORMAT, 0)) { "BroBeans" }
     val image = CanvasViewModel.DRAG_IMAGE_FORMATS.getOrElse(prefs.getInt(CanvasViewModel.DRAG_IMAGE_FORMAT, 0)) { "JPEG" }
     val formats = if (file in CanvasViewModel.DRAG_IMAGE_FORMATS) listOf(file) else listOf(file, image)
     val clip = ClipData(ClipDescription(a.name, formats.map(DragProvider::mime).toTypedArray()), ClipData.Item(DragProvider.uri(ctx, formats[0], a, root)))

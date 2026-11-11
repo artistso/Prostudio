@@ -7652,7 +7652,7 @@ class CanvasViewModel(app: Application) : AndroidViewModel(app) {
          * in them, so `.pcraft` ones from before and other apps' `.prostudio` zips still open.
          */
         const val OWN_EXTENSION = "prostudio"
-        const val OWN_LABEL = "ProStudio"
+        const val OWN_LABEL = "BroBeans"
         private const val MODEL_REFERENCE_PIXELS = 720
         private const val SELECTION_X_RAY = "selection_x_ray"
         const val PACKAGE_EXTENSION = "procreate"

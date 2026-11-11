@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ProStudio</string>
-    <string name="widget_recent_name">Recent artwork</string>
-    <string name="widget_recent_description">Opens ProStudio at the artwork you worked on last.</string>
+    <string name="app_name">BroBeans Studio</string>
+    <string name="widget_recent_name">Recent disaster</string>
+    <string name="widget_recent_description">Opens BroBeans Studio at whatever you were painting before everything went sideways.</string>
 </resources>

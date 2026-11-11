@@ -307,7 +307,7 @@ fun ActionsPanel(vm: CanvasViewModel, arrowX: Dp, modifier: Modifier = Modifier)
         else -> listOf(
             listOf(
                 Act("Quick Help") { vm.quickHelpOpen = true },
-                Act("About ProStudio") { dialog = "ProStudio" to "Version ${versionName(context)}" },
+                Act("About BroBeans") { dialog = "BroBeans" to "Version ${versionName(context)}" },
                 Act("Licences") { dialog = "Licences" to licences(context) },
             ),
             listOf(
@@ -685,7 +685,7 @@ fun WrongBuildAlert(vm: CanvasViewModel) {
         Unit.takeIf { vm.wrongBuildNotice },
         title = { "Use the 64-bit version" },
         message = {
-            "This is ProStudio's 32-bit version, for older tablets. This tablet runs the 64-bit one, which newer " +
+            "This is BroBeans' 32-bit version, for older tablets. This tablet runs the 64-bit one, which newer " +
                 "Android expects: install the file ending in arm64.apk over this one, and your artworks stay."
         },
         action = "Releases",

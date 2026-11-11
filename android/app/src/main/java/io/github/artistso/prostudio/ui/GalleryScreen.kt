@@ -139,6 +139,7 @@ fun GalleryScreen(vm: CanvasViewModel) {
     var renamingStack by remember { mutableStateOf<io.github.artistso.prostudio.gallery.Stack?>(null) }
     // the app's name tapped: what it is and its version, over the gallery
     var about by remember { mutableStateOf(false) }
+    var gremlinOpen by remember { mutableStateOf(false) }
     // Gallery Recovery's card: how far its pie has come while it shows, and whether it is done
     var recovery by remember { mutableStateOf<Float?>(null) }
     var recovered by remember { mutableStateOf(false) }
@@ -212,7 +213,7 @@ fun GalleryScreen(vm: CanvasViewModel) {
             if (selecting) {
                 val screen = androidx.compose.ui.platform.LocalConfiguration.current
                 SelectHeader(
-                    title = vm.openStack?.name ?: "ProStudio",
+                    title = vm.openStack?.name ?: "BroBeans",
                     count = selected.size,
                     wide = screen.screenWidthDp > screen.screenHeightDp,
                     canStack = vm.openStack == null,
@@ -272,40 +273,8 @@ fun GalleryScreen(vm: CanvasViewModel) {
                 val stackFrom = remember(stack) { stack?.let { stackCellAt[it.dir.name] } }
                 val leaving = transition.targetState == androidx.compose.animation.EnterExitState.PostExit
                 if (entries.isEmpty()) {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            androidx.compose.foundation.Image(
-                                androidx.compose.ui.res.painterResource(io.github.artistso.prostudio.R.drawable.prostudio_mark),
-                                contentDescription = null,
-                                alpha = 0.92f,
-                                modifier = Modifier.size(150.dp),
-                            )
-                            Text(
-                                "ProStudio",
-                                style = TextStyle(brush = Ps.Brand, fontSize = 32.sp, fontWeight = FontWeight.Bold),
-                                modifier = Modifier.padding(top = 2.dp),
-                            )
-                            Text(
-                                "A quiet studio, waiting for your first stroke.",
-                                color = Ps.GalleryText,
-                                fontSize = 14.sp,
-                                modifier = Modifier.padding(top = 6.dp),
-                            )
-                            Box(
-                                Modifier.padding(top = 18.dp).height(42.dp).clip(RoundedCornerShape(21.dp))
-                                    .background(Ps.Accent).clickable { newCanvas = true }.padding(horizontal = 28.dp),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Text(
-                                    "New canvas",
-                                    color = Color(0xFF26221F),
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    maxLines = 1,
-                                )
-                            }
-                        }
-                    }
+                    // unhinged mode, courtesy of the studio gremlin — engine untouched
+                    ChaosEmptyState(onNew = { newCanvas = true })
                 } else {
                     val columns = if (screenWidth > screenHeight) 4 else 3
                     val cell = cellSize(screenWidth, columns)
@@ -699,6 +668,13 @@ fun GalleryScreen(vm: CanvasViewModel) {
                 },
             ) { about = false }
         }
+        // the half-circle tab hugging the right edge — yes, that's intentional. It's a feature. Do not tell QA.
+        if (!selecting) {
+            GremlinTab(Modifier.align(Alignment.CenterEnd), onClick = { gremlinOpen = true })
+            if (gremlinOpen) {
+                GremlinPanel(onClose = { gremlinOpen = false })
+            }
+        }
         RecoveryProgress(recovery, recovered)
     }
 
@@ -782,7 +758,7 @@ private fun GalleryHeader(
                 }
             } else {
                 Text(
-                    "ProStudio",
+                    "BroBeans",
                     style = TextStyle(brush = Ps.Brand, fontSize = 36.sp, fontWeight = FontWeight.Bold),
                     modifier = Modifier.padding(start = 32.dp, top = 11.dp)
                         .clickable(remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, indication = null, onClick = onAbout),
@@ -1809,7 +1785,7 @@ private fun AboutApp(onRecover: () -> Unit, onClose: () -> Unit) {
                 )
             }
             Text(
-                "ProStudio",
+                "BroBeans",
                 style = TextStyle(brush = Ps.Brand, fontSize = 64.sp, fontWeight = FontWeight.Bold),
                 maxLines = 1,
                 modifier = Modifier.padding(top = 12.dp),
@@ -1818,6 +1794,13 @@ private fun AboutApp(onRecover: () -> Unit, onClose: () -> Unit) {
             Box(Modifier.padding(top = 14.dp).width(132.dp).height(4.dp).clip(CircleShape).background(Ps.Brand))
             Text("A painting studio of your own.", color = AboutInk, fontSize = 13.sp, maxLines = 1, modifier = Modifier.padding(top = 12.dp))
             Text(version, color = AboutInkDim, fontSize = 12.sp, maxLines = 1, modifier = Modifier.padding(top = 6.dp))
+            Text(
+                "Powered by caffeine and hubris.",
+                color = AboutInkDim,
+                fontSize = 12.sp,
+                maxLines = 1,
+                modifier = Modifier.padding(top = 2.dp),
+            )
         }
         Box(
             Modifier.align(Alignment.TopCenter).padding(top = AboutButtonTop).size(220.dp, 38.dp).clip(RoundedCornerShape(8.dp))
