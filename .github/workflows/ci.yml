@@ -80,7 +80,15 @@ jobs:
           fi
       - name: Unit tests
         working-directory: android
-        run: ./gradlew --no-daemon :app:testDebugUnitTest -Pprostudio.abis=x86_64
+        run: |
+          if ! ./gradlew --no-daemon :app:testDebugUnitTest -Pprostudio.abis=x86_64 2>&1 | tee build-tests.log; then
+            # the step's log is all there is to go on; surface the useful lines as annotations
+            grep -E "^e:|FAILED|> [a-z]+ FAILED|tests? (failed|completed)|What went wrong" build-tests.log | tail -40 | sed 's/%/%25/g; s/\r/%0D/g; s/\n/%0A/g' | sed 's/^/::error::/'
+            find app/build/test-results/testDebugUnitTest -name '*.xml' 2>/dev/null | xargs -r grep -l -E '<failure|<error' | while read -r f; do
+              grep -o -E 'testcase name="[^"]*" classname="[^"]*"|<(failure|error)[^>]*message="[^"]*"' "$f" | head -8
+            done | sed 's/%/%25/g; s/\r/%0D/g; s/\n/%0A/g; s/"/'"'"'/g' | sed 's/^/::error::/' | tail -30
+            exit 1
+          fi
       - name: 16 KB pages
         run: |
           apk=android/app/build/outputs/apk/release/app-release.apk

@@ -75,7 +75,7 @@ class ChromeFitTest {
         fun old(width: Dp, tip: Dp, screen: Dp, minLeft: Dp, minRight: Dp): Dp {
             val furthest = screen - minRight - width
             return if (furthest >= minLeft) (tip + Ps.ArrowShift - width / 2).coerceIn(minLeft, furthest)
-                   else ((screen - width) / 2).coerceAtLeast(0.dp)
+                   else ((screen.value - width.value) / 2f).coerceAtLeast(0f).dp
         }
         for (screen in widths(451, 2000)) {
             val tip = screen - Ps.toolCentreFromRight(0, screen)
