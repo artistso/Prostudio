@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -69,11 +70,27 @@ import kotlin.math.roundToInt
 fun GlassNodes(vm: CanvasViewModel, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val prefs = remember(context) { context.getSharedPreferences("interface", android.content.Context.MODE_PRIVATE) }
+    LaunchedEffect(prefs) {
+        Glass.worldIndex = prefs.getInt("glass_world", 0).coerceIn(0, Glass.worlds.lastIndex)
+        Glass.readable = prefs.getBoolean("glass_readable", false)
+    }
     var open by remember { mutableStateOf<GlassNode?>(null) }
     // each node's place, as a fraction of the stage, persisted as it is dragged
     val places = remember { mutableStateMapOf<GlassNode, Offset>() }
     // children torn off their fan stay pinned on the stage until re-linked, double-tapped, or collapsed
     val pinned = remember { mutableStateMapOf<String, PinnedChild>() }
+    val onPickWorld: (Int) -> Unit = { idx ->
+        val clamped = idx.coerceIn(0, Glass.worlds.lastIndex)
+        Glass.worldIndex = clamped
+        prefs.edit().putInt("glass_world", clamped).apply()
+        vm.showNotice("Theme · ${Glass.worlds[clamped].name}")
+    }
+    val onToggleReadable: () -> Unit = {
+        val next = !Glass.readable
+        Glass.readable = next
+        prefs.edit().putBoolean("glass_readable", next).apply()
+        vm.showNotice(if (next) "Readable text ON · high contrast labels" else "Readable text off")
+    }
     BoxWithConstraints(modifier.fillMaxSize()) {
         val density = LocalDensity.current
         val w = maxWidth
@@ -113,7 +130,7 @@ fun GlassNodes(vm: CanvasViewModel, modifier: Modifier = Modifier) {
             val place = placeOf(node)
             val centreX = (place.x * w.value).dp
             val centreY = (place.y * h.value).dp
-            val children = if (open == node) childrenFor(node, vm) { open = null } else emptyList()
+            val children = if (open == node) childrenFor(node, vm, onPickWorld, onToggleReadable) { open = null } else emptyList()
             Column(
                 Modifier
                     .offset(x = centreX - WrapperHalf, y = centreY - WrapperHalf)
@@ -139,20 +156,7 @@ fun GlassNodes(vm: CanvasViewModel, modifier: Modifier = Modifier) {
                     },
                     onDragEnd = { persist(node, placeOf(node)) },
                 )
-                // the label rides bare under the orb, white ink on the plum with a soft halo — as the reference draws it
-                Text(
-                    node.label.uppercase(),
-                    color = Color.White.copy(alpha = if (open == node) 1f else 0.92f),
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = 1.35.sp,
-                    textAlign = TextAlign.Center,
-                    maxLines = 1,
-                    style = TextStyle(
-                        shadow = Shadow(Color(0xE62A001A), Offset(0f, 1.5f), blurRadius = 7f),
-                    ),
-                    modifier = Modifier.padding(top = 2.dp),
-                )
+                OrbLabel(node.label, open == node)
             }
             if (open == node && children.isNotEmpty()) {
                 ChildrenFan(
@@ -174,7 +178,7 @@ fun GlassNodes(vm: CanvasViewModel, modifier: Modifier = Modifier) {
         }
         // the pin layer: torn-off child orbs that stay out on the stage when their parent closes
         for ((key, pin) in pinned.entries.toList()) {
-            val live = childrenFor(pin.parent, vm) {}.firstOrNull { it.id == pin.childId } ?: continue
+            val live = childrenFor(pin.parent, vm, onPickWorld, onToggleReadable) {}.firstOrNull { it.id == pin.childId } ?: continue
             PinnedChildOrb(
                 child = live,
                 vm = vm,
@@ -238,7 +242,7 @@ private enum class GlassNode(val label: String) {
 
     /** Whether a tap opens the fan of children, or does its one thing at once. */
     fun opensFan(vm: CanvasViewModel): Boolean = when (this) {
-        TOOLS, LINE, ACTIONS, COLOR -> true
+        TOOLS, LINE, ACTIONS, COLOR, LAYERS -> true
         FRAMES -> vm.animation != null
         else -> false
     }
@@ -256,19 +260,28 @@ private enum class GlassNode(val label: String) {
     }
 }
 
-/** A child of an open node: a glyph orb, an accent-lit one when it is what is chosen, a swatch, or a dial. */
+/** A child of an open node: a glyph orb, an accent-lit one when it is what is chosen, a swatch, a theme ring, a dial, or a nested branch. */
 private data class NodeChild(
     val id: String,
     val label: String,
     val glyph: String? = null,
     val swatch: Int? = null,
+    val themeWorld: Int? = null,
+    val badge: String? = null,
     val accent: Boolean = false,
     val dial: Boolean = false,
+    val branch: List<NodeChild> = emptyList(),
     val onTap: () -> Unit = {},
 )
 
 /** The children an open node fans out. */
-private fun childrenFor(node: GlassNode, vm: CanvasViewModel, close: () -> Unit): List<NodeChild> =
+private fun childrenFor(
+    node: GlassNode,
+    vm: CanvasViewModel,
+    onPickWorld: (Int) -> Unit,
+    onToggleReadable: () -> Unit,
+    close: () -> Unit,
+): List<NodeChild> =
     when (node) {
         GlassNode.TOOLS -> listOf(
             NodeChild("paint", "Paint", "ink", accent = vm.tool == ToolKind.PAINT) { vm.toolPressed(ToolKind.PAINT); close() },
@@ -285,18 +298,57 @@ private fun childrenFor(node: GlassNode, vm: CanvasViewModel, close: () -> Unit)
                 close()
             },
         )
-        GlassNode.ACTIONS -> listOf(
-            NodeChild("undo", "Undo", "undo") { vm.undo(); close() },
-            NodeChild("redo", "Redo", "redo") { vm.redo(); close() },
-            NodeChild("adjust", "Adjust", "tune", accent = vm.adjustment != null || vm.panel == Panel.ADJUSTMENTS) { vm.adjustmentsPressed(); close() },
-            NodeChild("select", "Select", "select", accent = vm.selecting) { vm.toggleSelecting(); close() },
-            NodeChild("transform", "Transform", "expand", accent = vm.transforming) { vm.toggleTransform(); close() },
-        )
+        GlassNode.LAYERS -> {
+            val current = vm.layers.firstOrNull { it.current }
+            val visible = current?.visible != false
+            val stackBranch = vm.layers.take(6).mapIndexed { idx, layer ->
+                NodeChild(
+                    id = "layer_${layer.id}",
+                    label = layer.name.take(8),
+                    badge = "${idx + 1}",
+                    accent = layer.current,
+                ) {
+                    vm.selectLayer(layer.id)
+                    close()
+                }
+            }
+            listOf(
+                NodeChild("ladd", "Add", "layerAdd") { vm.addLayer(); close() },
+                NodeChild("ldup", "Dup", "layerDup") { current?.let(vm::duplicate); close() },
+                NodeChild("leye", if (visible) "Show" else "Hide", if (visible) "eyeOn" else "eyeOff", accent = visible) {
+                    current?.let(vm::toggleVisible)
+                },
+                NodeChild("lmerge", "Merge", "layerDn") { current?.let(vm::mergeDown); close() },
+                NodeChild("lstack", "Stack", "list", branch = stackBranch),
+                NodeChild("lpanel", "Panel", "layers", accent = vm.panel == Panel.LAYERS) { vm.toggle(Panel.LAYERS); close() },
+            )
+        }
+        GlassNode.ACTIONS -> {
+            val themeBranch = Glass.worlds.mapIndexed { idx, world ->
+                NodeChild(
+                    id = "theme_$idx",
+                    label = world.name.split(' ').first(),
+                    themeWorld = idx,
+                    accent = Glass.worldIndex == idx,
+                ) { onPickWorld(idx) }
+            }
+            listOf(
+                NodeChild("undo", "Undo", "undo") { vm.undo(); close() },
+                NodeChild("redo", "Redo", "redo") { vm.redo(); close() },
+                NodeChild("adjust", "Adjust", "tune", accent = vm.adjustment != null || vm.panel == Panel.ADJUSTMENTS) { vm.adjustmentsPressed(); close() },
+                NodeChild("select", "Select", "select", accent = vm.selecting) { vm.toggleSelecting(); close() },
+                NodeChild("transform", "Transform", "expand", accent = vm.transforming) { vm.toggleTransform(); close() },
+                NodeChild("readable", "Text", "list", accent = Glass.readable) { onToggleReadable() },
+                NodeChild("themes", "Themes", "themes", branch = themeBranch),
+                NodeChild("panel", "More", "actions", accent = vm.panel == Panel.ACTIONS) { vm.toggle(Panel.ACTIONS); close() },
+            )
+        }
         GlassNode.COLOR -> {
-            val recent = vm.history.take(5).mapIndexed { i, rgb ->
+            val swatches = (vm.history + Glass.current.swatches).distinct().take(6)
+            val items = swatches.mapIndexed { i, rgb ->
                 NodeChild("c$i", "", swatch = rgb, accent = rgb == vm.colorRgb()) { vm.setRgb(rgb); close() }
             }
-            recent + NodeChild("more", "More", "custom") { vm.toggle(Panel.COLOR); close() }
+            items + NodeChild("more", "More", "custom") { vm.toggle(Panel.COLOR); close() }
         }
         GlassNode.FRAMES -> {
             val playing = vm.playingSlot != null
@@ -428,6 +480,7 @@ private fun ChildrenFan(
 ) {
     val unpinned = children.filter { "${parent.name}:${it.id}" !in pinnedKeys }
     if (unpinned.isEmpty()) return
+    var openBranch by remember(parent) { mutableStateOf<String?>(null) }
     val centre = Offset(cx.value, cy.value)
     val toTheRight = centre.x <= w.value / 2f
     val spread = if (unpinned.size <= 4) 78f else 118f
@@ -447,13 +500,67 @@ private fun ChildrenFan(
     }
     for ((i, child) in unpinned.withIndex()) {
         val seat = seats[i]
+        val isBranch = child.branch.isNotEmpty()
+        val branched = if (isBranch) {
+            child.copy(
+                accent = openBranch == child.id || child.accent,
+                onTap = { openBranch = if (openBranch == child.id) null else child.id },
+            )
+        } else {
+            child
+        }
         ChildOrb(
-            child = child,
+            child = branched,
             vm = vm,
             index = i,
             seat = seat,
             onPin = { atDp -> onPin(child, atDp) },
             modifier = Modifier.offset(x = (seat.x - ChildHalf.value).dp, y = (seat.y - ChildHalf.value).dp),
+        )
+        if (isBranch && openBranch == child.id) {
+            BranchFan(
+                branch = child.branch,
+                vm = vm,
+                seat = seat,
+                toTheRight = toTheRight,
+                w = w,
+                h = h,
+            )
+        }
+    }
+}
+
+/** A nested branch (`makeBranchKid` in the reference): sub-orbs fanning out along an inward arc from a branch child's seat. */
+@Composable
+private fun BranchFan(
+    branch: List<NodeChild>,
+    vm: CanvasViewModel,
+    seat: Offset,
+    toTheRight: Boolean,
+    w: Dp,
+    h: Dp,
+) {
+    if (branch.isEmpty()) return
+    val spread = if (branch.size <= 4) 68f else 98f
+    val start = if (toTheRight) -52f else 128f
+    val end = if (toTheRight) 52f else 232f
+    val marginX = 34f
+    val marginTop = 30f
+    val marginBottom = 58f
+    for ((i, sub) in branch.withIndex()) {
+        val fraction = if (branch.size <= 1) 0.5f else i.toFloat() / (branch.size - 1).toFloat()
+        val radians = (start + (end - start) * fraction) / 180f * PI.toFloat()
+        val subSeat = Offset(
+            (seat.x + cos(radians) * spread).coerceIn(marginX, w.value - marginX),
+            (seat.y + sin(radians) * spread).coerceIn(marginTop, h.value - marginBottom),
+        )
+        ChildOrb(
+            child = sub,
+            vm = vm,
+            index = i,
+            seat = subSeat,
+            onPin = {},
+            modifier = Modifier.offset(x = (subSeat.x - ChildHalf.value).dp, y = (subSeat.y - ChildHalf.value).dp),
         )
     }
 }
@@ -570,6 +677,29 @@ private fun ChildOrbBody(
     }
     when {
         child.dial -> StreamLineDial(vm, Modifier.size(ChildSize))
+        child.themeWorld != null -> {
+            val world = Glass.worlds.getOrElse(child.themeWorld) { Glass.current }
+            Box(
+                Modifier.size(ChildSize)
+                    .then(clickMod)
+                    .drawBehind {
+                        if (relinking || child.accent) drawCircle(world.accent.copy(alpha = 0.42f), radius = size.minDimension * 0.74f, center = center)
+                        drawCircle(Color(0x73000000), radius = size.minDimension / 2f + 1.dp.toPx(), center = Offset(center.x + 1.dp.toPx(), center.y + 2.dp.toPx()))
+                    }
+                    .clip(CircleShape)
+                    .background(
+                        Brush.sweepGradient(
+                            0.00f to world.accent,
+                            0.25f to world.rose,
+                            0.50f to world.accentDeep,
+                            0.75f to world.blush,
+                            1.00f to world.accent,
+                        ),
+                    )
+                    .border(if (child.accent) 2.dp else 1.dp, if (child.accent || relinking) Glass.Paper else Glass.RimInner.copy(alpha = 0.45f), CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {}
+        }
         child.swatch != null -> {
             val swatchColor = Color(0xFF000000.toInt() or child.swatch)
             Box(
@@ -594,20 +724,63 @@ private fun ChildOrbBody(
                 }
                 .clip(CircleShape)
                 .background(
-                    if (child.accent) Brush.radialGradient(listOf(Color(0xFFF7CAC9), Glass.Accent))
+                    if (child.accent) Brush.radialGradient(listOf(Glass.RoseQuartz, Glass.Accent))
                     else Brush.radialGradient(listOf(Glass.Strong, Color(0x9414000E))),
                 )
                 .border(1.dp, if (child.accent || relinking) Glass.RimInner else Glass.RimInner.copy(alpha = 0.45f), CircleShape),
             contentAlignment = Alignment.Center,
         ) {
-            GlassGlyph(child.glyph, 20.dp)
+            if (child.badge != null) {
+                Text(child.badge, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold)
+            } else {
+                GlassGlyph(child.glyph, 20.dp)
+            }
         }
     }
     if (child.label.isNotEmpty()) {
-        // bare white ink under the orb, as the reference draws it
+        ChildLabel(child.label)
+    }
+}
+
+/** Primary orb label: bare white ink with a soft shadow by default, or a high-contrast capsule when `Glass.readable` is on. */
+@Composable
+private fun OrbLabel(label: String, open: Boolean) {
+    val text = @Composable {
         Text(
-            child.label.uppercase(),
-            color = Color.White,
+            label.uppercase(),
+            color = if (Glass.readable) Glass.Paper else Color.White.copy(alpha = if (open) 1f else 0.92f),
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Black,
+            letterSpacing = 1.35.sp,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            style = TextStyle(
+                shadow = Shadow(Color(0xE62A001A), Offset(0f, 1.5f), blurRadius = 7f),
+            ),
+        )
+    }
+    if (Glass.readable) {
+        Box(
+            Modifier
+                .padding(top = 3.dp)
+                .clip(RoundedCornerShape(999.dp))
+                .background(Color(0x9E0A000A))
+                .border(1.dp, Glass.RimInner.copy(alpha = 0.45f), RoundedCornerShape(999.dp))
+                .padding(horizontal = 7.dp, vertical = 2.5.dp),
+            contentAlignment = Alignment.Center,
+        ) { text() }
+    } else {
+        Box(Modifier.padding(top = 2.dp), contentAlignment = Alignment.Center) { text() }
+    }
+}
+
+/** Child orb label: bare white ink by default, or a high-contrast capsule when `Glass.readable` is on. */
+@Composable
+private fun ChildLabel(label: String) {
+    val text = @Composable {
+        Text(
+            label.uppercase(),
+            color = if (Glass.readable) Glass.Paper else Color.White,
             fontSize = 8.sp,
             fontWeight = FontWeight.Black,
             letterSpacing = 0.45.sp,
@@ -617,6 +790,19 @@ private fun ChildOrbBody(
                 shadow = Shadow(Color(0xE62A001A), Offset(0f, 1f), blurRadius = 5f),
             ),
         )
+    }
+    if (Glass.readable) {
+        Box(
+            Modifier
+                .padding(top = 2.dp)
+                .clip(RoundedCornerShape(999.dp))
+                .background(Color(0x9E0A000A))
+                .border(1.dp, Glass.RimInner.copy(alpha = 0.45f), RoundedCornerShape(999.dp))
+                .padding(horizontal = 6.dp, vertical = 2.dp),
+            contentAlignment = Alignment.Center,
+        ) { text() }
+    } else {
+        text()
     }
 }
 

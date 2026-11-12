@@ -1,6 +1,7 @@
 package io.github.artistso.prostudio.ui
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Brush
@@ -25,17 +26,17 @@ object Ps {
 
     val Panel: Color get() = pick(0xF226222E, 0xF7ECE9E2)
     val Row: Color get() = pick(0xFF332F3B, 0xFFDDDAD1)
-    val RowSelected: Color get() = pick(0xFFBB0037, 0xFFA00030)
-    val AccentRose = Color(0xFFBB0037)
-    val DeepPlum = Color(0xFF1A001A)
-    val Accent: Color get() = pick(0xFFBB0037, 0xFFA00030)
+    val RowSelected: Color get() = if (light) Color(0xFFA00030) else Glass.Accent
+    val AccentRose: Color get() = Glass.Accent
+    val DeepPlum: Color get() = Glass.Deep
+    val Accent: Color get() = if (light) Color(0xFFA00030) else Glass.Accent
     /** The brand blend: blush into accent rose into deep plum. For the rare stroke that says where you are. */
-    val Brand: Brush get() = Brush.linearGradient(listOf(Color(0xFFFFD9E2), Color(0xFFBB0037), Color(0xFF4D0A33)))
+    val Brand: Brush get() = Brush.linearGradient(listOf(Glass.Highlight, Glass.Accent, Glass.ShadowPlum))
     val Text: Color get() = pick(0xFFF5F1E8, 0xFF26221F)
     val TextDim: Color get() = pick(0x99F5F1E8, 0x9926221F)
     val Disabled: Color get() = pick(0x4DF5F1E8, 0x4D26221F)
     val Divider: Color get() = pick(0x26F5F1E8, 0x1F26221F)
-    val Surround = Color(0xFF1A001A)
+    val Surround: Color get() = Glass.Deep
 
     // the bar across the top of the canvas
     /** The bar's ink, translucent, so the canvas shows through. */
@@ -243,59 +244,130 @@ object Ps {
 
 /**
  * The Glass Horizon: InkFrame's world, in ProStudio. The exact colours, glass values and light of
- * the Glass Horizon visual contract — a luminous rose horizon over a deep plum world, paper canvas
- * in a rounded frame of frosted glass, and optical nodes that float over it. Dark only: the world
- * does not dim with the lamps on; with the light interface the same glass reads over warm blush.
+ * the Glass Horizon visual contract — a luminous horizon over a deep world, paper canvas in a
+ * rounded frame of frosted glass, and optical nodes that float over it, across all eight of
+ * InkFrame's colour worlds.
  */
 object Glass {
-    // the horizon's progression, bright rose at the top of the sky to plum-black at the far edge
-    val Highlight = Color(0xFFFFD9E2)
-    val RoseQuartz = Color(0xFFF7CAC9)
-    val RoseDim = Color(0xFFD77FA0)
-    val HorizonDeep = Color(0xFFA52766)
-    val ShadowPlum = Color(0xFF4D0A33)
-    val Deep = Color(0xFF1A001A)
+    /** One of InkFrame's eight colour worlds: its horizon stops, glass tint, accent and palette swatches. */
+    data class World(
+        val name: String,
+        val accent: Color,
+        val accentDeep: Color,
+        val rose: Color,
+        val blush: Color,
+        val violet: Color,
+        val stops: List<Color>,
+        val swatches: List<Int>,
+    )
+
+    val worlds: List<World> = listOf(
+        World(
+            name = "Glass Horizon",
+            accent = Color(0xFFBB0037), accentDeep = Color(0xFF880057), rose = Color(0xFFF7CAC9), blush = Color(0xFFFFF0F3), violet = Color(0xFF2A001A),
+            stops = listOf(Color(0xFFFFD9E2), Color(0xFFF7CAC9), Color(0xFFD77FA0), Color(0xFFA52766), Color(0xFF4D0A33), Color(0xFF1A001A)),
+            swatches = listOf(0xBB0037, 0x880057, 0xF7CAC9, 0xFFF0F3, 0x2A001A, 0xD77FA0, 0xA52766, 0x7A1746),
+        ),
+        World(
+            name = "Aurora",
+            accent = Color(0xFF1F9C6B), accentDeep = Color(0xFF0F5C45), rose = Color(0xFFBFE9D6), blush = Color(0xFFEAFFF6), violet = Color(0xFF04211A),
+            stops = listOf(Color(0xFFD8FFF0), Color(0xFFBFE9D6), Color(0xFF5FC79B), Color(0xFF1F9C6B), Color(0xFF0C4A37), Color(0xFF04211A)),
+            swatches = listOf(0x1F9C6B, 0x0F5C45, 0xBFE9D6, 0xEAFFF6, 0x04211A, 0x57C79B, 0x127A55, 0x0A3A2B),
+        ),
+        World(
+            name = "Sapphire",
+            accent = Color(0xFF2F6DF2), accentDeep = Color(0xFF14367A), rose = Color(0xFFBCD2FF), blush = Color(0xFFEEF4FF), violet = Color(0xFF050A24),
+            stops = listOf(Color(0xFFDBE7FF), Color(0xFFBCD2FF), Color(0xFF6F9BF5), Color(0xFF2F6DF2), Color(0xFF15306E), Color(0xFF050A24)),
+            swatches = listOf(0x2F6DF2, 0x14367A, 0xBCD2FF, 0xEEF4FF, 0x050A24, 0x5B8AF5, 0x1D4AA8, 0x0C1C4A),
+        ),
+        World(
+            name = "Ember",
+            accent = Color(0xFFE3552B), accentDeep = Color(0xFF8A2410), rose = Color(0xFFFFCDAB), blush = Color(0xFFFFF0E6), violet = Color(0xFF2A0A04),
+            stops = listOf(Color(0xFFFFE2CF), Color(0xFFFFCDAB), Color(0xFFF2864F), Color(0xFFE3552B), Color(0xFF6E1C0A), Color(0xFF2A0A04)),
+            swatches = listOf(0xE3552B, 0x8A2410, 0xFFCDAB, 0xFFF0E6, 0x2A0A04, 0xF2864F, 0xB53A17, 0x5C1606),
+        ),
+        World(
+            name = "Amethyst",
+            accent = Color(0xFF8E44C0), accentDeep = Color(0xFF4D1F70), rose = Color(0xFFE3C9F7), blush = Color(0xFFF7EEFF), violet = Color(0xFF1A0428),
+            stops = listOf(Color(0xFFF0DDFF), Color(0xFFE3C9F7), Color(0xFFB06FE0), Color(0xFF8E44C0), Color(0xFF3C1758), Color(0xFF1A0428)),
+            swatches = listOf(0x8E44C0, 0x4D1F70, 0xE3C9F7, 0xF7EEFF, 0x1A0428, 0xB06FE0, 0x6A2E96, 0x34114E),
+        ),
+        World(
+            name = "Graphite",
+            accent = Color(0xFF8A8F99), accentDeep = Color(0xFF4A4F57), rose = Color(0xFFCFD4DC), blush = Color(0xFFF2F4F7), violet = Color(0xFF15171C),
+            stops = listOf(Color(0xFFE7EAEF), Color(0xFFCFD4DC), Color(0xFF9AA0AA), Color(0xFF6F757E), Color(0xFF2C2E34), Color(0xFF15171C)),
+            swatches = listOf(0x8A8F99, 0x4A4F57, 0xCFD4DC, 0xF2F4F7, 0x15171C, 0xA8ADB6, 0x5E636B, 0x2A2D33),
+        ),
+        World(
+            name = "Gold Dusk",
+            accent = Color(0xFFD9A328), accentDeep = Color(0xFF8A6310), rose = Color(0xFFF3DCA0), blush = Color(0xFFFFF7E3), violet = Color(0xFF261A04),
+            stops = listOf(Color(0xFFFFF1C9), Color(0xFFF3DCA0), Color(0xFFE0B94E), Color(0xFFD9A328), Color(0xFF6E4F0C), Color(0xFF261A04)),
+            swatches = listOf(0xD9A328, 0x8A6310, 0xF3DCA0, 0xFFF7E3, 0x261A04, 0xE0B94E, 0xA87C18, 0x4E3908),
+        ),
+        World(
+            name = "Mint Glass",
+            accent = Color(0xFF1FB6A6), accentDeep = Color(0xFF0F6B62), rose = Color(0xFFB8EFE7), blush = Color(0xFFE8FFFB), violet = Color(0xFF042320),
+            stops = listOf(Color(0xFFD6FFF8), Color(0xFFB8EFE7), Color(0xFF5FD6C7), Color(0xFF1FB6A6), Color(0xFF0C544C), Color(0xFF042320)),
+            swatches = listOf(0x1FB6A6, 0x0F6B62, 0xB8EFE7, 0xE8FFFB, 0x042320, 0x5FD6C7, 0x138C80, 0x0A423C),
+        ),
+    )
+
+    /** Which of the eight colour worlds is in play. */
+    var worldIndex by mutableIntStateOf(0)
+
+    /** Whether high-contrast readable label capsules (`Actions ▸ Text`) are on. */
+    var readable by mutableStateOf(false)
+
+    val current: World get() = worlds[worldIndex.coerceIn(0, worlds.lastIndex)]
+
+    // the horizon's progression, bright at the top of the sky to deep at the far edge
+    val Highlight: Color get() = current.stops[0]
+    val RoseQuartz: Color get() = current.stops[1]
+    val RoseDim: Color get() = current.stops[2]
+    val HorizonDeep: Color get() = current.stops[3]
+    val ShadowPlum: Color get() = current.stops[4]
+    val Deep: Color get() = current.stops[5]
     /** The horizon's stops, top to bottom, as the contract specifies. */
-    val HorizonStops = listOf(Highlight, RoseQuartz, RoseDim, HorizonDeep, ShadowPlum, Deep)
-    /** #880057 — shadows with the dark magenta cast of the reference. */
-    val ShadowMagenta = Color(0xFF880057)
-    /** #BB0037 — the interactive accent: what is chosen, what is possible. */
-    val Accent = Color(0xFFBB0037)
-    /** #FFF0F3 — the canvas paper, and the near-white of the rims. */
-    val Paper = Color(0xFFFFF0F3)
+    val HorizonStops: List<Color> get() = current.stops
+    /** Shadows with the deep cast of the active world. */
+    val ShadowMagenta: Color get() = current.accentDeep
+    /** The interactive accent: what is chosen, what is possible. */
+    val Accent: Color get() = current.accent
+    /** The canvas paper, and the near-white of the rims. */
+    val Paper: Color get() = current.blush
     /** rgba(20,0,14,.55) — the vignette's edge falloff. */
-    val VignetteEdge = Color(0x8C14000E)
+    val VignetteEdge: Color get() = current.violet.copy(alpha = 0.55f)
     /** rgba(10,0,10,.62) — a glass node's deep exterior shadow. */
     val NodeShadow = Color(0x9E0A000A)
     /** rgba(20,0,14,.55) — the frame glass's long drop shadow. */
-    val FrameShadow = Color(0x8C14000E)
+    val FrameShadow: Color get() = current.violet.copy(alpha = 0.55f)
 
     // the frosted glass the contract specifies, in its two strengths
-    /** rgba(247,202,201,.12) — the glass of the world at rest. */
-    val Normal = Color(0x1FF7CAC9)
-    /** rgba(247,202,201,.20) — the glass over what is lit (rims, strong edges). */
-    val Strong = Color(0x33F7CAC9)
-    /** rgba(247,202,201,.30) / rgba(247,202,201,.42) — the glass of what is held or open. */
-    val NormalHeld = Color(0x4DF7CAC9)
-    val StrongHeld = Color(0x6BF7CAC9)
-    /** rgba(255,240,243,.35) — the bright inner rim a glass edge catches. */
-    val RimInner = Color(0x59FFF0F3)
-    /** rgba(255,240,243,.6) — the rim of a node's optical centre. */
-    val Rim = Color(0x99FFF0F3)
-    /** rgba(247,202,201,.18) — the glass gradient's strong end. */
-    val GradientStrong = Color(0x2EF7CAC9)
-    /** rgba(247,202,201,.06) — the glass gradient's weak end. */
-    val GradientWeak = Color(0x0FF7CAC9)
+    /** The glass of the world at rest. */
+    val Normal: Color get() = current.rose.copy(alpha = 0.12f)
+    /** The glass over what is lit (rims, strong edges). */
+    val Strong: Color get() = current.rose.copy(alpha = 0.20f)
+    /** The glass of what is held or open. */
+    val NormalHeld: Color get() = current.rose.copy(alpha = 0.30f)
+    val StrongHeld: Color get() = current.rose.copy(alpha = 0.42f)
+    /** The bright inner rim a glass edge catches. */
+    val RimInner: Color get() = current.blush.copy(alpha = 0.35f)
+    /** The rim of a node's optical centre. */
+    val Rim: Color get() = current.blush.copy(alpha = 0.60f)
+    /** The glass gradient's strong end. */
+    val GradientStrong: Color get() = current.rose.copy(alpha = 0.18f)
+    /** The glass gradient's weak end. */
+    val GradientWeak: Color get() = current.rose.copy(alpha = 0.06f)
     /** The shared glass gradient (160 degrees: light from the upper-left). */
-    val Gradient: Brush = Brush.linearGradient(listOf(GradientStrong, GradientWeak))
+    val Gradient: Brush get() = Brush.linearGradient(listOf(GradientStrong, GradientWeak))
     /** The bar across the top, its frost catching the horizon above it. */
-    val BarGradient: Brush = Brush.linearGradient(listOf(Color(0x3DF7CAC9), Color(0x1FF7CAC9)))
+    val BarGradient: Brush get() = Brush.linearGradient(listOf(current.rose.copy(alpha = 0.24f), current.rose.copy(alpha = 0.12f)))
     /** The blush-to-accent gradient of what is current. */
-    val AccentGradient: Brush = Brush.linearGradient(listOf(Color(0xFFF7CAC9), Accent))
-    /** The wordmark's vertical gradient: white through the rose 55% down to the accent red. */
-    val TitleGradient: Brush = Brush.verticalGradient(colorStops = arrayOf(0f to Color(0xFFFFFFFF), 0.55f to RoseQuartz, 1f to Accent))
+    val AccentGradient: Brush get() = Brush.linearGradient(listOf(current.rose, Accent))
+    /** The wordmark's vertical gradient: white through the rose 55% down to the accent. */
+    val TitleGradient: Brush get() = Brush.verticalGradient(colorStops = arrayOf(0f to Color(0xFFFFFFFF), 0.55f to RoseQuartz, 1f to Accent))
     /** The deep radial optical centre a node's glyph sits on, for contrast. */
-    val OpticalCenter: Brush = Brush.radialGradient(listOf(Color(0xB30F020F), Color(0x00FFFFFF)))
+    val OpticalCenter: Brush get() = Brush.radialGradient(listOf(current.violet.copy(alpha = 0.70f), Color(0x00FFFFFF)))
 }
 
 /**

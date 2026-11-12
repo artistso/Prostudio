@@ -27,6 +27,7 @@ import kotlin.random.Random
 @Composable
 fun HorizonAtmosphere(modifier: Modifier = Modifier) {
     val specks = remember { scatterGrain() }
+    val rays = remember(Glass.RoseQuartz) { makeRays(Glass.RoseQuartz) }
     Canvas(modifier.fillMaxSize()) {
         val w = size.width
         val h = size.height
@@ -51,7 +52,7 @@ fun HorizonAtmosphere(modifier: Modifier = Modifier) {
         //    flat wash; the middle of the stage stays clear for the work
         drawRect(
             brush = Brush.sweepGradient(
-                colorStops = RAYS,
+                colorStops = rays,
                 center = topCentre,
             ),
         )
@@ -141,15 +142,14 @@ private fun scatterGrain(): List<Speck> {
 
 private const val GRAIN_SEED = 0x2545F491
 
-/** The conic rays' colour stops: soft rose spokes alternating with open sky, alpha kept low. */
-private val RAYS: Array<Pair<Float, Color>> = run {
-    val rose = Color(0xFFF7CAC9)
+/** The conic rays' colour stops: soft spokes of the active world's rose alternating with open sky, alpha kept low. */
+private fun makeRays(rose: Color): Array<Pair<Float, Color>> {
     val stops = mutableListOf<Pair<Float, Color>>()
     // spoke positions across the full sweep, and how lit each one is (0: open sky)
     val angles = floatArrayOf(0.00f, 0.045f, 0.075f, 0.120f, 0.150f, 0.210f, 0.235f, 0.290f, 0.330f, 0.375f, 0.405f, 0.470f, 0.505f, 0.560f, 0.600f, 0.660f, 0.700f, 0.760f, 0.800f, 0.870f, 0.910f, 0.970f, 1.000f)
     val strength = floatArrayOf(0.00f, 0.10f, 0.00f, 0.00f, 0.13f, 0.00f, 0.00f, 0.09f, 0.00f, 0.00f, 0.11f, 0.00f, 0.00f, 0.12f, 0.00f, 0.00f, 0.08f, 0.00f, 0.00f, 0.10f, 0.00f, 0.09f, 0.00f)
     for (i in angles.indices) stops += angles[i] to rose.copy(alpha = strength[i])
-    stops.toTypedArray()
+    return stops.toTypedArray()
 }
 
 /**
@@ -183,7 +183,7 @@ fun GlassWordmark(modifier: Modifier = Modifier) {
             fontSize = 10.sp,
             letterSpacing = 2.8.sp,
             fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-            color = Glass.RoseDim.copy(alpha = 0.86f),
+            color = if (Glass.readable) Glass.Paper else Glass.RoseDim.copy(alpha = 0.86f),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
             maxLines = 1,
             softWrap = false,
