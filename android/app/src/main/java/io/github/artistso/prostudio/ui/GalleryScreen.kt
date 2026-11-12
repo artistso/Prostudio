@@ -39,11 +39,8 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -1785,71 +1782,24 @@ private fun Chip(text: String, modifier: Modifier = Modifier) {
 }
 
 /**
- * What the app is, over the gallery (blurred and dimmed under it): its icon 300 across, its name,
- * its version; a round button at the top right closes it, as back does.
+ * What the app is, over the gallery: InkFrame's frosted Studio About card (`GH-029`), with Gallery Recovery.
  */
 @Composable
 private fun AboutApp(onRecover: () -> Unit, onClose: () -> Unit) {
-    BackHandler(onBack = onClose)
     val context = androidx.compose.ui.platform.LocalContext.current
-    val version = remember {
+    val version = remember(context) {
         runCatching {
             val info = context.packageManager.getPackageInfo(context.packageName, 0)
-            "Version ${info.versionName} Build ${androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(info)}"
-        }.getOrDefault("")
+            "${info.versionName ?: "0.1.0"} (${androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(info)})"
+        }.getOrDefault("0.1.0")
     }
-    Box(Modifier.fillMaxSize().background(AboutVeil).pointerInput(Unit) { awaitEachGesture { awaitFirstDown().consume() } }) {
-        Column(Modifier.fillMaxWidth().padding(top = 95.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            // the launcher icon: its field, and its picture drawn at the adaptive icon's full size
-            Box(Modifier.size(300.dp).clip(RoundedCornerShape(67.dp)).background(AboutIconField), contentAlignment = Alignment.Center) {
-                androidx.compose.foundation.Image(
-                    androidx.compose.ui.res.painterResource(io.github.artistso.prostudio.R.drawable.prostudio_mark),
-                    contentDescription = null,
-                    modifier = Modifier.requiredSize(450.dp),
-                )
-            }
-            Text(
-                "ProStudio",
-                style = TextStyle(brush = Ps.Brand, fontSize = 64.sp, fontWeight = FontWeight.Bold),
-                maxLines = 1,
-                modifier = Modifier.padding(top = 12.dp),
-            )
-            // the brand's stroke: one line of the blend under the word
-            Box(Modifier.padding(top = 14.dp).width(132.dp).height(4.dp).clip(CircleShape).background(Ps.Brand))
-            Text("A painting studio of your own.", color = AboutInk, fontSize = 13.sp, maxLines = 1, modifier = Modifier.padding(top = 12.dp))
-            Text(version, color = AboutInkDim, fontSize = 12.sp, maxLines = 1, modifier = Modifier.padding(top = 6.dp))
-        }
-        Box(
-            Modifier.align(Alignment.TopCenter).padding(top = AboutButtonTop).size(220.dp, 38.dp).clip(RoundedCornerShape(8.dp))
-                .background(AboutButtonFill).clickable(onClick = onRecover),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text("Start Gallery Recovery", color = AboutButtonInk, fontSize = 15.sp, maxLines = 1)
-        }
-        Box(
-            Modifier.align(Alignment.TopEnd).padding(top = 31.dp, end = 31.5.dp).size(22.5.dp).clip(CircleShape).background(AboutClose)
-                .clickable(onClick = onClose),
-            contentAlignment = Alignment.Center,
-        ) {
-            androidx.compose.foundation.Canvas(Modifier.size(8.dp)) {
-                val w = 1.8.dp.toPx()
-                drawLine(AboutCloseInk, androidx.compose.ui.geometry.Offset.Zero, androidx.compose.ui.geometry.Offset(size.width, size.height), w, cap = androidx.compose.ui.graphics.StrokeCap.Round)
-                drawLine(AboutCloseInk, androidx.compose.ui.geometry.Offset(size.width, 0f), androidx.compose.ui.geometry.Offset(0f, size.height), w, cap = androidx.compose.ui.graphics.StrokeCap.Round)
-            }
-        }
-    }
+    StudioAboutCard(
+        versionText = version,
+        onQuickHelp = null,
+        onRecover = onRecover,
+        onClose = onClose,
+    )
 }
 
-// the gallery under the brand's own ink, the light round close button
-private val AboutVeil = Color(0xD917141C)
-private val AboutIconField = Color(0xFF17141C)
-private val AboutInk = Color(0xFFCFC9BC)
-private val AboutInkDim = Color(0xFF8F897E)
-private val AboutClose = Color(0xFFF0EDE4)
-private val AboutCloseInk = Color(0xFF26221F)
-// the button 520 under the icon's top, 220 x 38
-private val AboutButtonTop = 615.dp
-private val AboutButtonFill = Color(0xFF1F1C26)
-private val AboutButtonInk = Color(0xFFCFC9BC)
 private const val RECOVERY_SEARCH_MS = 700
 private const val RECOVERY_DONE_MS = 900L

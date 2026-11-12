@@ -26,10 +26,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -307,7 +305,7 @@ fun ActionsPanel(vm: CanvasViewModel, arrowX: Dp, modifier: Modifier = Modifier)
         else -> listOf(
             listOf(
                 Act("Quick Help") { vm.quickHelpOpen = true },
-                Act("About ProStudio") { dialog = "ProStudio" to "Version ${versionName(context)}" },
+                Act("About ProStudio") { vm.studioAboutOpen = true },
                 Act("Licences") { dialog = "Licences" to licences(context) },
             ),
             listOf(
@@ -438,12 +436,7 @@ fun ActionsPanel(vm: CanvasViewModel, arrowX: Dp, modifier: Modifier = Modifier)
         pdfAsking = null
     }
     dialog?.let { (title, text) ->
-        AlertDialog(
-            onDismissRequest = { dialog = null },
-            title = { Text(title) },
-            text = { Text(text, modifier = Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) },
-            confirmButton = { TextButton(onClick = { dialog = null }) { Text("Done") } },
-        )
+        GlassTextDialog(title, text) { dialog = null }
     }
 }
 
@@ -941,9 +934,6 @@ internal fun Switch(checked: Boolean, enabled: Boolean, fixedTrack: Color = Ps.S
     }
 }
 
-
-private fun versionName(context: Context): String =
-    runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull() ?: "?"
 
 private fun licences(context: Context): String {
     fun asset(name: String) = runCatching { context.assets.open(name).bufferedReader().use { it.readText() } }.getOrDefault("")

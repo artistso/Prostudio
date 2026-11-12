@@ -242,7 +242,7 @@ private enum class GlassNode(val label: String) {
 
     /** Whether a tap opens the fan of children, or does its one thing at once. */
     fun opensFan(vm: CanvasViewModel): Boolean = when (this) {
-        TOOLS, LINE, ACTIONS, COLOR, LAYERS -> true
+        TOOLS, LINE, ACTIONS, COLOR, LAYERS, STUDIO -> true
         FRAMES -> vm.animation != null
         else -> false
     }
@@ -368,6 +368,11 @@ private fun childrenFor(
                 NodeChild("assist", "End Assist", "loop") { vm.changeAnimationAssist(false); close() },
             )
         }
+        GlassNode.STUDIO -> listOf(
+            NodeChild("qm", "Quick", "actions", accent = vm.quickMenuCenter != null) { vm.toggleQuickMenu(vm.screenCentre); close() },
+            NodeChild("help", "Help", "help", accent = vm.quickHelpOpen) { vm.quickHelpOpen = true; close() },
+            NodeChild("about", "About", "studio", accent = vm.studioAboutOpen) { vm.studioAboutOpen = true; close() },
+        )
         else -> emptyList()
     }
 

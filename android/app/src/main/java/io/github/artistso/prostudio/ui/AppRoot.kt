@@ -5,9 +5,11 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
-import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -27,7 +29,6 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.zIndex
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
@@ -273,6 +274,7 @@ fun AppRoot(vm: CanvasViewModel) {
                     exit = androidx.compose.animation.slideOutVertically(Motion.studioOut()) { it },
                 ) { Box(Modifier.fillMaxSize()) { GestureControls(vm) } }
                 if (vm.quickHelpOpen) QuickHelp(vm)
+                if (vm.studioAboutOpen) StudioAbout(vm)
                 ModelPicture(vm)
                 BlockedDialog(vm)
                 ModelWarningsAlert(vm)
@@ -494,19 +496,25 @@ private fun NoticeBand(vm: CanvasViewModel) {
         vm.noticeGone(n)
     }
     if (shown.value <= 0f && n == null) return
-    Box(Modifier.offset(y = Ps.BarHeight).fillMaxWidth().height(24.dp).clipToBounds()) {
-        // frosted over the canvas, as measured (a thin line under it doesn't show through); moved
-        // as it is placed, so the frost follows it
+    Box(
+        Modifier.offset(y = Ps.BarHeight + 12.dp).fillMaxWidth(),
+        contentAlignment = Alignment.TopCenter,
+    ) {
         Box(
-            Modifier.fillMaxSize()
-                .offset { androidx.compose.ui.unit.IntOffset(0, kotlin.math.round(-(1f - shown.value) * 24.dp.toPx()).toInt()) }
-                .then(rememberFrost(0.dp)).background(NoticeFill),
+            Modifier
+                .graphicsLayer {
+                    alpha = shown.value
+                    translationY = -(1f - shown.value) * 10.dp.toPx()
+                }
+                .clip(CircleShape)
+                .then(rememberFrost(999.dp))
+                .background(Glass.Deep.copy(alpha = 0.86f))
+                .background(Glass.Gradient)
+                .border(1.dp, Glass.RimInner.copy(alpha = 0.42f), CircleShape)
+                .padding(horizontal = 16.dp, vertical = 7.dp),
             contentAlignment = Alignment.Center,
         ) {
-            Text(text, color = NoticeInk, fontSize = 13.sp, maxLines = 1)
+            Text(text, color = Glass.Paper, fontSize = 12.sp, maxLines = 1)
         }
     }
 }
-
-private val NoticeFill = Color(0xC2424242)
-private val NoticeInk = Color(0xFFD7D7D7)

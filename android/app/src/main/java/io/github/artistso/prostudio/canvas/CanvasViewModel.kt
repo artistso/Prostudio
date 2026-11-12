@@ -2427,6 +2427,8 @@ class CanvasViewModel(app: Application) : AndroidViewModel(app) {
     var gestureControlsOpen by mutableStateOf(false)
     /** Quick Help: the Glass Horizon's own manual, shown over the world. */
     var quickHelpOpen by mutableStateOf(false)
+    /** Studio About: InkFrame's frosted studio/about card, shown over the world. */
+    var studioAboutOpen by mutableStateOf(false)
 
     /** Where the middle of one of the surround grid's lines falls (window pixels), for screens drawn over the canvas. */
     var gridOrigin by mutableStateOf<androidx.compose.ui.geometry.Offset?>(null)

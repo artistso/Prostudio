@@ -33,10 +33,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -59,12 +57,14 @@ import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -256,27 +256,77 @@ private fun TimelineLanes(vm: CanvasViewModel, width: Dp, modifier: Modifier = M
 @Composable
 private fun TimelineEditDialog(vm: CanvasViewModel, timeline: TimelineInfo, onClose: () -> Unit) {
     var name by remember(timeline.id) { mutableStateOf(timeline.name) }
-    AlertDialog(
-        onDismissRequest = onClose,
-        title = { Text("Timeline", fontSize = 19.sp, fontWeight = FontWeight.Bold) },
-        text = {
-            Column {
-                OutlinedTextField(value = name, onValueChange = { name = it }, singleLine = true, label = { Text("Name") })
-                if (vm.timelines.size > 1) {
-                    Spacer(Modifier.height(10.dp))
-                    TextButton(onClick = { vm.deleteTimeline(timeline.id); onClose() }) {
-                        Text("Delete timeline (the layers stay)", color = Ps.Accent)
-                    }
+    androidx.compose.ui.window.Dialog(onDismissRequest = onClose) {
+        Column(
+            Modifier.width(340.dp)
+                .clip(RoundedCornerShape(22.dp))
+                .background(Glass.Deep.copy(alpha = 0.94f))
+                .background(Glass.Gradient)
+                .border(1.dp, Glass.RimInner.copy(alpha = 0.42f), RoundedCornerShape(22.dp))
+                .padding(22.dp),
+        ) {
+            Text(
+                "TIMELINE",
+                color = Glass.Paper,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 2.4.sp,
+                maxLines = 1,
+            )
+            Spacer(Modifier.height(12.dp))
+            Box(
+                Modifier.fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0x1FFFF0F3))
+                    .border(1.dp, Glass.RimInner.copy(alpha = 0.32f), RoundedCornerShape(12.dp))
+                    .padding(horizontal = 14.dp, vertical = 11.dp),
+            ) {
+                BasicTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    singleLine = true,
+                    textStyle = TextStyle(color = Glass.Paper, fontSize = 15.sp, fontWeight = FontWeight.Medium),
+                    cursorBrush = SolidColor(Glass.Accent),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            if (vm.timelines.size > 1) {
+                Spacer(Modifier.height(10.dp))
+                Box(
+                    Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .clickable { vm.deleteTimeline(timeline.id); onClose() }
+                        .padding(horizontal = 6.dp, vertical = 6.dp),
+                ) {
+                    Text("Delete timeline (the layers stay)", color = Glass.RoseQuartz, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = { vm.renameTimeline(timeline.id, name); onClose() }) { Text("Rename") }
-        },
-        dismissButton = {
-            TextButton(onClick = onClose) { Text("Close") }
-        },
-    )
+            Spacer(Modifier.height(14.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    Modifier
+                        .clip(CircleShape)
+                        .background(Color(0x1FFFF0F3))
+                        .border(1.dp, Glass.RimInner.copy(alpha = 0.32f), CircleShape)
+                        .clickable(onClick = onClose)
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                ) {
+                    Text("Close", color = Glass.Paper, fontSize = 12.5.sp, fontWeight = FontWeight.Medium, maxLines = 1)
+                }
+                Spacer(Modifier.size(8.dp))
+                Box(
+                    Modifier
+                        .clip(CircleShape)
+                        .background(Glass.AccentGradient)
+                        .border(1.dp, Glass.RimInner.copy(alpha = 0.6f), CircleShape)
+                        .clickable { vm.renameTimeline(timeline.id, name); onClose() }
+                        .padding(horizontal = 18.dp, vertical = 10.dp),
+                ) {
+                    Text("Rename", color = Color.White, fontSize = 12.5.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                }
+            }
+        }
+    }
 }
 
 /** A chevron stepping the assist sequence one stop. */
