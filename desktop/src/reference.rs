@@ -7,7 +7,7 @@
 use std::time::{Duration, Instant};
 
 use egui::{Align2, Color32, Id, Order, Pos2, Rect, Sense, Stroke, TextureHandle, Vec2, pos2, vec2};
-use procraft_core::{
+use prostudio_core::{
     CanvasSession, ReferenceShows, ReferenceSizes, ReferenceView, ReferenceWindowState, reference_picture_point,
     reference_picture_rect, reference_view_pinched, reference_window_fitted, reference_window_size,
 };

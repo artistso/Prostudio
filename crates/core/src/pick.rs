@@ -1,7 +1,7 @@
 //! The eyedropper: what is shown around a window point, and the canvas colour under it.
 
-use procraft_engine::geom::{Affine, Vec2};
-use procraft_gpu::{Target, read_texture, wgpu};
+use prostudio_engine::geom::{Affine, Vec2};
+use prostudio_gpu::{Target, read_texture, wgpu};
 
 use crate::CanvasSession;
 
@@ -74,7 +74,7 @@ impl CanvasSession {
             // the current layer's own pixel (kept premultiplied): its colour, where it isn't clear
             at.and_then(|p| {
                 let (px, py) = (p.x as i32, p.y as i32);
-                let rect = procraft_engine::geom::IRect::new(px, py, px + 1, py + 1);
+                let rect = prostudio_engine::geom::IRect::new(px, py, px + 1, py + 1);
                 let pixel = canvas.read_layer_part(gpu, st.doc.current(), rect).ok()?;
                 let [r, g, b, a] = [pixel.first()?, pixel.get(1)?, pixel.get(2)?, pixel.get(3)?].map(|c| u32::from(*c));
                 let un = |c: u32| ((c * 255 + a / 2) / a.max(1)).min(255);

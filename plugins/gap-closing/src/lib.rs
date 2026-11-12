@@ -1,5 +1,5 @@
 //! ColorDrop gap closing: a fill keeps out of gaps up to this wide in the lines that bound it. It's
-//! a plugin, not part of the app: `tools/pack_plugin.py` makes a `.procraft-plugin` file of it.
+//! a plugin, not part of the app: `tools/pack_plugin.py` makes a `.prostudio-plugin` file of it.
 //!
 //! The app hands over the fill as it is let go, a row of bits at a time, and clears what comes back.
 //! The rule is all in [`closer`]. The interface is written down at the top of
@@ -27,19 +27,19 @@ static JOB: Mutex<Option<Job>> = Mutex::new(None);
 
 /// The slider's value (the only control, so `index` says nothing).
 #[unsafe(no_mangle)]
-pub extern "C" fn procraft_control(_index: i32, value: f32) {
+pub extern "C" fn prostudio_control(_index: i32, value: f32) {
     GAP.store(value as u32, Ordering::Relaxed);
 }
 
 /// Whether a fill has anything to come here for: with the slider at Off it doesn't.
 #[unsafe(no_mangle)]
-pub extern "C" fn procraft_fill_mask() -> i32 {
+pub extern "C" fn prostudio_fill_mask() -> i32 {
     i32::from(GAP.load(Ordering::Relaxed) > 0)
 }
 
 /// A new fill of `width` × `height`, from (`seed_x`, `seed_y`): where a row of bits goes.
 #[unsafe(no_mangle)]
-pub extern "C" fn procraft_fill_begin(width: i32, height: i32, seed_x: i32, seed_y: i32) -> i32 {
+pub extern "C" fn prostudio_fill_begin(width: i32, height: i32, seed_x: i32, seed_y: i32) -> i32 {
     let seed = (seed_x as usize, seed_y as usize);
     let closer = Closer::new(width as usize, height as usize, seed, GAP.load(Ordering::Relaxed));
     let row = vec![0; closer.n];
@@ -50,7 +50,7 @@ pub extern "C" fn procraft_fill_begin(width: i32, height: i32, seed_x: i32, seed
 
 /// The row at the buffer is row `y` of the fill.
 #[unsafe(no_mangle)]
-pub extern "C" fn procraft_fill_row(y: i32) {
+pub extern "C" fn prostudio_fill_row(y: i32) {
     let mut job = JOB.lock().unwrap_or_else(|e| e.into_inner());
     let Some(job) = job.as_mut() else { return };
     let n = job.closer.n;
@@ -60,14 +60,14 @@ pub extern "C" fn procraft_fill_row(y: i32) {
 
 /// Works it out: whether anything comes out of the fill.
 #[unsafe(no_mangle)]
-pub extern "C" fn procraft_fill_run() -> i32 {
+pub extern "C" fn prostudio_fill_run() -> i32 {
     let mut job = JOB.lock().unwrap_or_else(|e| e.into_inner());
     job.as_mut().map_or(0, |job| i32::from(job.closer.run()))
 }
 
 /// Row `y` of what comes out, at the buffer.
 #[unsafe(no_mangle)]
-pub extern "C" fn procraft_fill_out(y: i32) {
+pub extern "C" fn prostudio_fill_out(y: i32) {
     let mut job = JOB.lock().unwrap_or_else(|e| e.into_inner());
     let Some(job) = job.as_mut() else { return };
     let n = job.closer.n;

@@ -849,8 +849,8 @@ pub fn write(e: &Export<'_>) -> Vec<u8> {
         vec![("SiColorProfileArchiveICCNameKey", icc_name), ("SiColorProfileArchiveICCDataKey", Value::Data(icc_data))],
     );
     // the canvas's settings, and which assist is on: none 0, Animation Assist 1, Page Assist 2
-    let mode = doc.animation.as_ref().map_or(0, |a| if a.pages { 2 } else { 1 });
-    let a = doc.animation.clone().unwrap_or_default();
+    let mode = doc.active_animation().map_or(0, |a| if a.pages { 2 } else { 1 });
+    let a = doc.active_animation().cloned().unwrap_or_default();
     let playback = match a.playback {
         crate::animation::Playback::OneShot => 0,
         crate::animation::Playback::Loop => 1,
@@ -897,8 +897,8 @@ pub fn write(e: &Export<'_>) -> Vec<u8> {
         ("featureSet", Value::Int(1)),
         ("flippedHorizontally", Value::Bool(false)),
         ("flippedVertically", Value::Bool(false)),
-        ("isFirstItemAnimationForeground", Value::Bool(doc.animation.as_ref().is_some_and(|a| a.foreground))),
-        ("isLastItemAnimationBackground", Value::Bool(doc.animation.as_ref().is_some_and(|a| a.background))),
+        ("isFirstItemAnimationForeground", Value::Bool(doc.active_animation().is_some_and(|a| a.foreground))),
+        ("isLastItemAnimationBackground", Value::Bool(doc.active_animation().is_some_and(|a| a.background))),
         ("lastTextStyling", text_style),
         ("layers", layers),
         ("legacyBehaviour", Value::Int(1)),
@@ -1168,7 +1168,7 @@ struct LayerRecord<'a> {
 
 /// How many more frames Animation Assist holds layer `id` for (0 without a hold).
 fn held(doc: &Document, id: LayerId) -> i64 {
-    doc.animation.as_ref().map_or(0, |a| i64::from(a.hold(id)))
+    doc.active_animation().map_or(0, |a| i64::from(a.hold(id)))
 }
 
 impl LayerRecord<'_> {
@@ -1833,7 +1833,7 @@ mod tests {
             ..Default::default()
         };
         a.set_hold(id, 2);
-        doc.animation = Some(a);
+        doc.set_animation(Some(a));
         let pixels = HashMap::from([(id, vec![0u8; 16 * 16 * 4])]);
         let bytes = write(&Export {
             document: &doc,
@@ -1862,7 +1862,7 @@ mod tests {
         assert_eq!(anim.int("animationMode"), Some(1));
         // read back as it was written
         let back = read(&bytes).unwrap();
-        let b = back.document.animation.as_ref().unwrap();
+        let b = back.document.active_animation().unwrap();
         assert_eq!(
             (b.fps, b.onion_frames, b.onion_opacity, b.playback, b.blend_primary, b.pages),
             (24, 3, 0.25, crate::animation::Playback::PingPong, true, false)
@@ -1885,12 +1885,12 @@ mod tests {
                 reference_picture: None,
             })
         };
-        if let Some(a) = doc.animation.as_mut() {
+        if let Some(a) = doc.active_animation_mut() {
             a.pages = true;
         }
-        assert!(read(&pack(&doc)).unwrap().document.animation.unwrap().pages);
-        doc.animation = None;
-        assert!(read(&pack(&doc)).unwrap().document.animation.is_none());
+        assert!(read(&pack(&doc)).unwrap().document.active_animation().unwrap().pages);
+        doc.set_animation(None);
+        assert!(read(&pack(&doc)).unwrap().document.active_animation().is_none());
     }
 
     /// A text layer's archived text (as the samples have it): its box placed by `transform` on

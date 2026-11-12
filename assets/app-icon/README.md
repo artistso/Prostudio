@@ -1,6 +1,6 @@
-# ProCraft app icon
+# ProStudio app icon
 
-<img src="procraft-512.png" alt="ProCraft app icon: a paintbrush in a warm-to-cool blend on black" width="128">
+<img src="prostudio-512.png" alt="ProStudio app icon: a paintbrush in a warm-to-cool blend on black" width="128">
 
 A paintbrush, writing down to the left: a tapered handle in a warm-to-cool blend, a metal ferrule,
 paper bristles with a tip dipped in the blend, and a soft glow of the blend, on a black tile.
@@ -29,10 +29,10 @@ below. MIT OR Apache-2.0, like the code.
 
 | File | What |
 |---|---|
-| `procraft-1024.png`, `procraft-512.png` | the icon on its rounded tile (store listing, README) |
+| `prostudio-1024.png`, `prostudio-512.png` | the icon on its rounded tile (store listing, README) |
 | `res/drawable-*dpi/ic_launcher_foreground.png` | the adaptive icon's foreground, 108 dp |
 | `res/drawable-*dpi/ic_launcher_monochrome.png` | its monochrome layer, for themed icons |
-| `res/drawable-nodpi/procraft_mark.png` | the foreground at 1350 px, for the About screen |
+| `res/drawable-nodpi/prostudio_mark.png` | the foreground at 1350 px, for the About screen |
 | `res/mipmap-anydpi/ic_launcher.xml` | the adaptive icon (background `@color/ic_launcher_background`) |
 
 The `res/` paths are under `android/app/src/main/`.

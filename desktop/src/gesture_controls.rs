@@ -4,7 +4,7 @@
 //! a delay under the held ones; Reset to defaults under General; Done.
 
 use egui::{Align2, Color32, Id, Order, Rect, ScrollArea, Sense, Stroke, Ui, UiBuilder, pos2, vec2};
-use procraft_core::{GestureOption, GesturePurpose, GestureSettings, gesture_options, gesture_purposes};
+use prostudio_core::{GestureOption, GesturePurpose, GestureSettings, gesture_options, gesture_purposes};
 
 use crate::alert::{Alert, Answer};
 use crate::icons::{self, Icon};
@@ -86,7 +86,7 @@ impl GestureControls {
                 } else {
                     self.rail(ui, look, screen);
                 }
-                let heading = procraft_core::gesture_purpose_heading(self.page);
+                let heading = prostudio_core::gesture_purpose_heading(self.page);
                 let ink = argb(INK);
                 if wide {
                     let x = (screen.left() + WIDE_START + screen.right() - WIDE_END) / 2.0;
@@ -146,7 +146,7 @@ impl GestureControls {
             }
             let tint = if chosen { Color32::WHITE } else { argb(RAIL_IDLE) };
             look.icon(ui, icon(p), pos2(row.left() + 27.0, row.center().y), 37.0, tint);
-            let name = procraft_core::gesture_purpose_title(p);
+            let name = prostudio_core::gesture_purpose_title(p);
             let ink = if chosen { Color32::WHITE } else { argb(PAGE_INK) };
             text(
                 ui.painter(),

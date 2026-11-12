@@ -255,8 +255,8 @@ impl CanvasSession {
 pub(crate) mod tests {
     use std::time::Instant;
 
-    use procraft_engine::view::View;
-    use procraft_gpu::Gpu;
+    use prostudio_engine::view::View;
+    use prostudio_gpu::Gpu;
     use serde_json::{Value, json};
 
     use super::*;
@@ -270,11 +270,11 @@ pub(crate) mod tests {
     const PASTES: &str = r#"(module
         (memory (export "memory") 2)
         (global $on (mut i32) (i32.const 0))
-        (func (export "procraft_control") (param i32 f32)
+        (func (export "prostudio_control") (param i32 f32)
             (global.set $on (f32.ne (local.get 1) (f32.const 0))))
-        (func (export "procraft_paste_mask") (result i32) (global.get $on))
-        (func (export "procraft_row_buffer") (param i32) (result i32) (i32.const 65536))
-        (func (export "procraft_paste_row") (param $at i32) (param $width i32)
+        (func (export "prostudio_paste_mask") (result i32) (global.get $on))
+        (func (export "prostudio_row_buffer") (param i32) (result i32) (i32.const 65536))
+        (func (export "prostudio_paste_row") (param $at i32) (param $width i32)
             (local $end i32) (local $p i32) (local $grey i32)
             (local.set $end (i32.add (local.get $at) (i32.shl (local.get $width) (i32.const 2))))
             (block $done (loop $next
@@ -292,17 +292,17 @@ pub(crate) mod tests {
     /// Answers the scale hook by its one slider.
     const SCALES: &str = r#"(module
         (global $size (mut f32) (f32.const 1))
-        (func (export "procraft_control") (param i32 f32) (global.set $size (local.get 1)))
-        (func (export "procraft_interface_scale") (param f32 f32) (result f32) (global.get $size)))"#;
+        (func (export "prostudio_control") (param i32 f32) (global.set $size (local.get 1)))
+        (func (export "prostudio_interface_scale") (param f32 f32) (result f32) (global.get $size)))"#;
     /// Answers the pick hook by its one switch.
     const PICKS: &str = r#"(module
         (global $layer (mut i32) (i32.const 0))
-        (func (export "procraft_control") (param i32 f32)
+        (func (export "prostudio_control") (param i32 f32)
             (global.set $layer (f32.ne (local.get 1) (f32.const 0))))
-        (func (export "procraft_pick_layer") (result i32) (global.get $layer)))"#;
+        (func (export "prostudio_pick_layer") (result i32) (global.get $layer)))"#;
 
     fn store(name: &str) -> String {
-        let dir = std::env::temp_dir().join(format!("procraft-hooks-{name}-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-hooks-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         dir.to_string_lossy().into_owned()
     }
@@ -331,7 +331,7 @@ pub(crate) mod tests {
         plugins
     }
 
-    /// A plugin of no controls whose `procraft_position` does `body`, imported and on.
+    /// A plugin of no controls whose `prostudio_position` does `body`, imported and on.
     fn turned_on(dir: &str, before: &str, body: &str) -> Arc<Plugins> {
         let module = position_module(before, body);
         let plugins = Plugins::with_store(dir.to_owned());
@@ -405,7 +405,7 @@ pub(crate) mod tests {
     fn a_pick_plugin_that_crashes_leaves_the_pick_on_the_canvas() {
         let dir = store("pick-crash");
         let module =
-            wat::parse_str(r#"(module (func (export "procraft_pick_layer") (result i32) (unreachable)))"#).unwrap();
+            wat::parse_str(r#"(module (func (export "prostudio_pick_layer") (result i32) (unreachable)))"#).unwrap();
         let plugins = Plugins::with_store(dir.clone());
         let mut manifest = coded(ID, &module);
         manifest["hooks"] = json!(["pick_layer"]);
@@ -501,7 +501,7 @@ pub(crate) mod tests {
     fn a_scale_plugin_that_goes_wrong_leaves_the_interface_as_measured() {
         let dir = store("scale-wrong");
         let module = wat::parse_str(
-            r#"(module (func (export "procraft_interface_scale") (param f32 f32) (result f32) (f32.const 40)))"#,
+            r#"(module (func (export "prostudio_interface_scale") (param f32 f32) (result f32) (f32.const 40)))"#,
         )
         .unwrap();
         let plugins = Plugins::with_store(dir.clone());
@@ -662,7 +662,7 @@ pub(crate) mod tests {
         for y in 60..120 {
             mask[y * 200..(y + 1) * 200].fill(255);
         }
-        s.shared.lock().selection = Some(procraft_engine::selection::Mask { width: 200, height: 200, data: mask });
+        s.shared.lock().selection = Some(prostudio_engine::selection::Mask { width: 200, height: 200, data: mask });
         pour_at(&s, 30.0, 80.0);
         assert!(red_at(&s, 30, 80), "in the selection, this side of the cut");
         assert!(!red_at(&s, 30, 30), "out of the selection");
@@ -787,11 +787,11 @@ pub(crate) mod tests {
     }
 
     /// What whole-canvas fills cost going through a real plugin file, up to the most that can: with
-    /// `PROCRAFT_PLUGIN_FILE` naming the gap-closing plugin, `--ignored --nocapture`, on a device.
+    /// `PROSTUDIO_PLUGIN_FILE` naming the gap-closing plugin, `--ignored --nocapture`, on a device.
     #[test]
     #[ignore]
     fn a_built_gap_plugin_costs() {
-        let bytes = std::fs::read(std::env::var("PROCRAFT_PLUGIN_FILE").unwrap()).unwrap();
+        let bytes = std::fs::read(std::env::var("PROSTUDIO_PLUGIN_FILE").unwrap()).unwrap();
         let dir = store("built-gap-cost");
         let plugins = Plugins::with_store(dir.clone());
         assert_eq!(plugins.install(bytes), None);
@@ -807,7 +807,7 @@ pub(crate) mod tests {
                 data[y * side + side / 2..y * side + side / 2 + 6].fill(0);
             }
             let filled = data.iter().filter(|&&v| v > 0).count();
-            let mask = procraft_engine::selection::Mask { width: side as u32, height: side as u32, data };
+            let mask = prostudio_engine::selection::Mask { width: side as u32, height: side as u32, data };
             let start = Instant::now();
             let closed = crate::pour::closed_by(&hooks, mask, (side as u32 / 4, side as u32 / 4));
             let took = start.elapsed().as_secs_f64() * 1e3;
@@ -822,12 +822,12 @@ pub(crate) mod tests {
         let _ = std::fs::remove_dir_all(&dir);
     }
 
-    /// A gap closed by a real plugin file: with `PROCRAFT_PLUGIN_FILE` naming the gap-closing plugin and
+    /// A gap closed by a real plugin file: with `PROSTUDIO_PLUGIN_FILE` naming the gap-closing plugin and
     /// `--ignored`. Two rooms, the same fill through a gap, with the plugin on and off.
     #[test]
     #[ignore]
     fn a_built_gap_plugin_closes_a_real_fill() {
-        let bytes = std::fs::read(std::env::var("PROCRAFT_PLUGIN_FILE").unwrap()).unwrap();
+        let bytes = std::fs::read(std::env::var("PROSTUDIO_PLUGIN_FILE").unwrap()).unwrap();
         let Some(s) = session() else { return };
         s.set_color(0.0, 0.0, 0.0);
         s.set_brush_size(0.1);
@@ -996,7 +996,7 @@ pub(crate) mod tests {
                 .view
                 .and_then(|v| v.to_screen().inverse())
                 .unwrap()
-                .apply(procraft_engine::geom::Vec2::new(10.0, 20.0));
+                .apply(prostudio_engine::geom::Vec2::new(10.0, 20.0));
             assert_eq!(at[0].pos, plain, "the sample goes through unchanged");
         }
         assert_eq!(s.take_failure().as_deref(), Some("A plugin stopped. Switched off: it crashed."));
@@ -1197,14 +1197,14 @@ pub(crate) mod tests {
         running.control(0, 1.0).unwrap();
     }
 
-    /// What a 4096 square costs going through a paste plugin. With `PROCRAFT_PLUGIN_FILE` naming one
+    /// What a 4096 square costs going through a paste plugin. With `PROSTUDIO_PLUGIN_FILE` naming one
     /// it goes through that, otherwise through [`PASTES`]: run on a device with
     /// `--ignored --nocapture`.
     #[test]
     #[ignore]
     fn a_paste_of_a_4096_square_costs() {
         let dir = store("paste-cost");
-        let plugins = match std::env::var("PROCRAFT_PLUGIN_FILE") {
+        let plugins = match std::env::var("PROSTUDIO_PLUGIN_FILE") {
             Ok(path) => {
                 let plugins = Plugins::with_store(dir.clone());
                 assert_eq!(plugins.install(std::fs::read(path).unwrap()), None);
@@ -1273,11 +1273,11 @@ pub(crate) mod tests {
     }
 
     /// A real plugin file, built by `tools/pack_plugin.py`, end to end on the hook. Run with
-    /// `--ignored` and `PROCRAFT_PLUGIN_FILE` naming it.
+    /// `--ignored` and `PROSTUDIO_PLUGIN_FILE` naming it.
     #[test]
     #[ignore]
     fn a_built_plugin_file_works() {
-        let bytes = std::fs::read(std::env::var("PROCRAFT_PLUGIN_FILE").unwrap()).unwrap();
+        let bytes = std::fs::read(std::env::var("PROSTUDIO_PLUGIN_FILE").unwrap()).unwrap();
         let dir = store("built");
         let plugins = Plugins::with_store(dir.clone());
         let offer = plugins.inspect(bytes.clone());

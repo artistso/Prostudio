@@ -1346,7 +1346,7 @@ mod tests {
     }
 
     /// Prints what a brush file holds as the studio's controls:
-    /// `BRUSH_FILE=path cargo test -p procraft-engine brush_file_controls -- --ignored --nocapture`.
+    /// `BRUSH_FILE=path cargo test -p prostudio-engine brush_file_controls -- --ignored --nocapture`.
     #[test]
     #[ignore]
     fn brush_file_controls() {

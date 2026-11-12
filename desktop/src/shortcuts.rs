@@ -6,7 +6,7 @@
 use std::time::{Duration, Instant};
 
 use egui::{Align2, Color32, Galley, Id, Order, Rect, ScrollArea, Sense, Stroke, StrokeKind, UiBuilder, pos2, vec2};
-use procraft_core::ShortcutGroup;
+use prostudio_core::ShortcutGroup;
 
 use crate::look::{Weight, argb, pc, text};
 
@@ -137,7 +137,7 @@ fn panel(ctx: &egui::Context, closable: bool) -> bool {
     }
     let mac = cfg!(target_os = "macos");
     let layer = egui::LayerId::new(Order::Tooltip, Id::unique("shortcuts"));
-    let laid = lay_out(&ctx.layer_painter(layer), procraft_core::key_shortcut_list(true, mac));
+    let laid = lay_out(&ctx.layer_painter(layer), prostudio_core::key_shortcut_list(true, mac));
     let fit = ((screen.width() - 40.0 - 2.0 * PAD + COLUMN_GAP) / (COLUMN + COLUMN_GAP)).floor();
     let cols = columns(&laid, (fit as usize).clamp(1, 3));
     let body_height = cols.iter().map(|c| c.iter().map(|g| g.height).sum::<f32>()).fold(0.0, f32::max) - GROUP_GAP;

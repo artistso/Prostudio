@@ -422,9 +422,14 @@ pub struct Document {
     /// Dots per inch, for the canvas's printed size and in files that carry one.
     #[serde(default = "default_dpi")]
     pub dpi: f32,
-    /// Animation Assist's settings while it is on.
-    #[serde(default, deserialize_with = "or_default")]
+    /// Animation Assist's settings while it is on, in a file saved before there were
+    /// timelines. Never written back: on open it is moved into the artwork's first
+    /// timeline ([`crate::timeline`]), which carries the settings from then on.
+    #[serde(default, deserialize_with = "or_default", skip_serializing_if = "Option::is_none")]
     pub animation: Option<crate::animation::Animation>,
+    /// The artwork's timelines (scenes). Empty while there is no timeline yet.
+    #[serde(default, deserialize_with = "or_default")]
+    pub timelines: crate::timeline::Timelines,
     /// The colour profile its pixels and colours are in.
     #[serde(default, deserialize_with = "or_default")]
     pub profile: crate::profile::Profile,
@@ -518,6 +523,7 @@ impl Document {
             guide: crate::guide::Guide::new(width.clamp(1, MAX_CANVAS_EDGE), height.clamp(1, MAX_CANVAS_EDGE)),
             dpi: default_dpi(),
             animation: None,
+            timelines: crate::timeline::Timelines::default(),
             profile: crate::profile::Profile::Srgb,
             icc: None,
             solo: None,
@@ -1577,7 +1583,7 @@ impl Document {
         self.height = self.height.clamp(1, MAX_CANVAS_EDGE);
         self.background = self.background.map(|c| if c.is_finite() { c.clamp(0.0, 1.0) } else { 1.0 });
         self.dpi = if self.dpi.is_finite() { self.dpi.clamp(1.0, 9999.0) } else { default_dpi() };
-        self.animation = self.animation.map(crate::animation::Animation::repaired);
+        self.normalize_timelines();
         let mut seen = std::collections::HashSet::new();
         self.layers.retain(|l| seen.insert(l.id));
         for l in &mut self.layers {

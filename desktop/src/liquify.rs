@@ -5,7 +5,7 @@
 //! some of what it did. The touches liquify (touch.rs); the values are the core's (adjusting.rs).
 
 use egui::{Align2, Color32, Id, Order, Rect, Sense, Ui, pos2, vec2};
-use procraft_core::{AdjustShown, CanvasSession, LiquifyKind};
+use prostudio_core::{AdjustShown, CanvasSession, LiquifyKind};
 
 use crate::icons::{self, Icon};
 use crate::look::{Look, Shade, Themed, Weight, argb, pc, text};

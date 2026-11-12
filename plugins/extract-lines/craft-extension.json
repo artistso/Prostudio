@@ -1,12 +1,12 @@
 {
   "schema": 1,
-  "id": "io.github.artcraftandroid.extract-lines",
+  "id": "io.github.artistso.extract-lines",
   "name": "Extract lines",
   "version": "1.0.0",
   "holds": ["filter"],
-  "publisher": { "name": "ProCraft" },
+  "publisher": { "name": "ProStudio" },
   "description": "Keeps the dark lines of a scanned drawing and clears the paper, so you can colour under them.",
-  "compat": { "procraft": { "interface": 1 } },
+  "compat": { "prostudio": { "interface": 1 } },
   "permissions": [],
   "controls": [
     { "key": "cut", "type": "slider", "label": "Paper", "least": 0, "most": 1, "step": 0.01, "starts": 0.15, "shown_times": 100, "unit": "%", "live": true },

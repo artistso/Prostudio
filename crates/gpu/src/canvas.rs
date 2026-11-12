@@ -9,12 +9,12 @@ use std::num::NonZeroU64;
 use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::{Arc, Mutex, OnceLock, PoisonError, mpsc};
 
-use procraft_engine::animation::{self, FrameLook};
-use procraft_engine::brush::{BRUSH_BEHIND, Brush, GRAIN_LINEAR_HEIGHT, GrainMode, Rendering, Source, run_out};
-use procraft_engine::document::{BlendMode, Document, Layer, LayerId, LayerKind};
-use procraft_engine::geom::{Affine, IRect};
-use procraft_engine::stroke::{MOST_ROUNDNESS, Stamp};
-use procraft_engine::textures::{self, GrayImage, TEXTURE_SIZE};
+use prostudio_engine::animation::{self, FrameLook};
+use prostudio_engine::brush::{BRUSH_BEHIND, Brush, GRAIN_LINEAR_HEIGHT, GrainMode, Rendering, Source, run_out};
+use prostudio_engine::document::{BlendMode, Document, Layer, LayerId, LayerKind};
+use prostudio_engine::geom::{Affine, IRect};
+use prostudio_engine::stroke::{MOST_ROUNDNESS, Stamp};
+use prostudio_engine::textures::{self, GrayImage, TEXTURE_SIZE};
 
 use wgpu::util::DeviceExt;
 
@@ -630,7 +630,7 @@ struct StampInstance {
 /// How much work stamp `s` is on a canvas `full`: the pixels it covers there, more for one
 /// painted `in_place` (see [`WORK_AT_ONCE`]).
 fn stamp_work(s: &StampInstance, full: IRect, in_place: bool) -> u64 {
-    let at = procraft_engine::geom::Vec2::new(s.center[0], s.center[1]);
+    let at = prostudio_engine::geom::Vec2::new(s.center[0], s.center[1]);
     let reach = IRect::around(at, s.radius * s.roundness.max(1.0) * std::f32::consts::SQRT_2).intersect(full);
     let pixels = u64::from(reach.width()) * u64::from(reach.height());
     if in_place { pixels * IN_PLACE_PIXEL_WORK + IN_PLACE_STAMP_WORK } else { pixels + STAMP_WORK }
@@ -888,7 +888,7 @@ struct Veil {
 /// An encoded colour moved by a linear-light matrix (clipped), as the display shader does.
 fn convert_colour(c: [f32; 3], m: Option<[[f32; 3]; 3]>) -> [f32; 3] {
     let Some(m) = m else { return c };
-    use procraft_engine::profile::{apply, decode, encode};
+    use prostudio_engine::profile::{apply, decode, encode};
     apply(m, c.map(decode)).map(|v| encode(v.clamp(0.0, 1.0)))
 }
 
@@ -4128,7 +4128,7 @@ impl Canvas {
                     // a dual brush's paint laid in place: put together again where the second went
                     if second && self.smudge.as_ref().is_some_and(|s| s.apart.is_some()) {
                         let rect = instances.iter().fold(IRect::EMPTY, |r, s| {
-                            let at = procraft_engine::geom::Vec2::new(s.center[0], s.center[1]);
+                            let at = prostudio_engine::geom::Vec2::new(s.center[0], s.center[1]);
                             r.union(IRect::around(at, s.radius * s.roundness.max(1.0) * std::f32::consts::SQRT_2))
                         });
                         self.synthesize(device, &mut encoder, &mut smudge_uniforms, rect);
@@ -5018,7 +5018,7 @@ impl Canvas {
             encoder.begin_compute_pass(&wgpu::ComputePassDescriptor { label: Some("smudge"), timestamp_writes: None });
         pass.set_bind_group(1, own_grain.as_ref().unwrap_or(&self.brush_bind), &[]);
         for (k, s) in instances.iter().enumerate() {
-            let center = procraft_engine::geom::Vec2::new(s.center[0], s.center[1]);
+            let center = prostudio_engine::geom::Vec2::new(s.center[0], s.center[1]);
             let bbox = IRect::around(center, (s.radius + QUAD_REACH) * s.roundness.max(1.0) * std::f32::consts::SQRT_2)
                 .intersect(full);
             if bbox.is_empty() || s.radius <= 0.0 {
@@ -5177,7 +5177,7 @@ impl Canvas {
         if style.wet_pull.is_none() {
             // dry paint laid in place: each stamp lays the paint itself, no pass of plots
             for (s, _, _) in stamps {
-                let center = procraft_engine::geom::Vec2::new(s.center[0], s.center[1]);
+                let center = prostudio_engine::geom::Vec2::new(s.center[0], s.center[1]);
                 let bbox =
                     IRect::around(center, (s.radius + QUAD_REACH) * s.roundness.max(1.0) * std::f32::consts::SQRT_2)
                         .intersect(full);
@@ -5277,7 +5277,7 @@ impl Canvas {
             pass.dispatch_workgroups(plot.div_ceil(8), plot.div_ceil(8), 1);
             // then each stamp laid from its plot
             for (k, (s, _, _)) in group.iter().enumerate() {
-                let center = procraft_engine::geom::Vec2::new(s.center[0], s.center[1]);
+                let center = prostudio_engine::geom::Vec2::new(s.center[0], s.center[1]);
                 let bbox =
                     IRect::around(center, (s.radius + QUAD_REACH) * s.roundness.max(1.0) * std::f32::consts::SQRT_2)
                         .intersect(full);
@@ -6206,7 +6206,7 @@ impl Canvas {
     /// is below the run), with every layer in them; none while something else is under way
     /// (Animation Assist's frames, an adjustment, liquify, a transform, a stroke elsewhere).
     fn live_items(&self, doc: &Document) -> Option<(Vec<LayerId>, std::ops::Range<usize>)> {
-        if doc.animation.is_some() {
+        if doc.active_animation().is_some() {
             return None;
         }
         let tops = doc.members(None);
@@ -6440,13 +6440,13 @@ impl Canvas {
     /// With Animation Assist on (and nothing else under way), the layers of the frames shown: the
     /// current (or played) one, its onion skins, and a background or foreground frame.
     fn shown_frames(&self, doc: &Document) -> Option<HashSet<LayerId>> {
-        let a = doc.animation.as_ref()?;
+        let a = doc.active_animation()?;
         let busy =
             self.transforming.is_some() || self.liquify.is_some() || self.pencil.is_some() || self.held.is_some();
         if busy || self.smudge.is_some() {
             return None;
         }
-        let frames = animation::frames(doc);
+        let frames = doc.active_frames();
         let focus = self.play_frame.or_else(|| animation::current_frame(doc))?;
         let shown: HashSet<LayerId> = frames
             .iter()
@@ -6804,8 +6804,8 @@ impl Canvas {
         current: &mut usize,
     ) {
         // Animation Assist: the top level's frames show around the current (or played) one
-        let animation = if top { doc.animation.as_ref() } else { None };
-        let frames = animation.map(|_| animation::frames(doc)).unwrap_or_default();
+        let animation = if top { doc.active_animation() } else { None };
+        let frames = animation.map(|_| doc.active_frames()).unwrap_or_default();
         let focus = animation.and_then(|_| self.play_frame.or_else(|| animation::current_frame(doc)));
         for &id in items {
             let Some(layer) = doc.layer(id) else { continue };
@@ -7876,7 +7876,7 @@ impl Canvas {
     }
 
     /// A colour table for [`Target::lut`] from `lut` (its first three outputs, 0..1 encoded).
-    pub fn display_lut(&self, gpu: &Gpu, lut: &procraft_engine::cms::Lut) -> DisplayLut {
+    pub fn display_lut(&self, gpu: &Gpu, lut: &prostudio_engine::cms::Lut) -> DisplayLut {
         let rgba: Vec<u8> = lut
             .values
             .chunks(lut.outputs.max(1))
@@ -9093,13 +9093,13 @@ impl Parked {
                 rows.extend_from_slice(rgba.get(start..start + row).unwrap_or_default());
             }
         }
-        Parked { rect, lz4: procraft_engine::applz4::encode(&rows) }
+        Parked { rect, lz4: prostudio_engine::applz4::encode(&rows) }
     }
 
     /// The painted rectangle's rows, one after another; none if damaged.
     fn rows(&self) -> Option<Vec<u8>> {
         let size = self.rect.map_or(0, |r| r.width() as usize * r.height() as usize * 4);
-        procraft_engine::applz4::decode(&self.lz4, size).filter(|p| p.len() == size)
+        prostudio_engine::applz4::decode(&self.lz4, size).filter(|p| p.len() == size)
     }
 
     /// The whole layer (`width` x `height`, clear outside the rectangle); none if damaged.
@@ -9422,7 +9422,7 @@ struct Remake {
 /// How many levels of group textures compositing `doc` takes: down to the deepest group
 /// composited on its own (with Animation Assist any group, its frame's onion skin tinted whole).
 fn group_levels(doc: &Document) -> usize {
-    if doc.animation.is_some() {
+    if doc.active_animation().is_some() {
         return doc.max_depth();
     }
     let alone = doc.layers().iter().filter(|l| l.kind == LayerKind::Group && !l.passes_through());
@@ -10075,7 +10075,7 @@ mod tests {
 
     #[test]
     fn a_canvas_made_for_filling_holds_no_layer_textures_until_they_come() {
-        use procraft_engine::document::Document;
+        use prostudio_engine::document::Document;
         let Ok(gpu) = Gpu::headless() else { return };
         let mut doc = Document::new(512, 512);
         for _ in 0..7 {
@@ -10096,8 +10096,8 @@ mod tests {
 
     #[test]
     fn the_history_takes_from_the_room_for_layers() {
-        use procraft_engine::document::Document;
-        use procraft_engine::stroke::Stamp;
+        use prostudio_engine::document::Document;
+        use prostudio_engine::stroke::Stamp;
         let Ok(gpu) = Gpu::headless() else { return };
         let mut doc = Document::new(64, 64);
         let per = 64 * 64 * 4;
@@ -10108,7 +10108,7 @@ mod tests {
         // each stroke over the whole layer keeps a layer's worth to undo
         for _ in 0..2 {
             canvas.begin_stroke(id, StrokeStyle::new(StrokeTool::Paint, [0.0; 3], 1.0));
-            canvas.add_stamps(&[Stamp::round(procraft_engine::geom::Vec2::new(32.0, 32.0), 64.0, 1.0)]);
+            canvas.add_stamps(&[Stamp::round(prostudio_engine::geom::Vec2::new(32.0, 32.0), 64.0, 1.0)]);
             canvas.end_stroke();
             canvas.render(&gpu, &mut doc, None);
         }
@@ -10141,10 +10141,10 @@ mod tests {
 
     #[test]
     fn a_smudge_the_gpu_has_no_memory_for_draws_on_and_makes_no_step() {
-        use procraft_engine::document::Document;
-        use procraft_engine::stroke::Stamp;
+        use prostudio_engine::document::Document;
+        use prostudio_engine::stroke::Stamp;
         let Ok(gpu) = Gpu::headless() else { return };
-        let dot = |x: f32, radius: f32| Stamp::round(procraft_engine::geom::Vec2::new(x, 32.0), radius, 1.0);
+        let dot = |x: f32, radius: f32| Stamp::round(prostudio_engine::geom::Vec2::new(x, 32.0), radius, 1.0);
         let mut doc = Document::new(64, 64);
         let mut canvas = Canvas::new(&gpu, &doc).unwrap();
         let id = doc.current();

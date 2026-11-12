@@ -116,7 +116,7 @@ pub fn current_frame(doc: &Document) -> Option<usize> {
             None => break,
         }
     }
-    frames(doc).iter().position(|f| *f == id)
+    doc.active_frames().iter().position(|f| *f == id)
 }
 
 /// How frame `index` of `count` shows with frame `current` the one drawn on (or, `playing`, the

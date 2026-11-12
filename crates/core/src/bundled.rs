@@ -7,14 +7,14 @@
 
 /// Each by its folder's name under `plugins/`, and the file packed from it.
 pub(crate) const BUNDLED: &[(&str, &[u8])] = &[
-    ("extract-lines", include_bytes!("../bundled-plugins/extract-lines.procraft-plugin")),
-    ("eyedropper-layer", include_bytes!("../bundled-plugins/eyedropper-layer.procraft-plugin")),
-    ("gap-closing", include_bytes!("../bundled-plugins/gap-closing.procraft-plugin")),
-    ("interface-size", include_bytes!("../bundled-plugins/interface-size.procraft-plugin")),
-    ("outline", include_bytes!("../bundled-plugins/outline.procraft-plugin")),
-    ("paste-into-masks", include_bytes!("../bundled-plugins/paste-into-masks.procraft-plugin")),
-    ("posterise", include_bytes!("../bundled-plugins/posterise.procraft-plugin")),
-    ("touch-offset", include_bytes!("../bundled-plugins/touch-offset.procraft-plugin")),
+    ("extract-lines", include_bytes!("../bundled-plugins/extract-lines.prostudio-plugin")),
+    ("eyedropper-layer", include_bytes!("../bundled-plugins/eyedropper-layer.prostudio-plugin")),
+    ("gap-closing", include_bytes!("../bundled-plugins/gap-closing.prostudio-plugin")),
+    ("interface-size", include_bytes!("../bundled-plugins/interface-size.prostudio-plugin")),
+    ("outline", include_bytes!("../bundled-plugins/outline.prostudio-plugin")),
+    ("paste-into-masks", include_bytes!("../bundled-plugins/paste-into-masks.prostudio-plugin")),
+    ("posterise", include_bytes!("../bundled-plugins/posterise.prostudio-plugin")),
+    ("touch-offset", include_bytes!("../bundled-plugins/touch-offset.prostudio-plugin")),
 ];
 
 #[cfg(test)]

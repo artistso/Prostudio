@@ -1,38 +1,46 @@
-"""Draws ProCraft's app icon, a paintbrush in a warm-to-cool blend on black, and writes every size
-the app and the repository use. Needs Pillow. Run from anywhere:
+"""Draws ProStudio's app icon, one confident brush stroke closed into a ring — an ensō in the
+brand blend, amber to ultraviolet over warm ink — and writes every size the app and the
+repository use. Needs Pillow. Run from anywhere:
 
     python tools/app-icon/make_icon.py
 
 Writes:
-- assets/app-icon/procraft-1024.png, procraft-512.png, procraft-256.png: the icon on its rounded
+- assets/app-icon/prostudio-1024.png, prostudio-512.png, prostudio-256.png: the icon on its rounded
   tile (the desktop app's window and Linux menus use the 256 and 512 ones).
-- assets/app-icon/procraft.ico: the tile at every size Windows shows (the desktop app's .exe and
+- assets/app-icon/prostudio.ico: the tile at every size Windows shows (the desktop app's .exe and
   its installer).
-- assets/app-icon/hicolor/<n>x<n>/apps/procraft.png: the tile at the sizes Linux desktops look up
+- assets/app-icon/hicolor/<n>x<n>/apps/prostudio.png: the tile at the sizes Linux desktops look up
   for the app's menu entry and window (copied as it is into the packages' share/icons/).
-- the Android adaptive icon's layers (108 dp, the tile its middle 72 dp): the brush and its glow
-  (drawable-*dpi/ic_launcher_foreground.png), the brush alone in white for themed icons
+- the Android adaptive icon's layers (108 dp, the tile its middle 72 dp): the stroke (drawable-*dpi/
+  ic_launcher_foreground.png), the stroke alone in white for themed icons
   (drawable-*dpi/ic_launcher_monochrome.png), and a large copy for the About screen
-  (drawable-nodpi/procraft_mark.png).
+  (drawable-nodpi/prostudio_mark.png).
+
+The mark is drawn, not pasted: the ring is stamped along its own arc, so both ends taper like a
+pull of the brush, and the tail breaks into ragged dry-brush stamps. The stamps come from a seeded
+generator, so the icon comes out the same on every run.
 """
 
 import math
 import os
+import random
 
-from PIL import Image, ImageChops, ImageDraw, ImageFilter
+from PIL import Image, ImageDraw, ImageFilter
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 RES = os.path.join(ROOT, 'android', 'app', 'src', 'main', 'res')
 
 S = 2048  # the 512-unit tile, drawn at 4x
-INK = (11, 11, 12)
-PAPER = (239, 233, 220)
-METAL = (196, 198, 206)
-METAL_LINE = (120, 122, 130)
-# the blend: amber, orange, coral pink, violet, blue
-STOPS = [(0.0, (255, 196, 61)), (0.28, (240, 122, 46)), (0.52, (236, 72, 120)), (0.76, (139, 92, 246)),
-         (1.0, (59, 130, 246))]
-ANGLE = 225  # the brush drawn along x, then turned so it writes down to the left
+INK = (23, 20, 28)          # warm ink, the same the app's theme sits on
+INK_HI = (38, 34, 48)       # a breath of violet in the tile's top light
+# the blend: amber, ember, rose, ultraviolet
+STOPS = [(0.0, (255, 196, 61)), (0.34, (255, 107, 74)), (0.68, (236, 72, 120)), (1.0, (139, 92, 246))]
+# the arc: from the gap's lower lip round, counter-clockwise, to the drying tail above it
+A_START = math.radians(232)   # where the stroke is picked up (radians, PIL's clockwise-from-3-o'clock)
+A_SWEEP = math.radians(296)   # how far the stroke travels
+R = S * 0.295                 # the ring's radius
+W = S * 0.088                 # the stroke's belly
+SEED = 20261109
 
 
 def blend(t):
@@ -44,58 +52,68 @@ def blend(t):
     return STOPS[-1][1]
 
 
-def gradient_along(x0, x1):
-    """An S x S picture whose colour runs along x, from the blend's start at x0 to its end at x1."""
-    row = Image.new('RGB', (S, 1))
-    for x in range(S):
-        row.putpixel((x, 0), blend((x - x0) / (x1 - x0)))
-    return row.resize((S, S), Image.NEAREST)
+def radius_at(t):
+    """The stroke's half-width along its arc: a long soft shoulder at the start, full through the
+    belly, then a long dry fall-off at the tail."""
+    rise = min(1.0, t / 0.10)
+    rise = rise * rise * (3 - 2 * rise)  # smoothstep shoulder
+    fall = min(1.0, (1 - t) / 0.34)
+    fall = fall * fall * (3 - 2 * fall)  # smoothstep dry-out, longer than the rise
+    return W * (0.16 + 0.84 * min(rise, 1.0)) * (0.30 + 0.70 * fall)
 
 
-def brush():
-    """The paintbrush along x: a tapered handle in the blend, a metal ferrule, paper bristles whose
-    tip is dipped in the blend."""
+def stroke():
+    """The ring: discs stamped along its arc, each taking its colour from where it sits in the blend
+    and its size from [`radius_at`]; the tail breaks into dry-brush flecks."""
     layer = Image.new('RGBA', (S, S), (0, 0, 0, 0))
-    cy = S / 2
-    x_end, x_ferrule, x_bristle, x_tip = 230, 1080, 1300, 1820
-    handle = [(x_end + 60, cy - 70), (x_ferrule - 260, cy - 120), (x_ferrule, cy - 100),
-              (x_ferrule, cy + 100), (x_ferrule - 260, cy + 120), (x_end + 60, cy + 70)]
-    m = Image.new('L', (S, S), 0)
-    md = ImageDraw.Draw(m)
-    md.polygon(handle, fill=255)
-    md.ellipse((x_end, cy - 70, x_end + 120, cy + 70), fill=255)
-    layer.paste(gradient_along(x_end, x_ferrule), (0, 0), m)
-    shine = Image.new('RGBA', (S, S), (0, 0, 0, 0))
-    ImageDraw.Draw(shine).polygon([(x_end + 60, cy - 70), (x_ferrule - 260, cy - 120), (x_ferrule, cy - 100),
-                                   (x_ferrule, cy - 60), (x_end + 60, cy - 40)], fill=(255, 255, 255, 52))
-    layer.alpha_composite(shine)
     d = ImageDraw.Draw(layer)
-    d.polygon([(x_ferrule, cy - 104), (x_bristle, cy - 128), (x_bristle, cy + 128), (x_ferrule, cy + 104)],
-              fill=METAL + (255,))
-    d.line((x_ferrule + 70, cy - 112, x_ferrule + 70, cy + 112), fill=METAL_LINE + (255,), width=14)
-    bristles = [(x_bristle, cy - 128)]
-    for i in range(1, 41):
-        t = i / 40
-        x = x_bristle + t * (x_tip - x_bristle)
-        y = cy - 128 * (1 - t ** 1.6) * (1 + 0.25 * math.sin(t * math.pi))
-        bristles.append((x, y))
-    bristles += [(x, 2 * cy - y) for x, y in reversed(bristles)]
-    d.polygon(bristles, fill=PAPER + (255,))
-    dip = Image.new('L', (S, S), 0)
-    ImageDraw.Draw(dip).polygon(bristles, fill=255)
-    cut = Image.new('L', (S, S), 0)
-    ImageDraw.Draw(cut).rectangle((x_bristle + 0.55 * (x_tip - x_bristle), 0, S, S), fill=255)
-    layer.paste(gradient_along(x_bristle + 0.4 * (x_tip - x_bristle), x_tip + 200), (0, 0), ImageChops.multiply(dip, cut))
-    return layer.rotate(ANGLE, resample=Image.BICUBIC, center=(S / 2, S / 2))
+    cx = cy = S / 2
+    length = R * A_SWEEP
+    steps = int(length / (W * 0.16))          # a stamp every 16% of its width, dense enough to overlap
+    rng = random.Random(SEED)
+    for i in range(steps + 1):
+        t = i / steps
+        angle = A_START - A_SWEEP * t         # the stroke travels counter-clockwise
+        x, y = cx + R * math.cos(angle), cy + R * math.sin(angle)
+        r = radius_at(t)
+        d.ellipse((x - r, y - r, x + r, y + r), fill=blend(t) + (255,))
+        # dry brush at the tail: a sparse spray of small flecks just off the stroke's last fifth
+        if t > 0.78 and rng.random() < 0.55:
+            out = rng.uniform(0.08, 0.5) * W * (1.6 - t)      # just past the stroke's edge
+            side = 1 if rng.random() < 0.65 else -1            # usually outward, sometimes within
+            along = rng.uniform(-0.8, 0.8) * W                 # smeared along the stroke
+            fleck = rng.uniform(0.04, 0.13) * W * (1.6 - t)    # small: a spray of paint
+            cos_a, sin_a = math.cos(angle), math.sin(angle)
+            fx = x + cos_a * (r * 0.6 + out) * side + math.cos(angle + math.pi / 2) * along
+            fy = y + sin_a * (r * 0.6 + out) * side + math.sin(angle + math.pi / 2) * along
+            alpha = round(255 * rng.uniform(0.6, 0.95))
+            d.ellipse((fx - fleck, fy - fleck, fx + fleck, fy + fleck), fill=blend(t) + (alpha,))
+    # a bright fleck of amber where the brush touched down
+    d.ellipse((cx + R * math.cos(A_START) - W * 0.30, cy + R * math.sin(A_START) - W * 0.30,
+               cx + R * math.cos(A_START) + W * 0.30, cy + R * math.sin(A_START) + W * 0.30),
+              fill=(255, 226, 150, 255))
+    return layer
 
 
 def glow(turned):
-    """A soft glow of the blend around the turned brush."""
-    alpha = turned.split()[3].filter(ImageFilter.GaussianBlur(60)).point(lambda a: a * 0.35)
-    colour = gradient_along(S * 0.15, S * 0.85).rotate(ANGLE, center=(S / 2, S / 2))
-    out = Image.new('RGBA', (S, S), (0, 0, 0, 0))
-    out.paste(colour, (0, 0), alpha)
-    return out
+    """A soft ember glow hugging the stroke."""
+    alpha = turned.split()[3].filter(ImageFilter.GaussianBlur(46)).point(lambda a: a * 0.4)
+    ember = Image.new('RGBA', (S, S), (0, 0, 0, 0))
+    warm = Image.new('RGB', (S, S), (255, 110, 70))
+    ember.paste(warm, (0, 0), alpha)
+    return ember
+
+
+def tile_body():
+    """The tile: warm ink with a breath of violet in its top light."""
+    tile = Image.new('RGBA', (S, S), INK + (255,))
+    ramp = Image.new('L', (1, S))
+    for y in range(S):
+        ramp.putpixel((0, y), round(90 * (1 - y / S) ** 2))
+    light = Image.new('RGBA', (S, S), INK_HI + (0,))
+    light.putalpha(ramp.resize((S, S), Image.NEAREST))
+    tile.alpha_composite(light)
+    return tile
 
 
 def tile_mask():
@@ -118,30 +136,30 @@ def save(image, path, size):
 
 
 def main():
-    turned = brush()
-    picture = glow(turned)
-    picture.alpha_composite(turned)
+    mark = stroke()
+    picture = glow(mark)
+    picture.alpha_composite(mark)
 
-    tile = Image.new('RGBA', (S, S), INK + (255,))
+    tile = tile_body()
     tile.alpha_composite(picture)
     tile.putalpha(tile_mask())
     for size in (1024, 512, 256):
-        save(tile, os.path.join(ROOT, 'assets', 'app-icon', f'procraft-{size}.png'), size)
+        save(tile, os.path.join(ROOT, 'assets', 'app-icon', f'prostudio-{size}.png'), size)
     sizes = [(n, n) for n in (16, 20, 24, 32, 40, 48, 64, 128, 256)]
-    tile.resize((256, 256), Image.LANCZOS).save(os.path.join(ROOT, 'assets', 'app-icon', 'procraft.ico'), sizes=sizes)
+    tile.resize((256, 256), Image.LANCZOS).save(os.path.join(ROOT, 'assets', 'app-icon', 'prostudio.ico'), sizes=sizes)
     for size in (16, 24, 32, 48, 64, 128, 256, 512):
-        save(tile, os.path.join(ROOT, 'assets', 'app-icon', 'hicolor', f'{size}x{size}', 'apps', 'procraft.png'), size)
+        save(tile, os.path.join(ROOT, 'assets', 'app-icon', 'hicolor', f'{size}x{size}', 'apps', 'prostudio.png'), size)
 
     foreground = adaptive(picture)
-    mono = Image.new('RGBA', turned.size, (255, 255, 255, 0))
-    mono.putalpha(turned.split()[3])
+    mono = Image.new('RGBA', mark.size, (255, 255, 255, 0))
+    mono.putalpha(mark.split()[3])
     monochrome = adaptive(mono)
     for bucket, scale in (('mdpi', 1), ('hdpi', 1.5), ('xhdpi', 2), ('xxhdpi', 3), ('xxxhdpi', 4)):
         size = round(108 * scale)
         save(foreground, os.path.join(RES, f'drawable-{bucket}', 'ic_launcher_foreground.png'), size)
         save(monochrome, os.path.join(RES, f'drawable-{bucket}', 'ic_launcher_monochrome.png'), size)
     # the About screen shows it 450 dp across: sharp up to about 3 pixels a dp
-    save(foreground, os.path.join(RES, 'drawable-nodpi', 'procraft_mark.png'), 1350)
+    save(foreground, os.path.join(RES, 'drawable-nodpi', 'prostudio_mark.png'), 1350)
     print('written')
 
 

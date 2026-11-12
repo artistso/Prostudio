@@ -1,6 +1,6 @@
 # Attribution
 
-Every non-code asset in ProCraft, with its author, source and licence. ProCraft's own code and
+Every non-code asset in ProStudio, with its author, source and licence. ProStudio's own code and
 original assets are MIT OR Apache-2.0 (see [`LICENSE-MIT`](LICENSE-MIT),
 [`LICENSE-APACHE`](LICENSE-APACHE) and [`NOTICE`](NOTICE)). When you add an asset, add a row here
 in the same change; third-party assets must be openly licensed and keep their licence file next to
@@ -11,14 +11,14 @@ them.
 | Path | Title | Author | Source | Licence |
 |---|---|---|---|---|
 | `android/app/src/main/assets/fonts/Inter-{Regular,Medium,SemiBold,Bold}.ttf` | Inter 4.1 (interface font) | The Inter Project Authors | <https://github.com/rsms/inter/releases/tag/v4.1> (`Inter-4.1.zip`, `extras/ttf/`; `SOURCE.md` beside them) | SIL OFL 1.1, `Inter-OFL.txt` |
-| `android/app/src/main/java/io/github/artcraftandroid/procraft/ui/LucideIcons.kt` (the interface icons as Lucide draws them, kept beside ours) | Lucide icons, lucide-static 1.63.0 | Lucide Icons and Contributors (those derived from Feather: Cole Bemis) | <https://github.com/lucide-icons/lucide>; each icon's paths moved and scaled into the frame it is shown in, at the size shown | ISC (Feather-derived also MIT), [`LICENSE-lucide.txt`](android/app/src/main/assets/icons/LICENSE-lucide.txt) |
-| `assets/icons/procraft/*.svg`, and every icon in `android/app/src/main/java/io/github/artcraftandroid/procraft/ui/Icons.kt` (`PcIcons`: the bar, toolbars, panels and menus, the blend mode glyphs and the 48 brush set icons) | ProCraft's own interface icons | ProCraft contributors | Original work, drawn from the idea to [`docs/icons/STYLE_GUIDE.md`](docs/icons/STYLE_GUIDE.md) by `tools/icons/draw_icons.py`; placed by the measured slots in `assets/icons/slots.tsv` | MIT OR Apache-2.0 |
+| `android/app/src/main/java/io/github/artistso/prostudio/ui/LucideIcons.kt` (the interface icons as Lucide draws them, kept beside ours) | Lucide icons, lucide-static 1.63.0 | Lucide Icons and Contributors (those derived from Feather: Cole Bemis) | <https://github.com/lucide-icons/lucide>; each icon's paths moved and scaled into the frame it is shown in, at the size shown | ISC (Feather-derived also MIT), [`LICENSE-lucide.txt`](android/app/src/main/assets/icons/LICENSE-lucide.txt) |
+| `assets/icons/prostudio/*.svg`, and every icon in `android/app/src/main/java/io/github/artistso/prostudio/ui/Icons.kt` (`PsIcons`: the bar, toolbars, panels and menus, the blend mode glyphs and the 48 brush set icons) | ProStudio's own interface icons | ProStudio contributors | Original work, drawn from the idea to [`docs/icons/STYLE_GUIDE.md`](docs/icons/STYLE_GUIDE.md) by `tools/icons/draw_icons.py`; placed by the measured slots in `assets/icons/slots.tsv` | MIT OR Apache-2.0 |
 | `android/app/src/main/assets/environments/*.hdr` | 3D view light panoramas (11), halved to 512 x 256 and scaled by `tools/env/make_env.py` | Sergej Majboroda, Greg Zaal, Andreas Mischok, Rico Cilliers (per file in the folder's `README.md`) | <https://polyhaven.com> | CC0 1.0 |
-| `assets/app-icon/procraft-{1024,512}.png`, `android/app/src/main/res/drawable-*dpi/ic_launcher_{foreground,monochrome}.png`, `android/app/src/main/res/drawable-nodpi/procraft_mark.png`, `android/app/src/main/res/mipmap-anydpi/ic_launcher.xml` | App icon: a paintbrush in a warm-to-cool blend on black | ProCraft contributors | Original work, drawn in code by `tools/app-icon/make_icon.py`; see [`assets/app-icon/README.md`](assets/app-icon/README.md) | MIT OR Apache-2.0 |
-| `android/app/src/main/res/drawable/widget_back.xml`, `android/app/src/main/res/drawable-v31/widget_back.xml` | Recent-artwork widget background | ProCraft contributors | Original work | MIT OR Apache-2.0 |
-| `docs/images/{canvas,layers,brushes,studio,colour,actions,adjust,transform}.jpg`, `docs/images/demo.webp`, `docs/images/demo.mp4` | The README's screenshots and demo: ProCraft on a tablet, painting *Dusk* | ProCraft contributors | Original work: the painting made in the app by `tools/showcase/paint_dusk2.py`, captured from the screen | MIT OR Apache-2.0 |
-| Brushes, brush shapes and grains | Made in code at run time (`crates/engine`) | ProCraft contributors | Original work | MIT OR Apache-2.0 |
-| `docs/images/discord-badge.svg` | The README's "Join us on Discord" badge | ProCraft contributors; the Discord mark from Simple Icons | Drawn to match the download badges beside it; the mark's path from <https://simpleicons.org> (simple-icons 13.21.0, `icons/discord.svg`) | MIT OR Apache-2.0; the mark CC0 1.0 (Discord's trademark, shown to link to the project's server) |
+| `assets/app-icon/prostudio-{1024,512}.png`, `android/app/src/main/res/drawable-*dpi/ic_launcher_{foreground,monochrome}.png`, `android/app/src/main/res/drawable-nodpi/prostudio_mark.png`, `android/app/src/main/res/mipmap-anydpi/ic_launcher.xml` | App icon: a paintbrush in a warm-to-cool blend on black | ProStudio contributors | Original work, drawn in code by `tools/app-icon/make_icon.py`; see [`assets/app-icon/README.md`](assets/app-icon/README.md) | MIT OR Apache-2.0 |
+| `android/app/src/main/res/drawable/widget_back.xml`, `android/app/src/main/res/drawable-v31/widget_back.xml` | Recent-artwork widget background | ProStudio contributors | Original work | MIT OR Apache-2.0 |
+| `docs/images/{canvas,layers,brushes,studio,colour,actions,adjust,transform}.jpg`, `docs/images/demo.webp`, `docs/images/demo.mp4` | The README's screenshots and demo: ProStudio on a tablet, painting *Dusk* | ProStudio contributors | Original work: the painting made in the app by `tools/showcase/paint_dusk2.py`, captured from the screen | MIT OR Apache-2.0 |
+| Brushes, brush shapes and grains | Made in code at run time (`crates/engine`) | ProStudio contributors | Original work | MIT OR Apache-2.0 |
+| `docs/images/discord-badge.svg` | The README's "Join us on Discord" badge | ProStudio contributors; the Discord mark from Simple Icons | Drawn to match the download badges beside it; the mark's path from <https://simpleicons.org> (simple-icons 13.21.0, `icons/discord.svg`) | MIT OR Apache-2.0; the mark CC0 1.0 (Discord's trademark, shown to link to the project's server) |
 
 ### Lucide icons in `LucideIcons.kt`
 
@@ -265,7 +265,7 @@ Our own among the rest: `ShapeArc`, and the outlines and shapes not listed above
 
 | Path | Title | Author | Source | Licence |
 |---|---|---|---|---|
-| `crates/engine/tests/models/*.usd{a,c,z}` | Test cube, moved cube and grid | ProCraft contributors (made by `tools/usd/make_usd.py`) | Original work, see the folder's `README.md` | MIT OR Apache-2.0 |
+| `crates/engine/tests/models/*.usd{a,c,z}` | Test cube, moved cube and grid | ProStudio contributors (made by `tools/usd/make_usd.py`) | Original work, see the folder's `README.md` | MIT OR Apache-2.0 |
 
 ## Libraries
 

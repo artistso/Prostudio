@@ -1,8 +1,15 @@
 <p align="center">
-  <img src="assets/app-icon/procraft-1024.png" alt="ProCraft's app icon: a paintbrush in a warm-to-cool blend on a black tile" width="128">
+  <img src="assets/app-icon/prostudio-1024.png" alt="ProStudio's app icon: a paintbrush in a warm-to-cool blend on a black tile" width="128">
 </p>
 
-<h1 align="center">ProCraft</h1>
+<h1 align="center">ProStudio</h1>
+
+<p align="center">
+  <b>ProStudio is the merger of two projects by the same author: <a href="https://github.com/artistso/inkframesv5">InkFrame&nbsp;v5</a> and <b>ProCraft</b> — renamed to ProStudio as of v0.0.5-beta.</b><br>
+  ProCraft brought the Rust engine, the Android app and the desktop;<br>
+  InkFrame v5 brought the interface — <i>the Glass Horizon</i>: a rose-and-plum world, the wordmark out in the open, optical orbs, frosted glass, the perimeter frame board.<br>
+  <sub>Old <code>.procraft</code> artworks, plugins and settings open and carry over; new files use the <code>.prostudio</code> names.</sub>
+</p>
 
 <p align="center">
   <b>An open-source painting app for Android tablets, Windows and Linux, with its own Rust engine and GPU renderer: a Kotlin/Jetpack Compose UI on Android, the same interface in egui on the desktop.</b><br>
@@ -10,8 +17,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/artcraft-android/procraft/releases"><img src="https://raw.githubusercontent.com/Kunzisoft/Github-badge/main/get-it-on-github.png" alt="Get it on GitHub" height="60"></a>
-  <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/artcraft-android/procraft"><img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" alt="Get it on Obtainium" height="60"></a>
+  <a href="https://github.com/artistso/prostudio/releases"><img src="https://raw.githubusercontent.com/Kunzisoft/Github-badge/main/get-it-on-github.png" alt="Get it on GitHub" height="60"></a>
+  <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/artistso/prostudio"><img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" alt="Get it on Obtainium" height="60"></a>
   <a href="https://discord.gg/EmRrVN2X"><img src="docs/images/discord-badge.svg" alt="Join us on Discord" height="60"></a>
 </p>
 
@@ -28,7 +35,7 @@
 </p>
 
 <p align="center">
-  <sub>From <a href="https://github.com/artcraft-android/procraft/releases">Releases</a>: Android tablets take the <code>arm64.apk</code> (the <code>legacy-arm32.apk</code> is only for older 32-bit tablets), or Obtainium, for updates; Windows the <code>.msi</code> installer or the portable <code>.zip</code>; Linux the <code>.AppImage</code>, the <code>.deb</code> or the <code>.tar.gz</code> (videos and PDFs there use the system's <code>ffmpeg</code> and <code>poppler-utils</code>).</sub>
+  <sub>From <a href="https://github.com/artistso/prostudio/releases">Releases</a>: Android tablets take the <code>arm64.apk</code> (the <code>legacy-arm32.apk</code> is only for older 32-bit tablets), or Obtainium, for updates; Windows the <code>.msi</code> installer or the portable <code>.zip</code>; Linux the <code>.AppImage</code>, the <code>.deb</code> or the <code>.tar.gz</code> (videos and PDFs there use the system's <code>ffmpeg</code> and <code>poppler-utils</code>).</sub>
 </p>
 
 <p align="center">
@@ -43,9 +50,9 @@
 <br>
 
 <p align="center">
-  <img src="docs/images/demo.webp" alt="Dusk painted in ProCraft from a blank canvas, at a person's pace: the Soft Airbrush picked in the brush library and its size set; colours picked on the Classic square; the sky filled indigo by dragging the colour onto the canvas and airbrushed in bands of purple, magenta, orange and gold; a new layer for a glow and one for the sun, a circle that snaps round and is filled; two ranges of hills outlined and filled; pines and birds inked; stars airbrushed and made to glow with Bloom; the Layers panel opened on its seven layers" width="100%">
+  <img src="docs/images/demo.webp" alt="Dusk painted in ProStudio from a blank canvas, at a person's pace: the Soft Airbrush picked in the brush library and its size set; colours picked on the Classic square; the sky filled indigo by dragging the colour onto the canvas and airbrushed in bands of purple, magenta, orange and gold; a new layer for a glow and one for the sun, a circle that snaps round and is filled; two ranges of hills outlined and filled; pines and birds inked; stars airbrushed and made to glow with Bloom; the Layers panel opened on its seven layers" width="100%">
   <br>
-  <sub><b>Dusk</b>, painted from a blank canvas on a Lenovo Legion Tab: the brush library, the colour picker, the layers, a sun snapped round and filled, hills filled the same way, pines, stars with Bloom. About 1:20; the <a href="docs/images/demo.mp4">full video</a> (MP4, 2:21) shows every menu at close to real speed. Every stroke is a pen stroke with pressure, eased in and out, played by the <a href="tools/showcase">demo script</a>.</sub>
+  <sub><b>Dusk</b>, painted from a blank canvas on a Lenovo Legion Tab: the brush library, the colour picker, the layers, a sun snapped round and filled, hills filled the same way, pines, stars with Bloom. About 1:20; the <a href="docs/images/demo.mp4">full video</a> (MP4, 2:21) shows every menu at close to real speed. Every stroke is a pen stroke with pressure, eased in and out, played by the <a href="tools/showcase">demo script</a>. <i>Captured before the ProStudio rename — the interface now wears the warm-ink identity described above; fresh captures are due.</i></sub>
 </p>
 
 <br>
@@ -103,7 +110,7 @@
 
 ## Planned features
 
-ProCraft is in beta, on Android tablets and on the desktop (Windows and Linux).
+ProStudio is in beta, on Android tablets and on the desktop (Windows and Linux).
 
 | Area | Status |
 |---|---|
@@ -118,9 +125,9 @@ ProCraft is in beta, on Android tablets and on the desktop (Windows and Linux).
 | Gallery: stacks, new-canvas presets, import and share (PNG, JPEG, PSD, PDF, TIFF, GIF, MP4), time-lapse | 🚧 nearly done |
 | 3D painting: OBJ and USDZ models, texture sets, painting on the mesh, lights and environments | 🚧 |
 | Desktop: Windows and Linux, the same interface with a mouse, a pen tablet and keyboard shortcuts; an installer, an AppImage and a .deb | 🚧 beta |
-| Plugins: `.procraft-plugin` files you import in Prefs › Plugins, each off until you turn it on and gone without a trace when you turn it off. Filters (a few lines of WGSL, under Adjustments) and sandboxed WebAssembly that changes how the app behaves, such as Interface size, Touch offset and ColorDrop gap closing. How to write one: [docs/plugins.md](docs/plugins.md) | 🚧 experimental |
+| Plugins: `.prostudio-plugin` files you import in Prefs › Plugins, each off until you turn it on and gone without a trace when you turn it off. Filters (a few lines of WGSL, under Adjustments) and sandboxed WebAssembly that changes how the app behaves, such as Interface size, Touch offset and ColorDrop gap closing. How to write one: [docs/plugins.md](docs/plugins.md) | 🚧 experimental |
 | More for plugins: panels and tools of their own, and plugins that can use the app's commands | ⬜ |
-| Phones: their own app, ProCraft Pocket (this one is for tablets) | ⬜ |
+| Phones: their own app, ProStudio Pocket (this one is for tablets) | ⬜ |
 
 <sub>✅ works today · 🚧 in progress · ⬜ not started · 🚫 not planned</sub>
 
@@ -131,8 +138,8 @@ ProCraft is in beta, on Android tablets and on the desktop (Windows and Linux).
 
 * Clone this repository
 * Make sure you have at least 6 GB of free disk space
-* enter `android` and run `./gradlew assembleRelease -Pprocraft.abis=arm64-v8a`, or open that folder in Android Studio and press Run.
-* the desktop app: `cargo run --release -p procraft-desktop` from the repository's root; its installer and packages with `packaging/windows/package.ps1` (WiX v5) and `packaging/linux/package.sh` (nfpm, appimagetool).
+* enter `android` and run `./gradlew assembleRelease -Pprostudio.abis=arm64-v8a`, or open that folder in Android Studio and press Run.
+* the desktop app: `cargo run --release -p prostudio-desktop` from the repository's root; its installer and packages with `packaging/windows/package.ps1` (WiX v5) and `packaging/linux/package.sh` (nfpm, appimagetool).
 
 Build time dependencies:
 
@@ -175,7 +182,21 @@ Build time dependencies:
 
 <br>
 
+## For AI agents (and the people who use them)
+
+If you are an AI assistant in this repository — Arena.ai Agent Mode or anything else —
+read **[AGENTS.md](AGENTS.md)** first. It explains what this project is (the ProCraft →
+ProStudio → InkFrame v5 merger), which codebase is authoritative for drawing and which is
+the visual reference, how CI works (CI is the only compiler for Android), and the branch
+and attribution rules. The short version: the **engine of ProStudio is authoritative** for
+what the artwork becomes; **InkFrame v5** (a sibling repository,
+[`artistso/inkframesv5`](https://github.com/artistso/inkframesv5)) is the binding
+*visual and interaction* reference for the Glass Horizon interface — the rose/plum world,
+the wordmark, the orbs, the perimeter board — being rebuilt on Android. Nothing may be
+called done until the owner approves device screenshots.
+
 ## Misc info for myself
 
 Try to use [semantic commit](https://kapeli.com/cheat_sheets/Semantic_Commits.docset/Contents/Resources/Documents/index)
-messages. Use `feat:` / `fix:` / `chore:` / `docs:` / etc.
+messages. Use `feat:` / `fix:` / `chore:` / `docs:` / etc. Contribution rules for humans
+and AI both live in [AGENTS.md](AGENTS.md).

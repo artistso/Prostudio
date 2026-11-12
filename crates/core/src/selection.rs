@@ -1,8 +1,8 @@
 //! Selections: shapes drawn on the window become a selection on the canvas, which painting keeps
 //! inside, and which can be inverted, feathered, saved, filled or copied to a layer of its own.
 
-use procraft_engine::geom::Vec2;
-use procraft_engine::selection::{ColourFlood, Combine, Mask, feather_radius};
+use prostudio_engine::geom::Vec2;
+use prostudio_engine::selection::{ColourFlood, Combine, Mask, feather_radius};
 
 use crate::{CanvasSession, State};
 
@@ -404,7 +404,7 @@ impl CanvasSession {
         let mut guard = self.shared.lock();
         let st = &mut *guard;
         if let (Some(canvas), Some(gpu), Some((rect, pixels))) = (st.canvas.as_mut(), st.gpu.as_ref(), part) {
-            let _ = canvas.upload_layer_part(gpu, procraft_engine::document::LayerId(id), rect, &pixels);
+            let _ = canvas.upload_layer_part(gpu, prostudio_engine::document::LayerId(id), rect, &pixels);
         }
         st.revision += 1;
         self.shared.frame(st);

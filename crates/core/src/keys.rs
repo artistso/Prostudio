@@ -518,8 +518,8 @@ mod tests {
         assert_eq!(key_shortcut("up".into(), false, false, false, true), Some(Nudge { dx: 0.0, dy: -1.0 }));
     }
 
-    use procraft_engine::geom::Vec2;
-    use procraft_engine::view::View;
+    use prostudio_engine::geom::Vec2;
+    use prostudio_engine::view::View;
 
     /// A session (no GPU) with a 400 square window, its 100 square canvas fitted upright (zoom 4,
     /// the window's middle at (200, 200)); two window pixels a point.

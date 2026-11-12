@@ -1,23 +1,23 @@
 [package]
-name = "procraft-desktop"
+name = "prostudio-desktop"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 license.workspace = true
-description = "ProCraft on the desktop (Windows, macOS, Linux): the same engine and canvas, with an egui interface"
+description = "ProStudio on the desktop (Windows, macOS, Linux): the same engine and canvas, with an egui interface"
 
 [[bin]]
-name = "procraft"
+name = "prostudio"
 path = "src/main.rs"
 
 [lints]
 workspace = true
 
 [dependencies]
-procraft-core = { path = "../crates/core" }
-procraft-engine = { workspace = true }
-procraft-gpu = { workspace = true }
+prostudio-core = { path = "../crates/core" }
+prostudio-engine = { workspace = true }
+prostudio-gpu = { workspace = true }
 log = { workspace = true }
 env_logger = { version = "0.11", default-features = false, features = ["auto-color"] }
 egui = { version = "0.37", features = ["default_fonts"] }

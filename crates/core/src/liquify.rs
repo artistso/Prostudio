@@ -8,8 +8,8 @@
 
 use std::f32::consts::{FRAC_PI_2, PI, TAU};
 
-use procraft_engine::geom::Vec2;
-use procraft_gpu::{LiquifyMode, LiquifyStamp};
+use prostudio_engine::geom::Vec2;
+use prostudio_gpu::{LiquifyMode, LiquifyStamp};
 
 use crate::adjust::{LiquifyBrush, LiquifyKind};
 

@@ -124,7 +124,7 @@ fn geometry(
     }
     let half = side as f32 / 2.0;
     let rows: Vec<usize> = (0..side).collect();
-    let made = procraft_engine::par::side_by_side(&rows, |&y| {
+    let made = prostudio_engine::par::side_by_side(&rows, |&y| {
         let w = (y as f32 + 0.5) / half - 1.0;
         (0..side).map(|x| place((x as f32 + 0.5) / half - 1.0, w, half)).collect::<Vec<_>>()
     });
@@ -138,7 +138,7 @@ fn geometry(
 /// pixels, clear), the rows side by side: the pickers remake theirs as a slider is dragged.
 fn picture_rows(side: usize, row: impl Fn(usize, &mut [[u8; 4]]) + Sync) -> Vec<u8> {
     let rows: Vec<usize> = (0..side).collect();
-    let made = procraft_engine::par::side_by_side(&rows, |&y| {
+    let made = prostudio_engine::par::side_by_side(&rows, |&y| {
         let mut line = vec![[0u8; 4]; side];
         row(y, &mut line);
         line

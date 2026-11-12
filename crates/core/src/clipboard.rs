@@ -1,7 +1,7 @@
 //! Copy, cut and paste, the canvas flipped, and pictures brought in as layers.
 
-use procraft_engine::document::{LayerId, LayerKind};
-use procraft_engine::geom::IRect;
+use prostudio_engine::document::{LayerId, LayerKind};
+use prostudio_engine::geom::IRect;
 
 use crate::layers::ThumbnailImage;
 use crate::{CanvasSession, State};
@@ -222,14 +222,14 @@ impl CanvasSession {
     /// and each frame is held for as long as the file shows it at the animation's frame rate.
     /// None if it isn't a GIF of more than one frame (a still picture: insert it as one).
     pub fn insert_gif_frames(&self, bytes: Vec<u8>, private: bool) -> Option<FramesInserted> {
-        if procraft_engine::gif::frame_count(&bytes) < 2 {
+        if prostudio_engine::gif::frame_count(&bytes) < 2 {
             return None;
         }
-        let (width, height) = procraft_engine::gif::size(&bytes)?;
+        let (width, height) = prostudio_engine::gif::size(&bytes)?;
         // each frame's layer and how long it shows, ms
         let mut held: Vec<(LayerId, u32)> = Vec::new();
         let mut full = false;
-        procraft_engine::gif::frames(&bytes, |rgba, ms| {
+        prostudio_engine::gif::frames(&bytes, |rgba, ms| {
             let mut image = ThumbnailImage { width, height, rgba: rgba.to_vec() };
             // straight to premultiplied
             for px in image.rgba.as_chunks_mut::<4>().0 {
@@ -248,17 +248,25 @@ impl CanvasSession {
         if held.is_empty() {
             return Some(FramesInserted { added: 0, full });
         }
-        let assisted = self.shared.lock().doc.animation.as_ref().is_some_and(|a| !a.pages);
+        let assisted = self.shared.lock().doc.active_animation().is_some_and(|a| !a.pages);
         if !assisted {
             self.set_animation_assist(true);
         }
         // each shown for as many of the animation's frames as its time takes, at the rate it has
-        // now (turned on from Page Assist, its own)
-        if let Some(a) = self.shared.lock().doc.animation.as_mut() {
-            let fps = f64::from(a.fps.max(1));
-            for &(id, ms) in &held {
-                let shown = ((f64::from(ms) * fps / 1000.0).round() as u32).max(1);
-                a.set_hold(id, shown - 1);
+        // now (turned on from Page Assist, its own); and into the timeline (the seed captures
+        // them while it is made; one that was already there takes them appended)
+        {
+            let mut guard = self.shared.lock();
+            let st = &mut *guard;
+            if let Some(a) = st.doc.active_animation_mut() {
+                let fps = f64::from(a.fps.max(1));
+                for &(id, ms) in &held {
+                    let shown = ((f64::from(ms) * fps / 1000.0).round() as u32).max(1);
+                    a.set_hold(id, shown - 1);
+                }
+            }
+            for &(id, _) in &held {
+                st.doc.adopt_frame(id);
             }
         }
         Some(FramesInserted { added: held.len() as u32, full })

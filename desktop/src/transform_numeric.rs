@@ -3,7 +3,7 @@
 //! typed on a keypad. Each key changes the box at once; a tap outside closes it.
 
 use egui::{Align2, Color32, Id, Order, Pos2, Rect, Sense, Ui, pos2, vec2};
-use procraft_core::{CanvasSession, TransformBox};
+use prostudio_core::{CanvasSession, TransformBox};
 
 use crate::icons;
 use crate::look::{Look, Weight, argb, pc, text};

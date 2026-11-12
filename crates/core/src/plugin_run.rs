@@ -3,26 +3,26 @@
 //! and all it can do is hand some back.
 //!
 //! What a module exports, interface 1, in plain numbers:
-//! - `procraft_position(x: f32, y: f32) -> i64`: for the hook `position`, where a sample in window
+//! - `prostudio_position(x: f32, y: f32) -> i64`: for the hook `position`, where a sample in window
 //!   pixels lands, x's bits in the low half and y's in the high.
-//! - `procraft_pick_layer() -> i32`: for the hook `pick_layer`, whether the eyedropper reads the
+//! - `prostudio_pick_layer() -> i32`: for the hook `pick_layer`, whether the eyedropper reads the
 //!   current layer (not 0) or the canvas as it is composited (0).
-//! - `procraft_interface_scale(width: f32, height: f32) -> f32`: for the hook `interface_scale`, how
+//! - `prostudio_interface_scale(width: f32, height: f32) -> f32`: for the hook `interface_scale`, how
 //!   big the interface shows (1: as measured) in a window of that size, in points at 1.
-//! - `procraft_paste_mask() -> i32`: for the hook `paste_mask`, whether a picture pasted with a mask
+//! - `prostudio_paste_mask() -> i32`: for the hook `paste_mask`, whether a picture pasted with a mask
 //!   current goes into the mask (not 0). If it does, the picture goes through the module a row at a
-//!   time: `procraft_row_buffer(bytes: i32) -> i32` says where in its exported `memory` a row of that
-//!   many bytes can go, and for each row, written there, `procraft_paste_row(at: i32, width: i32)`
+//!   time: `prostudio_row_buffer(bytes: i32) -> i32` says where in its exported `memory` a row of that
+//!   many bytes can go, and for each row, written there, `prostudio_paste_row(at: i32, width: i32)`
 //!   turns its `width` RGBA pixels (premultiplied, top to bottom) into what the mask holds, in place.
-//! - `procraft_fill_mask() -> i32`: for the hook `fill_mask`, whether a fill being let go has
+//! - `prostudio_fill_mask() -> i32`: for the hook `fill_mask`, whether a fill being let go has
 //!   anything to go through (not 0). If it has, it goes through on a thread of its own, a row at a
-//!   time, in bits: `procraft_fill_begin(width: i32, height: i32, seed_x: i32, seed_y: i32) -> i32`
+//!   time, in bits: `prostudio_fill_begin(width: i32, height: i32, seed_x: i32, seed_y: i32) -> i32`
 //!   says where in its exported `memory` a row goes, `width` bits in 64-bit words, low bit first.
-//!   `procraft_fill_row(y: i32)` takes each row written there, `procraft_fill_run() -> i32` works it
-//!   out (not 0: something comes out), and `procraft_fill_out(y: i32)` puts each row of what comes
+//!   `prostudio_fill_row(y: i32)` takes each row written there, `prostudio_fill_run() -> i32` works it
+//!   out (not 0: something comes out), and `prostudio_fill_out(y: i32)` puts each row of what comes
 //!   out there. All it can do is take away: what isn't in the fill stays out of it, and the seed
 //!   stays in.
-//! - `procraft_control(index: i32, value: f32)`: a control's value (a switch is 0 or 1), by its
+//! - `prostudio_control(index: i32, value: f32)`: a control's value (a switch is 0 or 1), by its
 //!   place in the manifest: each as the plugin starts, then each as it changes. Needed if it has any.
 
 use std::panic::{AssertUnwindSafe, catch_unwind};
@@ -67,19 +67,19 @@ const MOST_MOVE: f32 = 16_384.0;
 /// The scales an interface can be used at: past these nobody could reach the page to undo it.
 const SCALES: std::ops::RangeInclusive<f32> = 0.5..=2.0;
 
-const POSITION: &str = "procraft_position";
-const PICK_LAYER: &str = "procraft_pick_layer";
-const INTERFACE_SCALE: &str = "procraft_interface_scale";
-const PASTE_MASK: &str = "procraft_paste_mask";
-const ROW_BUFFER: &str = "procraft_row_buffer";
-const PASTE_ROW: &str = "procraft_paste_row";
-const FILL_MASK: &str = "procraft_fill_mask";
-const FILL_BEGIN: &str = "procraft_fill_begin";
-const FILL_ROW: &str = "procraft_fill_row";
-const FILL_RUN: &str = "procraft_fill_run";
-const FILL_OUT: &str = "procraft_fill_out";
+const POSITION: &str = "prostudio_position";
+const PICK_LAYER: &str = "prostudio_pick_layer";
+const INTERFACE_SCALE: &str = "prostudio_interface_scale";
+const PASTE_MASK: &str = "prostudio_paste_mask";
+const ROW_BUFFER: &str = "prostudio_row_buffer";
+const PASTE_ROW: &str = "prostudio_paste_row";
+const FILL_MASK: &str = "prostudio_fill_mask";
+const FILL_BEGIN: &str = "prostudio_fill_begin";
+const FILL_ROW: &str = "prostudio_fill_row";
+const FILL_RUN: &str = "prostudio_fill_run";
+const FILL_OUT: &str = "prostudio_fill_out";
 const MEMORY: &str = "memory";
-const CONTROL: &str = "procraft_control";
+const CONTROL: &str = "prostudio_control";
 
 /// What a plugin may step into, by the name a manifest gives it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -514,21 +514,21 @@ pub(crate) mod tests {
     pub(crate) const OFFSET: &str = r#"(module
         (global $x (mut f32) (f32.const 0))
         (global $y (mut f32) (f32.const 0))
-        (func (export "procraft_control") (param i32 f32)
+        (func (export "prostudio_control") (param i32 f32)
             (if (i32.eqz (local.get 0))
                 (then (global.set $x (local.get 1)))
                 (else (global.set $y (local.get 1)))))
-        (func (export "procraft_position") (param f32 f32) (result i64)
+        (func (export "prostudio_position") (param f32 f32) (result i64)
             (i64.or
                 (i64.extend_i32_u (i32.reinterpret_f32 (f32.add (local.get 0) (global.get $x))))
                 (i64.shl
                     (i64.extend_i32_u (i32.reinterpret_f32 (f32.add (local.get 1) (global.get $y))))
                     (i64.const 32)))))"#;
 
-    /// A module whose `procraft_position` does `body`, after what `before` declares.
+    /// A module whose `prostudio_position` does `body`, after what `before` declares.
     pub(crate) fn position_module(before: &str, body: &str) -> Vec<u8> {
         let text =
-            format!(r#"(module {before} (func (export "procraft_position") (param f32 f32) (result i64) {body}))"#);
+            format!(r#"(module {before} (func (export "prostudio_position") (param f32 f32) (result i64) {body}))"#);
         wat::parse_str(text).unwrap()
     }
 
@@ -551,7 +551,7 @@ pub(crate) mod tests {
         let wants = |import: &str| {
             let text = format!(
                 r#"(module {import}
-                    (func (export "procraft_position") (param f32 f32) (result i64) (i64.const 0)))"#
+                    (func (export "prostudio_position") (param f32 f32) (result i64) (i64.const 0)))"#
             );
             can_run(&wat::parse_str(text).unwrap(), &[Hook::Position], false)
         };
@@ -566,17 +566,17 @@ pub(crate) mod tests {
         let refused = |text: &str, controls| !can_run(&wat::parse_str(text).unwrap(), &[Hook::Position], controls);
         assert!(refused("(module)", false));
         // not a function, or not the function it must be
-        assert!(refused(r#"(module (memory (export "procraft_position") 1))"#, false));
+        assert!(refused(r#"(module (memory (export "prostudio_position") 1))"#, false));
         assert!(refused(
-            r#"(module (func (export "procraft_position") (param f32) (result i64) (i64.const 0)))"#,
+            r#"(module (func (export "prostudio_position") (param f32) (result i64) (i64.const 0)))"#,
             false
         ));
         assert!(refused(
-            r#"(module (func (export "procraft_position") (param f32 f32) (result f32) (f32.const 0)))"#,
+            r#"(module (func (export "prostudio_position") (param f32 f32) (result f32) (f32.const 0)))"#,
             false
         ));
         // controls with nothing to tell them to
-        let no_control = r#"(module (func (export "procraft_position") (param f32 f32) (result i64) (i64.const 0)))"#;
+        let no_control = r#"(module (func (export "prostudio_position") (param f32 f32) (result i64) (i64.const 0)))"#;
         assert!(!refused(no_control, false));
         assert!(refused(no_control, true));
     }
@@ -632,7 +632,7 @@ pub(crate) mod tests {
     #[test]
     fn a_hook_needs_its_export_and_a_module_answers_only_what_it_exports() {
         let picks =
-            wat::parse_str(r#"(module (func (export "procraft_pick_layer") (result i32) (i32.const 7)))"#).unwrap();
+            wat::parse_str(r#"(module (func (export "prostudio_pick_layer") (result i32) (i32.const 7)))"#).unwrap();
         assert!(can_run(&picks, &[Hook::PickLayer], false));
         assert!(!can_run(&picks, &[Hook::Position], false));
         assert!(!can_run(&picks, &[Hook::PickLayer, Hook::Position], false));
@@ -640,7 +640,7 @@ pub(crate) mod tests {
         assert_eq!(running.pick_layer(), Ok(true));
         // what it doesn't export goes on as it came
         assert_eq!(running.position(1.0, 2.0), Ok((1.0, 2.0)));
-        let wrong = r#"(module (func (export "procraft_pick_layer") (param i32) (result i32) (i32.const 1)))"#;
+        let wrong = r#"(module (func (export "prostudio_pick_layer") (param i32) (result i32) (i32.const 1)))"#;
         assert!(!can_run(&wat::parse_str(wrong).unwrap(), &[Hook::PickLayer], false));
     }
 
@@ -648,7 +648,7 @@ pub(crate) mod tests {
     fn a_scale_nobody_could_use_is_refused() {
         let says = |value: &str| {
             let text = format!(
-                r#"(module (func (export "procraft_interface_scale") (param f32 f32) (result f32) (f32.const {value})))"#
+                r#"(module (func (export "prostudio_interface_scale") (param f32 f32) (result f32) (f32.const {value})))"#
             );
             started(&wat::parse_str(text).unwrap()).interface_scale(800.0, 600.0)
         };
@@ -660,13 +660,13 @@ pub(crate) mod tests {
         }
     }
 
-    /// A paste module whose `procraft_paste_row` does `body`, its buffer where `buffer` says.
+    /// A paste module whose `prostudio_paste_row` does `body`, its buffer where `buffer` says.
     pub(crate) fn paste_module(buffer: &str, body: &str) -> Vec<u8> {
         let text = format!(
             r#"(module (memory (export "memory") 2)
-                (func (export "procraft_paste_mask") (result i32) (i32.const 1))
-                (func (export "procraft_row_buffer") (param i32) (result i32) {buffer})
-                (func (export "procraft_paste_row") (param $at i32) (param $width i32) {body}))"#
+                (func (export "prostudio_paste_mask") (result i32) (i32.const 1))
+                (func (export "prostudio_row_buffer") (param i32) (result i32) {buffer})
+                (func (export "prostudio_paste_row") (param $at i32) (param $width i32) {body}))"#
         );
         wat::parse_str(text).unwrap()
     }
@@ -688,11 +688,11 @@ pub(crate) mod tests {
         let good = paste_module("(i32.const 65536)", "");
         assert!(can_run(&good, &[Hook::PasteMask], false));
         for wrong in [
-            r#"(module (func (export "procraft_paste_mask") (result i32) (i32.const 1)))"#,
+            r#"(module (func (export "prostudio_paste_mask") (result i32) (i32.const 1)))"#,
             r#"(module (memory 1)
-                (func (export "procraft_paste_mask") (result i32) (i32.const 1))
-                (func (export "procraft_row_buffer") (param i32) (result i32) (i32.const 0))
-                (func (export "procraft_paste_row") (param i32 i32)))"#,
+                (func (export "prostudio_paste_mask") (result i32) (i32.const 1))
+                (func (export "prostudio_row_buffer") (param i32) (result i32) (i32.const 0))
+                (func (export "prostudio_paste_row") (param i32 i32)))"#,
         ] {
             assert!(!can_run(&wat::parse_str(wrong).unwrap(), &[Hook::PasteMask], false));
         }
@@ -725,11 +725,11 @@ pub(crate) mod tests {
     pub(crate) fn fill_module(begin: &str, run: &str, out: &str) -> Vec<u8> {
         let text = format!(
             r#"(module (memory (export "memory") 2)
-                (func (export "procraft_fill_mask") (result i32) (i32.const 1))
-                (func (export "procraft_fill_begin") (param i32 i32 i32 i32) (result i32) {begin})
-                (func (export "procraft_fill_row") (param i32))
-                (func (export "procraft_fill_run") (result i32) {run})
-                (func (export "procraft_fill_out") (param $y i32) {out}))"#
+                (func (export "prostudio_fill_mask") (result i32) (i32.const 1))
+                (func (export "prostudio_fill_begin") (param i32 i32 i32 i32) (result i32) {begin})
+                (func (export "prostudio_fill_row") (param i32))
+                (func (export "prostudio_fill_run") (result i32) {run})
+                (func (export "prostudio_fill_out") (param $y i32) {out}))"#
         );
         wat::parse_str(text).unwrap()
     }
@@ -763,14 +763,14 @@ pub(crate) mod tests {
         let good = fill_module(FILL_AT, "(i32.const 0)", "");
         assert!(can_run(&good, &[Hook::FillMask], false));
         let no_memory = r#"(module
-            (func (export "procraft_fill_mask") (result i32) (i32.const 1))
-            (func (export "procraft_fill_begin") (param i32 i32 i32 i32) (result i32) (i32.const 0))
-            (func (export "procraft_fill_row") (param i32))
-            (func (export "procraft_fill_run") (result i32) (i32.const 0))
-            (func (export "procraft_fill_out") (param i32)))"#;
+            (func (export "prostudio_fill_mask") (result i32) (i32.const 1))
+            (func (export "prostudio_fill_begin") (param i32 i32 i32 i32) (result i32) (i32.const 0))
+            (func (export "prostudio_fill_row") (param i32))
+            (func (export "prostudio_fill_run") (result i32) (i32.const 0))
+            (func (export "prostudio_fill_out") (param i32)))"#;
         assert!(!can_run(&wat::parse_str(no_memory).unwrap(), &[Hook::FillMask], false));
         let one_short = r#"(module (memory (export "memory") 1)
-            (func (export "procraft_fill_mask") (result i32) (i32.const 1)))"#;
+            (func (export "prostudio_fill_mask") (result i32) (i32.const 1)))"#;
         assert!(!can_run(&wat::parse_str(one_short).unwrap(), &[Hook::FillMask], false));
     }
 

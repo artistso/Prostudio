@@ -13,7 +13,7 @@ use std::time::Instant;
 
 use egui::text::{CCursor, CCursorRange, LayoutJob, TextFormat, TextWrapping};
 use egui::{Align2, Color32, Pos2, Rect, ScrollArea, Sense, TextureHandle, TextureOptions, Ui, UiBuilder, pos2, vec2};
-use procraft_core::{
+use prostudio_core::{
     BlendModeInfo, CanvasSession, LayerInfo, LayerOption, LayerOptionRow, LayerType, ModelInfo, ThumbnailImage,
 };
 use resvg::tiny_skia;
@@ -232,7 +232,7 @@ fn items<'a>(
     };
     let mut out = Vec::new();
     for (set, name) in model.texture_sets.iter().enumerate() {
-        let meshes: Vec<(usize, &procraft_core::SubmeshInfo)> =
+        let meshes: Vec<(usize, &prostudio_core::SubmeshInfo)> =
             model.submeshes.iter().enumerate().filter(|(_, m)| m.texture_set as usize == set).collect();
         if meshes.is_empty() {
             continue;
@@ -310,7 +310,7 @@ impl Layers {
         let top = screen.top() + pc::BAR_HEIGHT;
         let layers = session.layers();
         let versions: HashMap<u64, u64> = session.layer_versions().into_iter().map(|v| (v.id, v.version)).collect();
-        let modes = procraft_core::blend_modes();
+        let modes = prostudio_core::blend_modes();
         // a closed group's layers are left out
         let collapsed: Vec<u64> =
             layers.iter().filter(|l| l.kind == LayerType::Group && l.collapsed).map(|l| l.id).collect();
