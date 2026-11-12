@@ -1,11 +1,14 @@
 package io.github.artistso.prostudio.ui
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -69,6 +72,8 @@ fun GlassNodes(vm: CanvasViewModel, modifier: Modifier = Modifier) {
     var open by remember { mutableStateOf<GlassNode?>(null) }
     // each node's place, as a fraction of the stage, persisted as it is dragged
     val places = remember { mutableStateMapOf<GlassNode, Offset>() }
+    // children torn off their fan stay pinned on the stage until re-linked, double-tapped, or collapsed
+    val pinned = remember { mutableStateMapOf<String, PinnedChild>() }
     BoxWithConstraints(modifier.fillMaxSize()) {
         val density = LocalDensity.current
         val w = maxWidth
@@ -84,6 +89,16 @@ fun GlassNodes(vm: CanvasViewModel, modifier: Modifier = Modifier) {
         fun persist(node: GlassNode, p: Offset) {
             places[node] = p
             prefs.edit().putFloat("glassnode_${node.name}_x", p.x).putFloat("glassnode_${node.name}_y", p.y).apply()
+        }
+        fun nodeCentreDp(node: GlassNode): Offset {
+            val p = placeOf(node)
+            return Offset(p.x * w.value, p.y * h.value)
+        }
+        fun nearAnyNode(atDp: Offset): Boolean = GlassNode.entries.any { node ->
+            val c = nodeCentreDp(node)
+            val dx = c.x - atDp.x
+            val dy = c.y - atDp.y
+            dx * dx + dy * dy <= REATTACH_DP * REATTACH_DP
         }
         // with a node open, a tap out in the world closes it — and still reaches the canvas
         if (open != null) {
@@ -140,11 +155,66 @@ fun GlassNodes(vm: CanvasViewModel, modifier: Modifier = Modifier) {
                 )
             }
             if (open == node && children.isNotEmpty()) {
-                ChildrenFan(children, vm, centreX, centreY, w, h)
+                ChildrenFan(
+                    parent = node,
+                    children = children,
+                    pinnedKeys = pinned.keys,
+                    vm = vm,
+                    cx = centreX,
+                    cy = centreY,
+                    w = w,
+                    h = h,
+                    onPin = { child, atDp ->
+                        val key = "${node.name}:${child.id}"
+                        pinned[key] = PinnedChild(node, child.id, atDp)
+                        vm.showNotice("Pinned · drag near a circle to re-link · double-tap to release")
+                    },
+                )
             }
         }
+        // the pin layer: torn-off child orbs that stay out on the stage when their parent closes
+        for ((key, pin) in pinned.entries.toList()) {
+            val live = childrenFor(pin.parent, vm) {}.firstOrNull { it.id == pin.childId } ?: continue
+            PinnedChildOrb(
+                child = live,
+                vm = vm,
+                at = pin.at,
+                relinking = nearAnyNode(pin.at),
+                onMove = { moved ->
+                    val clamped = Offset(
+                        moved.x.coerceIn(ChildHalf.value, w.value - ChildHalf.value),
+                        moved.y.coerceIn(ChildHalf.value, h.value - ChildHalf.value * 1.6f),
+                    )
+                    pinned[key] = pin.copy(at = clamped)
+                },
+                onMoveEnd = {
+                    val cur = pinned[key]?.at ?: pin.at
+                    if (nearAnyNode(cur)) {
+                        pinned.remove(key)
+                        vm.showNotice("Re-linked")
+                    }
+                },
+                onRelease = {
+                    pinned.remove(key)
+                    vm.showNotice("Pin released")
+                },
+            )
+        }
+        // #collapseBtn: the reference's bottom-right glass orb that folds every open fan and pinned child back
+        CollapseAllOrb(
+            visible = open != null || pinned.isNotEmpty(),
+            modifier = Modifier.align(Alignment.BottomEnd).padding(end = 18.dp, bottom = 18.dp),
+            onCollapse = {
+                open = null
+                pinned.clear()
+                vm.showNotice("Collapsed · clean canvas")
+            },
+        )
     }
 }
+
+/** A child orb torn off its fan and pinned on the stage at [at] (in dp). */
+private data class PinnedChild(val parent: GlassNode, val childId: String, val at: Offset)
 
 /** The optical commands; ProStudio's own capabilities behind InkFrame's vocabulary. */
 private enum class GlassNode(val label: String) {
@@ -335,6 +405,8 @@ private fun GlassOrb(
 
 /** The fan of children an open node blooms toward the middle of the drawing. */
 private const val DETACH_DP = 130f // how far a child must be dragged from its seat before it stays out of its seat
+private const val REATTACH_DP = 62f // how near a parent orb a pinned child must come to snap home
+private val CollapseOrbSize = 52.dp
 
 /**
  * The fan of children an open node blooms, straight from the reference: every child orb sits at one shared
@@ -344,23 +416,28 @@ private const val DETACH_DP = 130f // how far a child must be dragged from its s
  */
 @Composable
 private fun ChildrenFan(
+    parent: GlassNode,
     children: List<NodeChild>,
+    pinnedKeys: Set<String>,
     vm: CanvasViewModel,
     cx: Dp,
     cy: Dp,
     w: Dp,
     h: Dp,
+    onPin: (NodeChild, Offset) -> Unit,
 ) {
+    val unpinned = children.filter { "${parent.name}:${it.id}" !in pinnedKeys }
+    if (unpinned.isEmpty()) return
     val centre = Offset(cx.value, cy.value)
     val toTheRight = centre.x <= w.value / 2f
-    val spread = if (children.size <= 4) 78f else 118f
+    val spread = if (unpinned.size <= 4) 78f else 118f
     val start = if (toTheRight) -58f else 122f
     val end = if (toTheRight) 58f else 238f
     val marginX = 34f
     val marginTop = 30f
     val marginBottom = 58f // the label rides bare under the orb, so the foot of the stage needs room
-    val seats = children.indices.map { i ->
-        val fraction = if (children.size <= 1) 0.5f else i.toFloat() / (children.size - 1).toFloat()
+    val seats = unpinned.indices.map { i ->
+        val fraction = if (unpinned.size <= 1) 0.5f else i.toFloat() / (unpinned.size - 1).toFloat()
         val degrees = start + (end - start) * fraction
         val radians = degrees / 180f * PI.toFloat()
         Offset(
@@ -368,12 +445,15 @@ private fun ChildrenFan(
             (centre.y + sin(radians) * spread).coerceIn(marginTop, h.value - marginBottom),
         )
     }
-    for ((i, child) in children.withIndex()) {
+    for ((i, child) in unpinned.withIndex()) {
+        val seat = seats[i]
         ChildOrb(
-            child,
-            vm,
-            i,
-            Modifier.offset(x = (seats[i].x - ChildHalf.value).dp, y = (seats[i].y - ChildHalf.value).dp),
+            child = child,
+            vm = vm,
+            index = i,
+            seat = seat,
+            onPin = { atDp -> onPin(child, atDp) },
+            modifier = Modifier.offset(x = (seat.x - ChildHalf.value).dp, y = (seat.y - ChildHalf.value).dp),
         )
     }
 }
@@ -383,11 +463,12 @@ private fun ChildOrb(
     child: NodeChild,
     vm: CanvasViewModel,
     index: Int,
+    seat: Offset,
+    onPin: (Offset) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // the drag of this orb away from its seat, and whether it has let go and stays out there
+    // the drag of this orb away from its seat; past DETACH_DP it pins onto the stage
     val drag = remember { Animatable(Offset.Zero, Offset.VectorConverter) }
-    var detached by remember { mutableStateOf(false) }
     val pop = remember { Animatable(0.35f) }
     LaunchedEffect(Unit) {
         kotlinx.coroutines.delay(index * 45L)
@@ -401,8 +482,8 @@ private fun ChildOrb(
             .width(72.dp)
             .offset(drag.value.x.dp, drag.value.y.dp)
             .graphicsLayer {
-                scaleX = pop.value * if (detached) 1.08f else 1f
-                scaleY = pop.value * if (detached) 1.08f else 1f
+                scaleX = pop.value
+                scaleY = pop.value
                 alpha = pop.value.coerceIn(0f, 1f)
             }
             .pointerInput(tight) {
@@ -410,9 +491,9 @@ private fun ChildOrb(
                 detectDragGestures(
                     onDragEnd = {
                         val d = drag.value
-                        if (!detached && d.x * d.x + d.y * d.y > DETACH_DP * DETACH_DP) {
-                            detached = true
-                        } else if (!detached) {
+                        if (d.x * d.x + d.y * d.y > DETACH_DP * DETACH_DP) {
+                            onPin(seat + d)
+                        } else {
                             scope.launch { drag.animateTo(Offset.Zero, spring(dampingRatio = 0.32f, stiffness = 720f)) }
                         }
                     },
@@ -425,62 +506,163 @@ private fun ChildOrb(
             },
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        when {
-            child.dial -> StreamLineDial(vm, Modifier.size(ChildSize))
-            child.swatch != null -> {
-                val swatchColor = Color(0xFF000000.toInt() or child.swatch)
-                Box(
-                    Modifier.size(ChildSize)
-                        .clickable(
-                            interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
-                            indication = null,
-                            onClick = child.onTap,
-                        )
-                        .drawBehind {
-                            drawCircle(Color(0x73000000), radius = size.minDimension / 2f + 1.dp.toPx(), center = Offset(center.x + 1.dp.toPx(), center.y + 2.dp.toPx()))
-                        }
-                        .clip(CircleShape)
-                        .background(Brush.radialGradient(listOf(swatchColor.copy(alpha = 0.98f), swatchColor.copy(alpha = 0.58f))))
-                        .border(1.dp, if (child.accent) Glass.RimInner else Glass.RimInner.copy(alpha = 0.45f), CircleShape),
-                    contentAlignment = Alignment.Center,
-                ) {}
-            }
-            else -> Box(
+        ChildOrbBody(child, vm, relinking = false, onTap = child.onTap, onDoubleTap = null)
+    }
+}
+
+/** A child orb that has been torn off its fan and lives on the stage until re-linked or released. */
+@Composable
+private fun PinnedChildOrb(
+    child: NodeChild,
+    vm: CanvasViewModel,
+    at: Offset,
+    relinking: Boolean,
+    onMove: (Offset) -> Unit,
+    onMoveEnd: () -> Unit,
+    onRelease: () -> Unit,
+) {
+    val tight = child.dial
+    val density = LocalDensity.current
+    Column(
+        Modifier
+            .offset(x = (at.x - 36f).dp, y = (at.y - ChildHalf.value).dp)
+            .width(72.dp)
+            .pointerInput(tight, at) {
+                if (tight) return@pointerInput
+                var cur = at
+                detectDragGestures(
+                    onDragEnd = { onMoveEnd() },
+                    onDrag = { change, delta ->
+                        change.consume()
+                        cur += Offset(delta.x / density.density, delta.y / density.density)
+                        onMove(cur)
+                    },
+                )
+            },
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        ChildOrbBody(child, vm, relinking = relinking, onTap = child.onTap, onDoubleTap = onRelease)
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun ChildOrbBody(
+    child: NodeChild,
+    vm: CanvasViewModel,
+    relinking: Boolean,
+    onTap: () -> Unit,
+    onDoubleTap: (() -> Unit)?,
+) {
+    val clickMod = if (onDoubleTap != null) {
+        Modifier.combinedClickable(
+            interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+            indication = null,
+            onClick = onTap,
+            onDoubleClick = onDoubleTap,
+        )
+    } else {
+        Modifier.clickable(
+            interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+            indication = null,
+            onClick = onTap,
+        )
+    }
+    when {
+        child.dial -> StreamLineDial(vm, Modifier.size(ChildSize))
+        child.swatch != null -> {
+            val swatchColor = Color(0xFF000000.toInt() or child.swatch)
+            Box(
                 Modifier.size(ChildSize)
-                    .clickable(
-                        interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
-                        indication = null,
-                        onClick = child.onTap,
-                    )
+                    .then(clickMod)
                     .drawBehind {
+                        if (relinking) drawCircle(Glass.Accent.copy(alpha = 0.42f), radius = size.minDimension * 0.76f, center = center)
                         drawCircle(Color(0x73000000), radius = size.minDimension / 2f + 1.dp.toPx(), center = Offset(center.x + 1.dp.toPx(), center.y + 2.dp.toPx()))
                     }
                     .clip(CircleShape)
-                    .background(
-                        if (child.accent) Brush.radialGradient(listOf(Color(0xFFF7CAC9), Glass.Accent))
-                        else Brush.radialGradient(listOf(Glass.Strong, Color(0x9414000E))),
-                    )
-                    .border(1.dp, if (child.accent) Glass.RimInner else Glass.RimInner.copy(alpha = 0.45f), CircleShape),
+                    .background(Brush.radialGradient(listOf(swatchColor.copy(alpha = 0.98f), swatchColor.copy(alpha = 0.58f))))
+                    .border(1.dp, if (child.accent || relinking) Glass.RimInner else Glass.RimInner.copy(alpha = 0.45f), CircleShape),
                 contentAlignment = Alignment.Center,
-            ) {
-                GlassGlyph(child.glyph, 20.dp)
+            ) {}
+        }
+        else -> Box(
+            Modifier.size(ChildSize)
+                .then(clickMod)
+                .drawBehind {
+                    if (relinking) drawCircle(Glass.Accent.copy(alpha = 0.42f), radius = size.minDimension * 0.76f, center = center)
+                    drawCircle(Color(0x73000000), radius = size.minDimension / 2f + 1.dp.toPx(), center = Offset(center.x + 1.dp.toPx(), center.y + 2.dp.toPx()))
+                }
+                .clip(CircleShape)
+                .background(
+                    if (child.accent) Brush.radialGradient(listOf(Color(0xFFF7CAC9), Glass.Accent))
+                    else Brush.radialGradient(listOf(Glass.Strong, Color(0x9414000E))),
+                )
+                .border(1.dp, if (child.accent || relinking) Glass.RimInner else Glass.RimInner.copy(alpha = 0.45f), CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            GlassGlyph(child.glyph, 20.dp)
+        }
+    }
+    if (child.label.isNotEmpty()) {
+        // bare white ink under the orb, as the reference draws it
+        Text(
+            child.label.uppercase(),
+            color = Color.White,
+            fontSize = 8.sp,
+            fontWeight = FontWeight.Black,
+            letterSpacing = 0.45.sp,
+            maxLines = 1,
+            textAlign = TextAlign.Center,
+            style = TextStyle(
+                shadow = Shadow(Color(0xE62A001A), Offset(0f, 1f), blurRadius = 5f),
+            ),
+        )
+    }
+}
+
+/**
+ * InkFrame's `#collapseBtn`: the 52 dp glass orb at the bottom-right that folds every open fan and
+ * pinned child back to a clean canvas.
+ */
+@Composable
+private fun CollapseAllOrb(
+    visible: Boolean,
+    modifier: Modifier = Modifier,
+    onCollapse: () -> Unit,
+) {
+    val scale by animateFloatAsState(
+        targetValue = if (visible) 1f else 0.6f,
+        animationSpec = spring(dampingRatio = 0.6f, stiffness = 420f),
+        label = "collapseScale",
+    )
+    val alpha by animateFloatAsState(
+        targetValue = if (visible) 0.92f else 0f,
+        animationSpec = spring(dampingRatio = 0.85f, stiffness = 420f),
+        label = "collapseAlpha",
+    )
+    if (alpha <= 0.01f) return
+    Box(
+        modifier
+            .size(CollapseOrbSize)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+                this.alpha = alpha
             }
-        }
-        if (child.label.isNotEmpty()) {
-            // bare white ink under the orb, as the reference draws it
-            Text(
-                child.label.uppercase(),
-                color = Color.White,
-                fontSize = 8.sp,
-                fontWeight = FontWeight.Black,
-                letterSpacing = 0.45.sp,
-                maxLines = 1,
-                textAlign = TextAlign.Center,
-                style = TextStyle(
-                    shadow = Shadow(Color(0xE62A001A), Offset(0f, 1f), blurRadius = 5f),
-                ),
-            )
-        }
+            .drawBehind {
+                drawCircle(Color(0x73000000), radius = size.minDimension / 2f + 1.5.dp.toPx(), center = Offset(center.x + 1.dp.toPx(), center.y + 3.dp.toPx()))
+            }
+            .clip(CircleShape)
+            .background(Brush.radialGradient(listOf(Glass.Strong, Glass.Normal, Color(0x7714000E))))
+            .border(1.dp, Glass.RimInner, CircleShape)
+            .clickable(
+                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                indication = null,
+                onClick = onCollapse,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        GlassGlyph("collapse", 24.dp)
     }
 }
 

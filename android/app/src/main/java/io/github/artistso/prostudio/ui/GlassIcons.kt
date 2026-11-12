@@ -114,10 +114,11 @@ object GlassIcons {
         put("hold", listOf(stroke("M9 6v12M15 6v12"), stroke("M5 12h2M17 12h2", soft = true)))
         put("list", listOf(circle(6f, 12f, 1.6f, fill = true), circle(12f, 12f, 1.6f, fill = true), circle(18f, 12f, 1.6f, fill = true)))
         put("custom", listOf(circle(12f, 12f, 8f), stroke("M12 8v8M8 12h8")))
-        // the app's own, drawn in the same hand: a lane slider (adjustments), step chevrons
+        // the app's own, drawn in the same hand: a lane slider (adjustments), step chevrons, collapse-all
         put("tune", listOf(stroke("M5 8h14M5 16h14"), circle(9f, 8f, 1.8f, fill = true), circle(15f, 16f, 1.8f, fill = true)))
         put("prev", listOf(stroke("M15 6l-6 6 6 6")))
         put("next", listOf(stroke("M9 6l6 6-6 6")))
+        put("collapse", listOf(stroke("M9 9l-4-1 1 4"), stroke("M15 9l4-1-1 4"), stroke("M9 15l-4 1 1-4"), stroke("M15 15l4 1-1-4"), circle(12f, 12f, 2.4f)))
     }
 }
 
