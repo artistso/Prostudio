@@ -5,7 +5,7 @@
 use std::time::{Duration, Instant};
 
 use egui::{Align2, Color32, Pos2, Rect, Sense, TextureHandle, TextureOptions, Ui, pos2, vec2};
-use procraft_core::{CanvasSession, Pick, QuickShapeInfo, QuickShapeKind};
+use prostudio_core::{CanvasSession, Pick, QuickShapeInfo, QuickShapeKind};
 
 use crate::icons;
 use crate::look::{Look, Themed, Weight, argb, pc, text};
@@ -112,7 +112,7 @@ impl Overlays {
 
     /// The brush's outline goes to `at` (points), where the pointer hovers, sized for the brush
     /// as it is now (`info`); or away.
-    pub fn hover(&mut self, session: &CanvasSession, info: &procraft_core::CanvasInfo, ppp: f32, at: Option<Pos2>) {
+    pub fn hover(&mut self, session: &CanvasSession, info: &prostudio_core::CanvasInfo, ppp: f32, at: Option<Pos2>) {
         if at.is_some() {
             // the core keeps the brush's outline: asked again, it is handed back as it was
             self.cursor_shape = session.brush_outline();

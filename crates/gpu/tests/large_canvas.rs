@@ -1,7 +1,7 @@
 //! What a large canvas does on this device's GPU, to run on a tablet: its limits and memory, then
 //! a smudge, wet paint with a grain and both ways a crop takes a layer across, at the sides in
 //! `LARGE_SIDES` (comma separated; 2048, 2300 and 3000 if unset), on `LARGE_LAYERS` painted layers
-//! (5 if unset). Built with `cargo ndk -t arm64-v8a test -p procraft-gpu --test large_canvas
+//! (5 if unset). Built with `cargo ndk -t arm64-v8a test -p prostudio-gpu --test large_canvas
 //! --no-run`, pushed to /data/local/tmp and run with `--ignored --nocapture --test-threads=1`.
 //!
 //! Keep it well under the device's free memory: a process started from `adb shell` can't be
@@ -10,11 +10,11 @@
 
 #![allow(clippy::unwrap_used)]
 
-use procraft_engine::brush::{GrainMode, Rendering};
-use procraft_engine::document::Document;
-use procraft_engine::geom::Vec2;
-use procraft_engine::stroke::Stamp;
-use procraft_gpu::{Canvas, Gpu, StrokeStyle, StrokeTool};
+use prostudio_engine::brush::{GrainMode, Rendering};
+use prostudio_engine::document::Document;
+use prostudio_engine::geom::Vec2;
+use prostudio_engine::stroke::Stamp;
+use prostudio_gpu::{Canvas, Gpu, StrokeStyle, StrokeTool};
 
 fn number_list(name: &str, default: &[u32]) -> Vec<u32> {
     std::env::var(name).map_or_else(|_| default.to_vec(), |v| v.split(',').filter_map(|n| n.parse().ok()).collect())

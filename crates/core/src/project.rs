@@ -13,10 +13,10 @@ use std::io::BufReader;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use procraft_engine::document::{BlendMode, Document, LayerId, LayerKind};
-use procraft_engine::formats::{self, PsdKind, PsdLayer};
-use procraft_engine::geom::Vec2;
-use procraft_engine::view::View;
+use prostudio_engine::document::{BlendMode, Document, LayerId, LayerKind};
+use prostudio_engine::formats::{self, PsdKind, PsdLayer};
+use prostudio_engine::geom::Vec2;
+use prostudio_engine::view::View;
 
 use crate::{CanvasSession, MobileError};
 
@@ -31,7 +31,10 @@ const AUTOSAVE_EVERY: std::time::Duration = std::time::Duration::from_millis(if 
 const AUTOSAVE_AGAIN: std::time::Duration = std::time::Duration::from_millis(if cfg!(test) { 5 } else { 250 });
 /// A package's preview's longest side, pixels.
 const PACKAGE_PREVIEW_SIDE: u32 = 1024;
-const FORMAT: &str = "procraft-artwork";
+const FORMAT: &str = "prostudio-artwork";
+/// As ProCraft wrote it before the rename: read all the same, so an artwork saved before the
+/// rename still opens; a new one writes `prostudio-artwork`.
+const LEGACY_FORMAT: &str = "procraft-artwork";
 const VERSION: u32 = 1;
 
 /// Whether the artwork in `dir` plays: a model, which turns, or Animation Assist or Page Assist on, from its file alone.
@@ -39,7 +42,11 @@ const VERSION: u32 = 1;
 pub fn artwork_plays(dir: String) -> bool {
     let text = fs::read_to_string(Path::new(&dir).join("artwork.json"));
     let file = text.ok().and_then(|t| serde_json::from_str::<ArtworkFile>(&t).ok());
-    file.is_some_and(|f| f.document.animation.is_some() || f.model.is_some())
+    file.is_some_and(|f| {
+        f.document.animation.is_some()
+            || !f.document.timelines.items.is_empty() && f.document.timelines.enabled
+            || f.model.is_some()
+    })
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -49,12 +56,12 @@ struct ArtworkFile {
     name: String,
     document: Document,
     /// Read as kept, or its default if it can't be (as are the document's own settings).
-    #[serde(default, deserialize_with = "procraft_engine::document::or_default")]
+    #[serde(default, deserialize_with = "prostudio_engine::document::or_default")]
     info: ArtworkInfo,
     /// How it was last shown, if it was.
     #[serde(
         default,
-        deserialize_with = "procraft_engine::document::or_default",
+        deserialize_with = "prostudio_engine::document::or_default",
         skip_serializing_if = "Option::is_none"
     )]
     view: Option<SavedView>,
@@ -64,10 +71,10 @@ struct ArtworkFile {
     /// The Reference window as it was left, if it was ever used (its picture beside the layers).
     #[serde(
         default,
-        deserialize_with = "procraft_engine::document::or_default",
+        deserialize_with = "prostudio_engine::document::or_default",
         skip_serializing_if = "Option::is_none"
     )]
-    reference: Option<procraft_engine::reference_window::ReferenceWindow>,
+    reference: Option<prostudio_engine::reference_window::ReferenceWindow>,
 }
 
 /// A view kept with an artwork: the canvas point in the middle of the window, the zoom and the
@@ -156,16 +163,16 @@ pub(crate) struct SaveSnapshot {
     file: ArtworkFile,
     layers: Vec<(LayerId, u64, Vec<u8>)>,
     /// Layers on their way back from the GPU, to be checked against the folder once here.
-    reading: Vec<(LayerId, procraft_gpu::Readback)>,
+    reading: Vec<(LayerId, prostudio_gpu::Readback)>,
     /// Layers still the PNG files they were opened from (not shown yet), written as they are.
     files: Vec<(LayerId, Vec<u8>)>,
-    composite: Option<procraft_gpu::Readback>,
+    composite: Option<prostudio_gpu::Readback>,
     /// Not shown yet, with no thumbnail in the folder: one made from its top picture, for the
     /// gallery until the canvas draws its own.
     unshown: Option<(u32, u32, Vec<u8>)>,
     model: Option<crate::scene3d::ModelSnapshot>,
     /// The device read from, to tell whether it was lost meanwhile.
-    gpu: Option<procraft_gpu::Gpu>,
+    gpu: Option<prostudio_gpu::Gpu>,
     /// The Reference window's picture, if it has one.
     reference_picture: Option<Arc<Vec<u8>>>,
 }
@@ -236,7 +243,7 @@ impl crate::State {
 
     /// See [`CanvasSession::edits`].
     pub(crate) fn edits(&self) -> u64 {
-        self.revision.wrapping_add(self.canvas.as_ref().map_or(0, procraft_gpu::Canvas::steps_made))
+        self.revision.wrapping_add(self.canvas.as_ref().map_or(0, prostudio_gpu::Canvas::steps_made))
     }
 
     /// Nothing under way that saving would end or cut short.
@@ -312,7 +319,8 @@ impl crate::State {
                         continue;
                     }
                     let read = canvas.start_reading_layer(gpu, id).map_err(|e| file_error("reading a layer", e))?;
-                    let after: usize = reading.iter().map(|(_, r): &(LayerId, procraft_gpu::Readback)| r.bytes()).sum();
+                    let after: usize =
+                        reading.iter().map(|(_, r): &(LayerId, prostudio_gpu::Readback)| r.bytes()).sum();
                     if after + read.bytes() <= READ_AFTER_LOCK {
                         reading.push((id, read));
                     } else {
@@ -412,7 +420,7 @@ impl CanvasSession {
                 if now == kept {
                     continue;
                 }
-                let lost = || session.shared.lock().gpu.as_ref().is_some_and(procraft_gpu::Gpu::is_lost);
+                let lost = || session.shared.lock().gpu.as_ref().is_some_and(prostudio_gpu::Gpu::is_lost);
                 if lost() {
                     return;
                 }
@@ -479,9 +487,9 @@ fn write_artwork(saved: &mut Saved, dir: &Path, snapshot: SaveSnapshot) -> Resul
         }
     }
     let composite =
-        composite.map(procraft_gpu::Readback::pixels).transpose().map_err(|e| file_error("reading the picture", e))?;
+        composite.map(prostudio_gpu::Readback::pixels).transpose().map_err(|e| file_error("reading the picture", e))?;
     // a device lost meanwhile read back nothing true: the last save is kept as it is
-    if gpu.as_ref().is_some_and(procraft_gpu::Gpu::is_lost) {
+    if gpu.as_ref().is_some_and(prostudio_gpu::Gpu::is_lost) {
         return Err(file_error("reading the layers", "the graphics device was lost"));
     }
     if saved.dir != dir {
@@ -504,7 +512,7 @@ fn write_artwork(saved: &mut Saved, dir: &Path, snapshot: SaveSnapshot) -> Resul
         // only those not already there as they are, encoded and written side by side, each
         // layer's PNG made in memory before it is written
         let each = w as usize * h as usize * 4;
-        let results = procraft_engine::par::side_by_side_within(&layers, each, |(id, _, rgba)| {
+        let results = prostudio_engine::par::side_by_side_within(&layers, each, |(id, _, rgba)| {
             write_beside(&layer_path(dir, *id), |p| write_png(p, w, h, rgba, &[]))
         });
         // every one written kept track of, so a failure among them leaves none of them beside
@@ -612,7 +620,7 @@ impl CanvasSession {
         background_visible: bool,
         name: String,
     ) -> Arc<CanvasSession> {
-        let most = procraft_engine::document::canvas_edge_most();
+        let most = prostudio_engine::document::canvas_edge_most();
         let mut doc = Document::new(width.clamp(1, most), height.clamp(1, most));
         doc.dpi = dpi;
         if let [r, g, b] = background[..] {
@@ -640,21 +648,21 @@ impl CanvasSession {
                 *c = ((u16::from(*c) * a + 127) / 255) as u8;
             }
         }
-        let most = procraft_engine::document::canvas_edge_most();
+        let most = prostudio_engine::document::canvas_edge_most();
         let (w, h) = if sw.max(sh) > most {
             let k = most as f32 / sw.max(sh) as f32;
             let side = |v: u32| ((v as f32 * k).round() as u32).clamp(1, most);
             let (w, h) = (side(sw), side(sh));
-            let to_old = procraft_engine::geom::Affine {
+            let to_old = prostudio_engine::geom::Affine {
                 a: sw as f32 / w as f32,
                 d: sh as f32 / h as f32,
-                ..procraft_engine::geom::Affine::IDENTITY
+                ..prostudio_engine::geom::Affine::IDENTITY
             };
-            pixels = procraft_engine::crop::resample(
+            pixels = prostudio_engine::crop::resample(
                 &pixels,
                 sw,
                 sh,
-                &procraft_engine::crop::Crop { width: w, height: h, to_old },
+                &prostudio_engine::crop::Crop { width: w, height: h, to_old },
             );
             (w, h)
         } else {
@@ -676,7 +684,7 @@ impl CanvasSession {
         let dir = PathBuf::from(dir);
         let text = fs::read_to_string(dir.join("artwork.json")).map_err(|e| file_error("reading the artwork", e))?;
         let file: ArtworkFile = serde_json::from_str(&text).map_err(|e| file_error("reading the artwork", e))?;
-        if file.format != FORMAT || file.version > VERSION {
+        if (file.format != FORMAT && file.format != LEGACY_FORMAT) || file.version > VERSION {
             return Err(MobileError::File {
                 reason: format!("not an artwork this version can open ({} {})", file.format, file.version),
             });
@@ -781,7 +789,7 @@ impl CanvasSession {
     pub fn prepare_offscreen(&self) -> bool {
         let mut st = self.shared.lock();
         if st.gpu.is_none() {
-            match procraft_gpu::Gpu::headless() {
+            match prostudio_gpu::Gpu::headless() {
                 Ok(gpu) => st.gpu = Some(gpu),
                 Err(e) => {
                     log::error!("exporting offscreen: {e}");
@@ -822,7 +830,7 @@ impl CanvasSession {
     pub fn export_jpeg(&self, path: String) -> Result<(), MobileError> {
         let (w, h, straight, icc) = self.finished_picture()?;
         self.exported(0.7);
-        let bytes = procraft_engine::jpeg::encode_tagged(&onto_white(&straight), w, h, JPEG_QUALITY, &icc);
+        let bytes = prostudio_engine::jpeg::encode_tagged(&onto_white(&straight), w, h, JPEG_QUALITY, &icc);
         self.exported(0.95);
         write_atomically(Path::new(&path), |p| fs::write(p, &bytes).map_err(|e| file_error("saving", e)))?;
         self.exported(1.0);
@@ -834,7 +842,7 @@ impl CanvasSession {
     pub fn open_package(path: String) -> Result<Arc<CanvasSession>, MobileError> {
         let bytes = fs::read(&path).map_err(|e| file_error("opening the file", e))?;
         let imported =
-            procraft_engine::native::read(&bytes).map_err(|e| file_error("opening the file", format!("{e:?}")))?;
+            prostudio_engine::native::read(&bytes).map_err(|e| file_error("opening the file", format!("{e:?}")))?;
         let session = CanvasSession::with_document(imported.document, imported.name, imported.pixels);
         {
             let mut st = session.shared.lock();
@@ -861,7 +869,7 @@ impl CanvasSession {
                 for s in &t.segments {
                     segments.push(fs::read(s).map_err(|e| file_error("reading the time-lapse", e))?);
                 }
-                Some(procraft_engine::native::TimeLapse {
+                Some(prostudio_engine::native::TimeLapse {
                     recording: t.recording,
                     quality: t.quality,
                     resolution: t.resolution,
@@ -906,7 +914,7 @@ impl CanvasSession {
             table.apply_rgba(&mut thumb, false);
         }
         let preview = png_bytes(tw, th, &thumb, &doc.picture_icc())?;
-        let bytes = procraft_engine::native::write(&procraft_engine::native::Export {
+        let bytes = prostudio_engine::native::write(&prostudio_engine::native::Export {
             document: &doc,
             pixels: &pixels,
             composite: &composite,
@@ -1056,18 +1064,18 @@ pub fn write_photo(dir: String, bytes: Vec<u8>) -> Result<(), MobileError> {
 
 /// The table showing a CMYK canvas's colours as its press prints them (in Display P3, as its
 /// pictures carry), if it is one.
-fn proof_table(doc: &Document) -> Option<procraft_engine::cms::Lut> {
-    use procraft_engine::cms::{Lut, builtin};
+fn proof_table(doc: &Document) -> Option<prostudio_engine::cms::Lut> {
+    use prostudio_engine::cms::{Lut, builtin};
     let press = doc.press()?;
-    Some(Lut::build(&doc.rgb_profile(), &builtin(procraft_engine::profile::Profile::DisplayP3), Some(&press), 33))
+    Some(Lut::build(&doc.rgb_profile(), &builtin(prostudio_engine::profile::Profile::DisplayP3), Some(&press), 33))
 }
 
 /// What a layered or print file of the canvas carries: the profile, and for a CMYK canvas the
 /// table to its press's inks.
-fn file_colours(doc: &Document) -> (Vec<u8>, Option<procraft_engine::cms::Lut>) {
+fn file_colours(doc: &Document) -> (Vec<u8>, Option<prostudio_engine::cms::Lut>) {
     match doc.press() {
         Some(press) => {
-            let inks = procraft_engine::cms::Lut::build(&doc.rgb_profile(), &press, None, 33);
+            let inks = prostudio_engine::cms::Lut::build(&doc.rgb_profile(), &press, None, 33);
             (press.bytes.to_vec(), Some(inks))
         }
         None => (doc.picture_icc(), None),
@@ -1154,7 +1162,7 @@ impl CanvasSession {
                     }
                     LayerKind::Mask => {
                         let rgba = canvas.read_layer(gpu, l.id).map_err(|e| file_error("reading a mask", e))?;
-                        let grey = rgba.as_chunks::<4>().0.iter().map(|&p| procraft_engine::document::mask_grey(p));
+                        let grey = rgba.as_chunks::<4>().0.iter().map(|&p| prostudio_engine::document::mask_grey(p));
                         masks.insert(l.id, grey.collect());
                     }
                     LayerKind::Group => {}
@@ -1466,7 +1474,7 @@ pub(crate) fn onto_white(rgba: &[u8]) -> Vec<u8> {
 pub(crate) fn straight_alpha(rgba: &[u8]) -> Vec<u8> {
     // in pieces made side by side
     let pieces: Vec<&[u8]> = rgba.chunks(1 << 20).collect();
-    let made = procraft_engine::par::side_by_side(&pieces, |piece| straight_piece(piece));
+    let made = prostudio_engine::par::side_by_side(&pieces, |piece| straight_piece(piece));
     let mut out = Vec::with_capacity(rgba.len());
     for (piece, made) in pieces.iter().zip(made) {
         out.extend_from_slice(&made.unwrap_or_else(|| straight_piece(piece)));
@@ -1511,8 +1519,8 @@ pub fn import_pages(
     dir: String,
     name: String,
 ) -> PagesOutcome {
-    use procraft_engine::document::Layer;
-    let most = procraft_engine::document::canvas_edge_most();
+    use prostudio_engine::document::Layer;
+    let most = prostudio_engine::document::canvas_edge_most();
     let (w, h) = (width.clamp(1, most), height.clamp(1, most));
     let most = Document::new(w, h).layer_cap();
     if count as usize > most {
@@ -1551,7 +1559,7 @@ pub fn import_pages(
     if dpi.is_finite() && dpi > 0.0 {
         doc.dpi = dpi.clamp(1.0, 9999.0);
     }
-    doc.animation = Some(procraft_engine::animation::Animation { pages: true, ..Default::default() });
+    doc.set_animation(Some(prostudio_engine::animation::Animation { pages: true, ..Default::default() }));
     let name =
         if name.trim().is_empty() { "Untitled Artwork".to_owned() } else { name.trim().chars().take(256).collect() };
     // the first page is the gallery's thumbnail until the artwork is opened
@@ -1588,7 +1596,7 @@ pub enum PsdOutcome {
 #[uniffi::export]
 pub fn package_time_lapse(path: String, dir: String) -> Result<Option<PackageTimeLapse>, MobileError> {
     let bytes = fs::read(&path).map_err(|e| file_error("opening the file", e))?;
-    let Some(t) = procraft_engine::native::read_time_lapse(&bytes)
+    let Some(t) = prostudio_engine::native::read_time_lapse(&bytes)
         .map_err(|e| file_error("opening the file", format!("{e:?}")))?
     else {
         return Ok(None);
@@ -1620,7 +1628,7 @@ pub fn package_time_lapse(path: String, dir: String) -> Result<Option<PackageTim
 /// layers, groups and masks, and its flattened picture as the gallery's thumbnail until opened.
 #[uniffi::export]
 pub fn import_psd(path: String, dir: String, name: String) -> PsdOutcome {
-    use procraft_engine::psd::{self, PsdError};
+    use prostudio_engine::psd::{self, PsdError};
     let Ok(bytes) = fs::read(&path) else { return PsdOutcome::Unreadable };
     let imported = match psd::read(&bytes) {
         Ok(i) => i,
@@ -1672,7 +1680,7 @@ pub(crate) fn thumbnail(rgba: &[u8], width: u32, height: u32, side: u32) -> (u32
     }
     // each row averaged on its own, side by side
     let rows: Vec<u32> = (0..th).collect();
-    let made = procraft_engine::par::side_by_side(&rows, |&ty| thumbnail_row(rgba, width, height, tw, th, ty));
+    let made = prostudio_engine::par::side_by_side(&rows, |&ty| thumbnail_row(rgba, width, height, tw, th, ty));
     let mut out = Vec::with_capacity(tw as usize * th as usize * 4);
     for (&ty, row) in rows.iter().zip(made) {
         out.extend_from_slice(&row.unwrap_or_else(|| thumbnail_row(rgba, width, height, tw, th, ty)));
@@ -1725,7 +1733,7 @@ mod signature_tests {
                 [g, 255 - g, g, 255]
             })
             .collect();
-        let path = std::env::temp_dir().join(format!("procraft-cut-layer-{}.png", std::process::id()));
+        let path = std::env::temp_dir().join(format!("prostudio-cut-layer-{}.png", std::process::id()));
         write_png(&path, w, h, &rgba, &[]).unwrap();
         let whole = fs::read(&path).unwrap();
         let _ = fs::remove_file(&path);
@@ -1770,7 +1778,7 @@ mod signature_tests {
 
     #[test]
     fn a_signature_is_kept_as_the_android_app_keeps_it() {
-        let dir = std::env::temp_dir().join(format!("procraft-signature-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-signature-{}", std::process::id()));
         let path = dir.to_string_lossy().into_owned();
         assert!(read_signature(path.clone()).is_empty());
         let strokes = vec![vec![0.1, 0.2, 0.3, 0.4], vec![0.5, 0.5]];
@@ -1784,7 +1792,7 @@ mod signature_tests {
 
     #[test]
     fn the_photo_and_signature_are_replaced_whole_with_nothing_left_beside() {
-        let dir = std::env::temp_dir().join(format!("procraft-about-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-about-{}", std::process::id()));
         let path = dir.to_string_lossy().into_owned();
         write_photo(path.clone(), b"first photo".to_vec()).unwrap();
         write_signature(path.clone(), vec![vec![0.1, 0.2]]).unwrap();

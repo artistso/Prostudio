@@ -8,7 +8,7 @@ use std::path::Path;
 use egui::{
     Align2, Color32, Id, Order, Pos2, Rect, ScrollArea, Sense, Stroke, TextureHandle, Ui, UiBuilder, pos2, vec2,
 };
-use procraft_core::{
+use prostudio_core::{
     ArtworkInfo, CanvasSession, cmyk_profiles, color_profiles, convert_color, is_cmyk_profile, read_signature,
     write_photo, write_signature,
 };
@@ -84,7 +84,7 @@ impl CanvasInfo {
         session: &CanvasSession,
         dir: Option<String>,
         lapse: (u32, u64),
-        video: procraft_core::TimeLapseSettings,
+        video: prostudio_core::TimeLapseSettings,
     ) -> CanvasInfo {
         let info = session.artwork_info();
         CanvasInfo {
@@ -99,7 +99,7 @@ impl CanvasInfo {
             new_photo: None,
             profile: session.profile(),
             lapse,
-            video: procraft_core::time_lapse_setting_names(video),
+            video: prostudio_core::time_lapse_setting_names(video),
             asking: crate::alert::Alert::default(),
             failure: None,
         }
@@ -403,7 +403,7 @@ impl CanvasInfo {
             4 => {
                 // the time-lapse recorded so far, as its video would be
                 let (frames, bytes) = self.lapse;
-                let seconds = frames / procraft_core::TIME_LAPSE_FPS;
+                let seconds = frames / prostudio_core::TIME_LAPSE_FPS;
                 let video = [
                     ("Video length", format!("{:02}:{:02}:{:02}", seconds / 3600, seconds / 60 % 60, seconds % 60)),
                     ("Video quality", self.video.first().cloned().unwrap_or_default()),

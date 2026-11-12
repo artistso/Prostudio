@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Mutex, MutexGuard, PoisonError};
 
-use procraft_gpu::Gpu;
+use prostudio_gpu::Gpu;
 
 static DEVICE: Mutex<Option<Gpu>> = Mutex::new(None);
 
@@ -104,7 +104,7 @@ pub fn warm_gpu() {
             *kept = Some(gpu);
         }
         Ok(Err(e)) => log::error!("making the GPU device: {e}"),
-        Err(panic) => log::error!("making the GPU device panicked: {}", procraft_gpu::panic_message(panic.as_ref())),
+        Err(panic) => log::error!("making the GPU device panicked: {}", prostudio_gpu::panic_message(panic.as_ref())),
     }
 }
 
@@ -117,7 +117,7 @@ pub fn set_gpu_record_folder(dir: String) {
     *RECORD_FOLDER.lock().unwrap_or_else(PoisonError::into_inner) = Some(PathBuf::from(dir));
 }
 
-/// The log, to Android's (tag "procraft"), with a panic's message and place in it (the platform
+/// The log, to Android's (tag "prostudio"), with a panic's message and place in it (the platform
 /// drops what the standard error says); once.
 pub(crate) fn start_log() {
     #[cfg(target_os = "android")]
@@ -125,7 +125,7 @@ pub(crate) fn start_log() {
         static ONCE: std::sync::Once = std::sync::Once::new();
         ONCE.call_once(|| {
             android_logger::init_once(
-                android_logger::Config::default().with_max_level(log::LevelFilter::Info).with_tag("procraft"),
+                android_logger::Config::default().with_max_level(log::LevelFilter::Info).with_tag("prostudio"),
             );
             let before = std::panic::take_hook();
             std::panic::set_hook(Box::new(move |info| {
@@ -302,7 +302,7 @@ mod tests {
 
     #[test]
     fn the_record_follows_the_tries_and_keeps_a_backend_that_drew() {
-        let dir = std::env::temp_dir().join(format!("procraft-gpu-record-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-gpu-record-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let _ = std::fs::remove_file(dir.join(RECORD));
         assert_eq!(start_in(&dir, 2), 0);

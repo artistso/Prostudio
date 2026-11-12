@@ -7,8 +7,8 @@
 
 use std::sync::Arc;
 
-use procraft_engine::geom::Vec2;
-use procraft_engine::view::View;
+use prostudio_engine::geom::Vec2;
+use prostudio_engine::view::View;
 
 use crate::CanvasSession;
 use crate::adjust::{

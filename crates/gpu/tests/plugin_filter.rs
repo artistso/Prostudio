@@ -6,10 +6,10 @@
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use procraft_engine::document::Document;
-use procraft_engine::geom::Vec2;
-use procraft_engine::stroke::Stamp;
-use procraft_gpu::{Canvas, FilterProgram, FilterRun, Gpu, StrokeStyle, StrokeTool, read_filter};
+use prostudio_engine::document::Document;
+use prostudio_engine::geom::Vec2;
+use prostudio_engine::stroke::Stamp;
+use prostudio_gpu::{Canvas, FilterProgram, FilterRun, Gpu, StrokeStyle, StrokeTool, read_filter};
 
 fn gpu() -> Option<Gpu> {
     match Gpu::headless() {

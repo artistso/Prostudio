@@ -3,7 +3,7 @@
 //! button, opacity, undo and redo, and a slider's panel while it is dragged).
 
 use egui::{Align2, Color32, Rect, Sense, Stroke, Ui, pos2, vec2};
-use procraft_core::{CanvasInfo, CanvasSession, ToolKind};
+use prostudio_core::{CanvasInfo, CanvasSession, ToolKind};
 use resvg::tiny_skia;
 
 use crate::icons;

@@ -4,7 +4,7 @@
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
-use procraft_engine::palette::{self, Palette};
+use prostudio_engine::palette::{self, Palette};
 
 /// A palette as the panels show it: its name and its thirty swatches (empty slots none).
 #[derive(Clone, Debug, PartialEq, uniffi::Record)]
@@ -271,7 +271,7 @@ mod tests {
     #[test]
     fn palettes_that_cant_be_written_say_so_once() {
         // a file where their folder would be
-        let blocked = std::env::temp_dir().join(format!("procraft-palettes-blocked-{}", std::process::id()));
+        let blocked = std::env::temp_dir().join(format!("prostudio-palettes-blocked-{}", std::process::id()));
         std::fs::write(&blocked, b"not a folder").unwrap();
         let p = Palettes::open(blocked.join("palettes.json").to_string_lossy().into_owned());
         assert_eq!(p.take_failure(), None);

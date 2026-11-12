@@ -3,14 +3,14 @@
 
 use std::collections::BTreeMap;
 
-use procraft_engine::brush::{
+use prostudio_engine::brush::{
     Author, Brush, FullGrain, GrainFile, Notches, PressureCurves, ResetPoint, ShapeFile, Source, StockImage,
     StockImages,
 };
-use procraft_engine::brushfile::{self, Texture};
-use procraft_engine::curve::Curve;
-use procraft_engine::geom::Vec2;
-use procraft_engine::library::{BrushSet, SHELF};
+use prostudio_engine::brushfile::{self, Texture};
+use prostudio_engine::curve::Curve;
+use prostudio_engine::geom::Vec2;
+use prostudio_engine::library::{BrushSet, SHELF};
 
 use crate::{CanvasSession, State};
 
@@ -245,7 +245,7 @@ impl Images {
     /// Bytes kept with a brush (a preview, a picture).
     fn bytes(self, bytes: &[u8]) -> String {
         match self {
-            Images::Whole => procraft_engine::base64::encode(bytes),
+            Images::Whole => prostudio_engine::base64::encode(bytes),
             Images::Told => format!("{:016x}:{}", crate::project::pixels_hash(bytes), bytes.len()),
         }
     }
@@ -614,7 +614,7 @@ impl State {
             metallic: stock(&b.metallic_stock),
             roughness: stock(&b.roughness_stock),
         };
-        let png = |text: &Option<String>| text.as_deref().and_then(procraft_engine::base64::decode).map(Into::into);
+        let png = |text: &Option<String>| text.as_deref().and_then(prostudio_engine::base64::decode).map(Into::into);
         brush.thumbnail = png(&b.thumbnail);
         if let Some(s) = &brush.stock.shape {
             let texture = Texture::Stock { name: s.name.clone(), inverted: s.inverted };
@@ -1569,8 +1569,8 @@ mod keeping {
 
     #[test]
     fn a_seconds_own_shape_keeps_its_sizes_through_a_restart() {
-        use procraft_engine::brush::{Brush, Source};
-        use procraft_engine::textures::TEXTURE_SIZE;
+        use prostudio_engine::brush::{Brush, Source};
+        use prostudio_engine::textures::TEXTURE_SIZE;
         let s = CanvasSession::new(32, 32);
         let round = Brush::round_pen();
         // a second with a shape of its own, its sizes where the round pen's controls sit (so

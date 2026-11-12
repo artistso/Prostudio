@@ -3,8 +3,8 @@
 //! frame follows: which part a press takes, snapping to the canvas's sides and middle, a locked
 //! aspect following the width. The app draws the frame and the settings; Done crops (crop.rs).
 
-use procraft_engine::document::canvas_edge_most;
-use procraft_engine::geom::Vec2;
+use prostudio_engine::document::canvas_edge_most;
+use prostudio_engine::geom::Vec2;
 
 use crate::CanvasSession;
 

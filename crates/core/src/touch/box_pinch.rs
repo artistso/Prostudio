@@ -59,9 +59,9 @@ impl CanvasSession {
 mod tests {
     use crate::touch::TransformTouch;
     use crate::{CanvasSession, PenSample, PointerKind, TouchCommand};
-    use procraft_engine::geom::Affine;
-    use procraft_engine::transform::{Transform, TransformMode};
-    use procraft_engine::view::View;
+    use prostudio_engine::geom::Affine;
+    use prostudio_engine::transform::{Transform, TransformMode};
+    use prostudio_engine::view::View;
 
     fn at(x: f32, y: f32, ms: f64) -> Vec<PenSample> {
         vec![PenSample { x, y, pressure: 0.5, tilt: 0.0, orientation: 0.0, time_ms: ms, roll: 0.0 }]

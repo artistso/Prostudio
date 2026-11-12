@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # Packages the desktop app for macOS into $DIST (default dist/):
 #
-#   procraft-<version>-macos-universal.dmg   ProCraft.app for Apple silicon and Intel Macs (macOS 11+),
+#   prostudio-<version>-macos-universal.dmg   ProStudio.app for Apple silicon and Intel Macs (macOS 11+),
 #                                            beside a link to Applications to drag it onto
 #
 # Usage: packaging/macos/package.sh [--skip-build]
 #
-# VERSION is the release's (default: procraft.version in android/gradle.properties); the app's own
+# VERSION is the release's (default: prostudio.version in android/gradle.properties); the app's own
 # version is its numbers alone (a beta's suffix left out, as the MSI's), its build number
-# procraft.versionCode. Runs on a Mac with Xcode's command line tools (lipo, codesign, hdiutil),
+# prostudio.versionCode. Runs on a Mac with Xcode's command line tools (lipo, codesign, hdiutil),
 # Rust with the aarch64-apple-darwin and x86_64-apple-darwin targets, and python3 (the icon).
 #
 # Signing: ad hoc by default, which a Mac runs once the user allows it (System Settings > Privacy &
@@ -27,40 +27,40 @@ while [ $# -gt 0 ]; do
   esac
 done
 PROPERTIES="$ROOT/android/gradle.properties"
-VERSION="${VERSION:-$(sed -n 's/^procraft\.version=//p' "$PROPERTIES" | tr -d '\r')}"
-BUILD="${BUILD:-$(sed -n 's/^procraft\.versionCode=//p' "$PROPERTIES" | tr -d '\r')}"
+VERSION="${VERSION:-$(sed -n 's/^prostudio\.version=//p' "$PROPERTIES" | tr -d '\r')}"
+BUILD="${BUILD:-$(sed -n 's/^prostudio\.versionCode=//p' "$PROPERTIES" | tr -d '\r')}"
 [ -n "$VERSION" ] && [ -n "$BUILD" ] || { echo "no version: set VERSION and BUILD or see $PROPERTIES" >&2; exit 2; }
 # the bundle's own version is numbers only
 SHORT="${VERSION%%-*}"
 DIST="$(mkdir -p "${DIST:-$ROOT/dist}" && cd "${DIST:-$ROOT/dist}" && pwd)"
 TARGET_DIR="${CARGO_TARGET_DIR:-$ROOT/target}"
 TARGETS="aarch64-apple-darwin x86_64-apple-darwin"
-DMG="$DIST/procraft-$VERSION-macos-universal.dmg"
-echo "==> ProCraft $VERSION ($SHORT, build $BUILD) for macOS, universal"
+DMG="$DIST/prostudio-$VERSION-macos-universal.dmg"
+echo "==> ProStudio $VERSION ($SHORT, build $BUILD) for macOS, universal"
 
 # the oldest macOS the app runs on, as Info.plist says
 export MACOSX_DEPLOYMENT_TARGET=11.0
 if [ "$SKIP_BUILD" = 0 ]; then
   for target in $TARGETS; do
-    (cd "$ROOT" && cargo build --release --locked -p procraft-desktop --target "$target")
+    (cd "$ROOT" && cargo build --release --locked -p prostudio-desktop --target "$target")
   done
 fi
 
-# ---- ProCraft.app --------------------------------------------------------------------------------
+# ---- ProStudio.app --------------------------------------------------------------------------------
 WORK="$TARGET_DIR/macos-package"
-APP="$WORK/ProCraft.app"
+APP="$WORK/ProStudio.app"
 rm -rf "$WORK"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 slices=()
-for target in $TARGETS; do slices+=("$TARGET_DIR/$target/release/procraft"); done
+for target in $TARGETS; do slices+=("$TARGET_DIR/$target/release/prostudio"); done
 # one binary for both kinds of Mac
-lipo -create -output "$APP/Contents/MacOS/procraft" "${slices[@]}"
-strip -x "$APP/Contents/MacOS/procraft"
-lipo -info "$APP/Contents/MacOS/procraft"
+lipo -create -output "$APP/Contents/MacOS/prostudio" "${slices[@]}"
+strip -x "$APP/Contents/MacOS/prostudio"
+lipo -info "$APP/Contents/MacOS/prostudio"
 sed -e "s|@VERSION@|$SHORT|g" -e "s|@BUILD@|$BUILD|g" "$HERE/Info.plist" >"$APP/Contents/Info.plist"
 plutil -lint "$APP/Contents/Info.plist"
 printf 'APPL????' >"$APP/Contents/PkgInfo"
-python3 "$HERE/icns.py" "$ROOT/assets/app-icon/procraft-1024.png" "$APP/Contents/Resources/procraft.icns"
+python3 "$HERE/icns.py" "$ROOT/assets/app-icon/prostudio-1024.png" "$APP/Contents/Resources/prostudio.icns"
 for f in LICENSE-MIT LICENSE-APACHE NOTICE ATTRIBUTION.md; do
   cp "$ROOT/$f" "$APP/Contents/Resources/$f"
 done
@@ -78,12 +78,12 @@ codesign --verify --strict --verbose=2 "$APP"
 # ---- .dmg ----------------------------------------------------------------------------------------
 STAGE="$WORK/dmg"
 mkdir -p "$STAGE"
-ditto "$APP" "$STAGE/ProCraft.app"
+ditto "$APP" "$STAGE/ProStudio.app"
 ln -s /Applications "$STAGE/Applications"
 rm -f "$DMG"
 # hdiutil now and then finds its disk busy: tried again
 for try in 1 2 3; do
-  if hdiutil create -volname ProCraft -srcfolder "$STAGE" -ov -format UDZO "$DMG"; then break; fi
+  if hdiutil create -volname ProStudio -srcfolder "$STAGE" -ov -format UDZO "$DMG"; then break; fi
   [ "$try" = 3 ] && { echo "error: hdiutil failed" >&2; exit 1; }
   sleep 5
 done

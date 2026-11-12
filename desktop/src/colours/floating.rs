@@ -4,7 +4,7 @@
 //! palette under the pickers, the modes as icons under them.
 
 use egui::{Align2, Color32, Pos2, Rect, ScrollArea, Sense, Stroke, Ui, UiBuilder, Vec2, pos2, vec2};
-use procraft_core::CanvasSession;
+use prostudio_core::CanvasSession;
 
 use super::{
     Colours, EMPTY_SLOT, GRABBER, HarmonyKind, Mode, PALETTE_TILE, colours_in_p3, hex_pad, of_hex, rgb_to_hsv, srgb,
@@ -303,7 +303,7 @@ fn floating_tiles(ui: &Ui, n: usize, filled: &[(usize, u32)], at: Rect) -> Optio
         let lettering = if rgb_to_hsv(of_hex(rgb))[2] >= 0.85 { Color32::BLACK } else { Color32::WHITE };
         let mut job = egui::text::LayoutJob::default();
         job.append(
-            &procraft_core::colour_name(rgb),
+            &prostudio_core::colour_name(rgb),
             0.0,
             egui::TextFormat {
                 font_id: Weight::Regular.font(15.0),

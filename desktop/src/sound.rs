@@ -79,7 +79,7 @@ pub fn click() {
     static FILE: OnceLock<Option<PathBuf>> = OnceLock::new();
     let file = FILE.get_or_init(|| {
         let folder = std::env::var_os("XDG_RUNTIME_DIR").map_or_else(std::env::temp_dir, PathBuf::from);
-        let path = folder.join("procraft-click.wav");
+        let path = folder.join("prostudio-click.wav");
         std::fs::write(&path, click_wav()).ok().map(|()| path)
     });
     let Some(file) = file else { return };

@@ -1,8 +1,8 @@
 //! The brush studio's 3D preview: a lit sphere showing the canvas under it.
 #![allow(clippy::unwrap_used, clippy::indexing_slicing)]
 
-use procraft_engine::document::Document;
-use procraft_gpu::{Canvas, Gpu, SphereLook, SpherePreview, read_texture, wgpu};
+use prostudio_engine::document::Document;
+use prostudio_gpu::{Canvas, Gpu, SphereLook, SpherePreview, read_texture, wgpu};
 
 const SIDE: u32 = 64;
 

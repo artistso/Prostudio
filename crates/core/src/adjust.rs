@@ -1,13 +1,13 @@
 //! Adjustments: the current layer redrawn through a filter while its values are dragged, kept as
 //! one undo step or put back; only what is selected changes.
 
-use procraft_engine::geom::Vec2;
-use procraft_engine::selection::feather_radius;
-use procraft_engine::tone;
-use procraft_gpu::{Filter, LiquifyStamp};
+use prostudio_engine::geom::Vec2;
+use prostudio_engine::selection::feather_radius;
+use prostudio_engine::tone;
+use prostudio_gpu::{Filter, LiquifyStamp};
 
-use procraft_engine::stroke::StrokeBuilder;
-use procraft_gpu::{Canvas, StrokeStyle, StrokeTool};
+use prostudio_engine::stroke::StrokeBuilder;
+use prostudio_gpu::{Canvas, StrokeStyle, StrokeTool};
 
 use crate::liquify::{self, LiquifyRun, Point};
 use crate::{CanvasSession, PenSample, PointerKind, Shared, State, ToolKind};

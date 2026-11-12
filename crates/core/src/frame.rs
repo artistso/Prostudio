@@ -3,9 +3,9 @@
 
 use std::time::{Duration, Instant};
 
-use procraft_engine::geom::Vec2;
-use procraft_engine::profile::Profile;
-use procraft_gpu::{Backdrop, Gpu, SelectionLook, Stripes, Target, wgpu};
+use prostudio_engine::geom::Vec2;
+use prostudio_engine::profile::Profile;
+use prostudio_gpu::{Backdrop, Gpu, SelectionLook, Stripes, Target, wgpu};
 
 use crate::selection::SelectionDisplay;
 use crate::{
@@ -23,7 +23,7 @@ impl State {
         screen: Profile,
     ) {
         let (Some(canvas), Some(gpu)) = (self.canvas.as_mut(), self.gpu.as_ref()) else { return };
-        let to_screen = procraft_engine::view::View::fit((self.doc.width(), self.doc.height()), size).to_screen();
+        let to_screen = prostudio_engine::view::View::fit((self.doc.width(), self.doc.height()), size).to_screen();
         let convert = colours_to(self.doc.profile, screen);
         let key = crate::colour::table_key(&self.doc, screen);
         if self.display_lut.as_ref().map(|(k, _)| *k) != key {

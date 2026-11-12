@@ -828,7 +828,7 @@ mod tests {
 
     #[test]
     fn videos_with_no_note_of_them_are_set_aside_not_deleted() {
-        let artwork = std::env::temp_dir().join(format!("procraft-unnoted-{}", std::process::id()));
+        let artwork = std::env::temp_dir().join(format!("prostudio-unnoted-{}", std::process::id()));
         let _ = fs::remove_dir_all(&artwork);
         let t = TimeLapse::new(artwork.to_string_lossy().into_owned());
         assert!(t.record([255u8, 0, 0, 255].repeat(16), 4, 4));
@@ -848,7 +848,7 @@ mod tests {
 
     #[test]
     fn frames_are_kept_once_on_white_and_counted_again() {
-        let dir = std::env::temp_dir().join(format!("procraft-timelapse-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-timelapse-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         let t = TimeLapse::new(dir.to_string_lossy().into_owned());
         assert_eq!(t.count(), 0);
@@ -892,7 +892,7 @@ mod tests {
 
     #[test]
     fn purging_deletes_what_was_recorded_and_keeps_the_settings_and_the_switch() {
-        let dir = std::env::temp_dir().join(format!("procraft-purge-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-purge-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         let t = TimeLapse::new(dir.to_string_lossy().into_owned());
         let s = TimeLapseSettings { resolution: 1, quality: 2, hevc: false };
@@ -915,7 +915,7 @@ mod tests {
 
     #[test]
     fn package_videos_are_made_once_and_added_to() {
-        let dir = std::env::temp_dir().join(format!("procraft-segments-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-segments-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         let t = TimeLapse::new(dir.to_string_lossy().into_owned());
         assert_eq!(t.segment_plan(), None, "no frames: nothing to make");
@@ -949,7 +949,7 @@ mod tests {
 
     #[test]
     fn a_package_time_lapse_comes_in_with_its_videos() {
-        let dir = std::env::temp_dir().join(format!("procraft-take-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-take-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         let video = dir.join("brought.mp4");
         fs::create_dir_all(&dir).unwrap();
@@ -1028,7 +1028,7 @@ mod tests {
 
     #[test]
     fn an_mp4s_frames_and_size_come_from_its_header() {
-        let dir = std::env::temp_dir().join(format!("procraft-mp4-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-mp4-{}", std::process::id()));
         fs::create_dir_all(&dir).unwrap();
         let video = dir.join("clip.mp4");
         fake_mp4(&video, 241, 672, 1102);
@@ -1040,7 +1040,7 @@ mod tests {
 
     #[test]
     fn a_package_time_lapse_comes_in_as_its_videos_and_grows_by_one_more() {
-        let dir = std::env::temp_dir().join(format!("procraft-clips-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-clips-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
         let brought: Vec<String> = [3u32, 2]
@@ -1112,7 +1112,7 @@ mod tests {
 
     #[test]
     fn pictures_go_only_once_their_videos_hold_them() {
-        let dir = std::env::temp_dir().join(format!("procraft-dropframes-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-dropframes-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         let t = TimeLapse::new(dir.to_string_lossy().into_owned());
         for i in 0..3u8 {
@@ -1132,7 +1132,7 @@ mod tests {
 
     #[test]
     fn only_videos_whose_pictures_are_still_there_are_read_back() {
-        let dir = std::env::temp_dir().join(format!("procraft-readback-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-readback-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         let t = TimeLapse::new(dir.to_string_lossy().into_owned());
         for i in 0..3u8 {

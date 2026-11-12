@@ -1,4 +1,4 @@
-//! ProCraft's own CMYK profile, made here: a press printing on coated paper, modelled from the
+//! ProStudio's own CMYK profile, made here: a press printing on coated paper, modelled from the
 //! colours of its inks and their overprints, written as an ICC version 2 output profile with
 //! 16-bit tables (the same tables for every rendering intent).
 //!
@@ -401,12 +401,12 @@ mod tests {
     use crate::cms::{IccProfile, Space};
     use crate::profile::Profile;
 
-    /// Writes the profile to the file in `PROCRAFT_CMYK`, for trying in other colour programs:
-    /// `cargo test -p procraft-engine write_cmyk -- --ignored`.
+    /// Writes the profile to the file in `PROSTUDIO_CMYK`, for trying in other colour programs:
+    /// `cargo test -p prostudio-engine write_cmyk -- --ignored`.
     #[test]
     #[ignore]
     fn write_cmyk() {
-        let Ok(path) = std::env::var("PROCRAFT_CMYK") else { return };
+        let Ok(path) = std::env::var("PROSTUDIO_CMYK") else { return };
         std::fs::write(path, profile()).unwrap();
     }
 

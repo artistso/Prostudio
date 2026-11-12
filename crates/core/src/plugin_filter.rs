@@ -4,7 +4,7 @@
 //! any filter. Nothing of it goes in the artwork: what it did is pixels, and an artwork never
 //! depends on a plugin.
 //!
-//! What keeps a filter from running away is in procraft-gpu (`plugin_filter.rs`). This is what is
+//! What keeps a filter from running away is in prostudio-gpu (`plugin_filter.rs`). This is what is
 //! done about one that gets past that, or that a driver falls over on: the artwork is saved before
 //! the first filter of a session, a filter on trial is written down until it has drawn, and one
 //! that stops is switched off with its reason on its card, for someone to turn on again. It is
@@ -14,7 +14,7 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use procraft_gpu::{Canvas, FilterProgram, FilterRun};
+use prostudio_gpu::{Canvas, FilterProgram, FilterRun};
 
 use crate::plugins::{PluginControl, PluginSlider, Plugins, STOPPED_DRIVER};
 use crate::{CanvasSession, State};
@@ -236,8 +236,8 @@ impl CanvasSession {
 
 #[cfg(test)]
 mod tests {
-    use procraft_engine::view::View;
-    use procraft_gpu::Gpu;
+    use prostudio_engine::view::View;
+    use prostudio_gpu::Gpu;
     use serde_json::{Value, json};
 
     use super::*;
@@ -255,7 +255,7 @@ mod tests {
     const ID: &str = "org.example.lines";
 
     fn store(name: &str) -> String {
-        let dir = std::env::temp_dir().join(format!("procraft-filters-{name}-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("prostudio-filters-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         dir.to_string_lossy().into_owned()
     }
@@ -270,7 +270,7 @@ mod tests {
     /// `file_of`, but with code beside the filter.
     fn with_code(id: &str, code: &str) -> Vec<u8> {
         let module = crate::plugin_run::tests::position_module(
-            r#"(func (export "procraft_control") (param i32 f32))"#,
+            r#"(func (export "prostudio_control") (param i32 f32))"#,
             "(i64.const 0)",
         );
         let mut manifest = manifest(id);
@@ -512,7 +512,7 @@ mod tests {
             "@group(0) @binding(0) var t: texture_2d<f32>;\nfn pixel(colour: vec4<f32>, at: vec2<f32>) -> vec4<f32> { return colour; }",
             "@fragment fn main() -> @location(0) vec4<f32> { return vec4<f32>(1.0); }",
         ] {
-            assert_eq!(refused(code).as_deref(), Some("This filter's code can't run in ProCraft."), "{code}");
+            assert_eq!(refused(code).as_deref(), Some("This filter's code can't run in ProStudio."), "{code}");
         }
         // the text is held to its size at the door too
         let huge = format!(
@@ -549,7 +549,7 @@ mod tests {
         }
         // (on a device the repo isn't there: the folder is pushed, and named)
         let here = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../plugins");
-        let root = std::env::var_os("PROCRAFT_SAMPLES").map_or(here, std::path::PathBuf::from);
+        let root = std::env::var_os("PROSTUDIO_SAMPLES").map_or(here, std::path::PathBuf::from);
         let mut count = 0;
         // greys across, and clear at the top
         let ramp = (0..64 * 64).flat_map(|i: usize| {

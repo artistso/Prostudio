@@ -1,5 +1,5 @@
 //! Paste into masks: with a mask selected, Paste puts the picture's brightness into the mask. It's a
-//! plugin, not part of the app: `tools/pack_plugin.py` makes a `.procraft-plugin` file of it.
+//! plugin, not part of the app: `tools/pack_plugin.py` makes a `.prostudio-plugin` file of it.
 //!
 //! The app asks where the picture goes, and if it goes here, hands it over a row at a time and
 //! writes back what it gets. The interface is written down at the top of
@@ -27,13 +27,13 @@ fn brightness(pixel: u32) -> u32 {
 
 /// The switch's value (the only control, so `index` says nothing).
 #[unsafe(no_mangle)]
-pub extern "C" fn procraft_control(_index: i32, value: f32) {
+pub extern "C" fn prostudio_control(_index: i32, value: f32) {
     INTO_MASK.store(value != 0.0, Ordering::Relaxed);
 }
 
 /// Whether a picture pasted with a mask current goes into the mask.
 #[unsafe(no_mangle)]
-pub extern "C" fn procraft_paste_mask() -> i32 {
+pub extern "C" fn prostudio_paste_mask() -> i32 {
     i32::from(INTO_MASK.load(Ordering::Relaxed))
 }
 
@@ -41,7 +41,7 @@ pub extern "C" fn procraft_paste_mask() -> i32 {
 /// here is in them, and kept for the next.
 #[cfg(not(test))]
 #[unsafe(no_mangle)]
-pub extern "C" fn procraft_row_buffer(bytes: i32) -> i32 {
+pub extern "C" fn prostudio_row_buffer(bytes: i32) -> i32 {
     let pages = (bytes + PAGE - 1) / PAGE;
     if pages > PAGES.load(Ordering::Relaxed) {
         let at = core::arch::wasm32::memory_grow(0, pages as usize);
@@ -57,9 +57,9 @@ pub extern "C" fn procraft_row_buffer(bytes: i32) -> i32 {
 /// The `width` pixels at `at` as what the mask holds, in place.
 ///
 /// # Safety
-/// The app calls this with what [`procraft_row_buffer`] gave it, holding a row of that length.
+/// The app calls this with what [`prostudio_row_buffer`] gave it, holding a row of that length.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn procraft_paste_row(at: i32, width: i32) {
+pub unsafe extern "C" fn prostudio_paste_row(at: i32, width: i32) {
     let row = unsafe { core::slice::from_raw_parts_mut(at as *mut u32, width as usize) };
     for pixel in row {
         *pixel = brightness(*pixel);

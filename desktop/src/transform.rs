@@ -9,7 +9,7 @@ use std::time::Instant;
 
 use egui::epaint::PathShape;
 use egui::{Align2, Color32, Id, LayerId, Order, Pos2, Rect, Sense, Shape, Stroke, Ui, pos2, vec2};
-use procraft_core::{
+use prostudio_core::{
     CanvasSession, GuideSettings, Interpolation, TransformAction, TransformBox, TransformHandle, TransformKind,
     TransformTouch,
 };
@@ -267,7 +267,7 @@ impl Transform {
                 }
             }
             let held = self.held.map(|(h, _)| h);
-            for i in procraft_core::shown_mesh_points(self.advanced) {
+            for i in prostudio_core::shown_mesh_points(self.advanced) {
                 let corner_of = |h: TransformHandle| match h {
                     TransformHandle::Corner { index } => [0u8, 3, 15, 12].get(usize::from(index % 4)).copied(),
                     _ => None,
@@ -286,7 +286,7 @@ impl Transform {
         for &[x0, y0, x1, y1] in b.snap_lines.as_chunks::<4>().0 {
             painter.line_segment([point(x0, y0), point(x1, y1)], Stroke::new(1.0, argb(SNAP_GUIDE)));
         }
-        let Some(s) = procraft_core::screen_box(b.corners, view, ppp) else { return };
+        let Some(s) = prostudio_core::screen_box(b.corners, view, ppp) else { return };
         let at = |v: &[f32], i: usize| match (v.get(2 * i), v.get(2 * i + 1)) {
             (Some(&x), Some(&y)) => pos2(x, y) / ppp,
             _ => Pos2::ZERO,

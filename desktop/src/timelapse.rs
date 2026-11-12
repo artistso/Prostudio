@@ -9,7 +9,7 @@ use std::sync::mpsc::{Receiver, TryRecvError, channel, sync_channel};
 use std::time::{Duration, Instant};
 
 use egui::{Align2, Color32, Id, Order, Rect, Sense, TextureHandle, pos2, vec2};
-use procraft_core::{
+use prostudio_core::{
     CanvasSession, TIME_LAPSE_FPS, ThumbnailImage, TimeLapse, time_lapse_bits_per_pixel, time_lapse_picks,
     time_lapse_side,
 };
@@ -74,7 +74,7 @@ impl TimeLapseUi {
     }
 
     /// The video's size, quality and codec, kept with the artwork.
-    pub fn settings(&self) -> procraft_core::TimeLapseSettings {
+    pub fn settings(&self) -> prostudio_core::TimeLapseSettings {
         self.lapse.as_ref().map(|(_, t)| t.settings()).unwrap_or_default()
     }
 
@@ -246,7 +246,7 @@ It can't be brought back."
                 let (width, height) = (first.width, first.height);
                 let last = std::cell::RefCell::new(Some(first));
                 let settings = lapse.settings();
-                let out = std::env::temp_dir().join("procraft-exports").join(format!("{name}.mp4"));
+                let out = std::env::temp_dir().join("prostudio-exports").join(format!("{name}.mp4"));
                 std::fs::create_dir_all(out.parent().unwrap_or(&out)).map_err(|e| e.to_string())?;
                 crate::video::write_mp4(
                     &out,
@@ -285,7 +285,7 @@ It can't be brought back."
 
 /// The time-lapse of the artwork in folder `dir` as a package keeps it, its frames made into
 /// videos first (only those since the last share, when the videos made then still hold).
-pub fn for_package(dir: &str) -> procraft_core::PackageTimeLapse {
+pub fn for_package(dir: &str) -> prostudio_core::PackageTimeLapse {
     let lapse = TimeLapse::new(dir.to_owned());
     let mut plan = lapse.segment_plan();
     while let Some(p) = plan {
@@ -386,8 +386,8 @@ fn read_in_order(lapse: Arc<TimeLapse>, wanted: Vec<u32>, stop: Arc<AtomicBool>)
 }
 
 /// `plan`'s frames as a video, fitted on white; one added to those before comes out their size.
-fn make_segment(lapse: &TimeLapse, plan: &procraft_core::SegmentPlan) -> Result<(u32, u32), String> {
-    let settings = procraft_core::TimeLapseSettings { hevc: plan.hevc, ..lapse.settings() };
+fn make_segment(lapse: &TimeLapse, plan: &prostudio_core::SegmentPlan) -> Result<(u32, u32), String> {
+    let settings = prostudio_core::TimeLapseSettings { hevc: plan.hevc, ..lapse.settings() };
     let (width, height, side) = if plan.width > 0 && plan.height > 0 {
         (plan.width, plan.height, plan.width.max(plan.height))
     } else {
@@ -414,9 +414,9 @@ fn make_segment(lapse: &TimeLapse, plan: &procraft_core::SegmentPlan) -> Result<
 /// The time-lapse of the package at `package` taken into the artwork folder `dir`: its settings,
 /// and its videos' frames (the videos kept to go back into a package when they all came in).
 pub fn take_package(package: &std::path::Path, dir: &str) {
-    let temp = std::env::temp_dir().join(format!("procraft-segments-{}", std::process::id()));
+    let temp = std::env::temp_dir().join(format!("prostudio-segments-{}", std::process::id()));
     let taken =
-        procraft_core::package_time_lapse(package.to_string_lossy().into_owned(), temp.to_string_lossy().into_owned());
+        prostudio_core::package_time_lapse(package.to_string_lossy().into_owned(), temp.to_string_lossy().into_owned());
     let t = match taken {
         Ok(Some(t)) => t,
         Ok(None) => return,
@@ -449,7 +449,7 @@ pub fn take_package(package: &std::path::Path, dir: &str) {
 }
 
 /// `frame` fitted into `w` × `h` on white, as RGBA rows.
-fn on_white(frame: &procraft_core::ThumbnailImage, w: u32, h: u32) -> Vec<u8> {
+fn on_white(frame: &prostudio_core::ThumbnailImage, w: u32, h: u32) -> Vec<u8> {
     let mut out = image::RgbaImage::from_pixel(w, h, image::Rgba([255, 255, 255, 255]));
     if let Some(picture) = image::RgbaImage::from_raw(frame.width, frame.height, frame.rgba.clone()) {
         let k = (w as f32 / frame.width.max(1) as f32).min(h as f32 / frame.height.max(1) as f32);
@@ -652,13 +652,13 @@ fn surround_grid(ui: &egui::Ui, screen: Rect) {
 mod tests {
     use super::*;
 
-    /// A real package's time-lapse (its path in PROCRAFT_PACKAGE) taken in as its videos, then
+    /// A real package's time-lapse (its path in PROSTUDIO_PACKAGE) taken in as its videos, then
     /// frames read back from them in order.
     #[test]
     #[ignore = "needs a .procreate with a time-lapse, and ffmpeg"]
     fn a_packages_videos_come_in_as_they_are_and_play_back() {
-        let Ok(package) = std::env::var("PROCRAFT_PACKAGE") else { return };
-        let dir = std::env::temp_dir().join(format!("procraft-take-real-{}", std::process::id()));
+        let Ok(package) = std::env::var("PROSTUDIO_PACKAGE") else { return };
+        let dir = std::env::temp_dir().join(format!("prostudio-take-real-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         let artwork = dir.to_string_lossy().into_owned();

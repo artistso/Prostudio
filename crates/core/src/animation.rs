@@ -5,9 +5,9 @@ use std::fs;
 use std::io::BufWriter;
 use std::path::Path;
 
-use procraft_engine::animation::{self, Animation, Playback};
-use procraft_engine::document::{Document, LayerId, LayerKind};
-use procraft_engine::formats::GifWriter;
+use prostudio_engine::animation::{self, Animation, Playback};
+use prostudio_engine::document::{Document, LayerId, LayerKind};
+use prostudio_engine::formats::GifWriter;
 
 use crate::layers::ThumbnailImage;
 use crate::project::{file_error, thumbnail, write_atomically};
@@ -21,12 +21,12 @@ const GIF_PALETTE_SAMPLES: usize = 1 << 18;
 
 /// The frames: the visible top-level layers and groups, bottom first.
 fn frames(doc: &Document) -> Vec<LayerId> {
-    animation::frames(doc)
+    doc.active_frames()
 }
 
 /// The frames as they play: each as often as Animation Assist holds it.
 fn sequence(doc: &Document) -> Vec<LayerId> {
-    let holds = |id: LayerId| doc.animation.as_ref().map_or(0, |a| a.hold(id)) as usize;
+    let holds = |id: LayerId| doc.active_animation().map_or(0, |a| a.hold(id)) as usize;
     frames(doc).into_iter().flat_map(|id| std::iter::repeat_n(id, 1 + holds(id))).collect()
 }
 
@@ -111,11 +111,11 @@ impl CanvasSession {
             next += frames.len();
             let Some(&(w, h, _)) = frames.first() else { break };
             let frame_bytes = (w as usize * h as usize * 4).max(1);
-            few = (GIF_BATCH_BYTES / frame_bytes).clamp(1, procraft_engine::par::cores());
+            few = (GIF_BATCH_BYTES / frame_bytes).clamp(1, prostudio_engine::par::cores());
             let writer = gif.get_or_insert_with(|| GifWriter::new(w, h));
             let made = {
                 let writer = &*writer;
-                procraft_engine::par::side_by_side(&frames, |(_, _, rgba)| {
+                prostudio_engine::par::side_by_side(&frames, |(_, _, rgba)| {
                     writer.encoded_frame(rgba, delay.max(1), dither)
                 })
             };
@@ -308,8 +308,14 @@ impl CanvasSession {
                     (false, true) => "hide Page Assist",
                 },
                 |d| {
-                    let now = d.animation.as_ref().is_some_and(|a| a.pages == pages);
-                    (now != on).then(|| d.animation = on.then(|| Animation { pages, ..Animation::default() }))
+                    let now = d.active_animation().is_some_and(|a| a.pages == pages);
+                    (now != on).then(|| {
+                        if on {
+                            d.set_assist(pages);
+                        } else {
+                            d.set_animation(None);
+                        }
+                    })
                 },
             )
             .is_some();
@@ -328,14 +334,14 @@ impl CanvasSession {
 impl CanvasSession {
     /// Animation Assist's settings while it is on.
     pub fn animation_settings(&self) -> Option<AnimationSettings> {
-        self.shared.lock().doc.animation.as_ref().map(AnimationSettings::from)
+        self.shared.lock().doc.active_animation().map(AnimationSettings::from)
     }
 
     /// Changes the settings (live, as sliders move).
     pub fn set_animation_settings(&self, s: AnimationSettings) {
         let mut guard = self.shared.lock();
         let st = &mut *guard;
-        let Some(a) = st.doc.animation.as_mut() else { return };
+        let Some(a) = st.doc.active_animation_mut() else { return };
         let color = |v: &[f32], or: [f32; 3]| match v {
             [r, g, b] => [*r, *g, *b],
             _ => or,
@@ -366,7 +372,7 @@ impl CanvasSession {
 
     /// The frames' layers (top-level layers and groups), bottom first.
     pub fn animation_frames(&self) -> Vec<u64> {
-        animation::frames(&self.shared.lock().doc).into_iter().map(|id| id.0).collect()
+        self.shared.lock().doc.active_frames().into_iter().map(|id| id.0).collect()
     }
 
     /// The frame holding the current layer.
@@ -415,14 +421,14 @@ impl CanvasSession {
 
     /// How many more frames the frame of layer `id` is held.
     pub fn frame_hold(&self, id: u64) -> u32 {
-        self.shared.lock().doc.animation.as_ref().map_or(0, |a| a.hold(LayerId(id)))
+        self.shared.lock().doc.active_animation().map_or(0, |a| a.hold(LayerId(id)))
     }
 
     /// Holds the frame of layer `id` so many more frames as its slider moves; `done` ends the drag
     /// (one undo step for the whole drag).
     pub fn change_frame_hold(&self, id: u64, frames: u32, done: bool) -> bool {
         self.change_live("hold frame length", done, |d| {
-            d.animation.as_mut().is_some_and(|a| {
+            d.active_animation_mut().is_some_and(|a| {
                 a.set_hold(LayerId(id), frames);
                 true
             })
@@ -432,7 +438,7 @@ impl CanvasSession {
     /// Delete on a held place: the frame of layer `id` held one frame less.
     pub fn drop_held_frame(&self, id: u64) -> bool {
         self.change("hold frame length", |d| {
-            let a = d.animation.as_mut()?;
+            let a = d.active_animation_mut()?;
             let hold = a.hold(LayerId(id)).checked_sub(1)?;
             a.set_hold(LayerId(id), hold);
             Some(())
@@ -449,15 +455,16 @@ impl CanvasSession {
             return None;
         }
         self.duplicated(id, "split held frame", |doc, copy| {
-            if let Some(a) = doc.animation.as_mut() {
+            if let Some(a) = doc.active_animation_mut() {
                 a.set_hold(LayerId(id), at - 1);
                 a.set_hold(copy, hold - at);
             }
+            doc.insert_frame_after(LayerId(id), copy);
         })
     }
 
     pub fn set_frame_hold(&self, id: u64, frames: u32) {
-        if let Some(a) = self.shared.lock().doc.animation.as_mut() {
+        if let Some(a) = self.shared.lock().doc.active_animation_mut() {
             a.set_hold(LayerId(id), frames);
         }
     }

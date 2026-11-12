@@ -6,7 +6,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use egui::{Color32, Key, KeyboardShortcut, Modifiers, Rect, Stroke, Ui, vec2};
-use procraft_core::{
+use prostudio_core::{
     Blocked, CanvasInfo, CanvasSession, GesturePurpose, KeyShortcut, ModeButton, ModeSwitch, Modes, QuickAction,
     ToolKind, TouchCommand, Trigger, mode_switch,
 };
@@ -39,8 +39,8 @@ fn is_picture(path: &std::path::Path) -> bool {
 }
 
 /// Why layer or group `name`, which would hide a change, takes none, by what hides it (`by`).
-fn hidden_message(name: &str, by: Option<procraft_core::HiddenBy>) -> String {
-    use procraft_core::HiddenBy as H;
+fn hidden_message(name: &str, by: Option<prostudio_core::HiddenBy>) -> String {
+    use prostudio_core::HiddenBy as H;
     let why = match by {
         Some(H::MaskLayer) => "its layer is hidden",
         Some(H::Group) => "its group is hidden",
@@ -142,7 +142,7 @@ pub struct Interface {
     /// The interface is hidden (full screen).
     bars_hidden: bool,
     /// A layer copied or cut, to paste.
-    clipboard: Option<procraft_core::ThumbnailImage>,
+    clipboard: Option<prostudio_core::ThumbnailImage>,
     /// What other apps copied, which Paste takes once it is the newer.
     system_clipboard: SystemClipboard,
     /// Paste's button shows, the window in front (it is looked at again as that begins).
@@ -160,7 +160,7 @@ pub struct Interface {
     /// Selection: its toolbar and what shows while selecting, while open.
     selection: crate::selection::Selection,
     /// The gesture settings (kept between runs), and their page while it is open.
-    gestures: std::sync::Arc<procraft_core::GestureSettings>,
+    gestures: std::sync::Arc<prostudio_core::GestureSettings>,
     gesture_controls: crate::gesture_controls::GestureControls,
     /// Canvas information, while it is open.
     canvas_info: Option<crate::canvas_info::CanvasInfo>,
@@ -177,7 +177,7 @@ pub struct Interface {
     pen_picking: bool,
     /// An open adjustment's bar, panel and tap menu; Gradient Map's library (kept between runs).
     adjustments: crate::adjustments::Adjustments,
-    gradients: std::sync::Arc<procraft_core::Gradients>,
+    gradients: std::sync::Arc<prostudio_core::Gradients>,
     styled: bool,
     /// The current layer turned a change away: why, and the alert saying so (offering to unlock or
     /// show it, or open Layers).
@@ -270,7 +270,7 @@ impl Default for Interface {
             side_bar: SideBar::default(),
             transform: crate::transform::Transform::default(),
             selection: crate::selection::Selection::default(),
-            gestures: procraft_core::GestureSettings::new(crate::files::kept_gestures()),
+            gestures: prostudio_core::GestureSettings::new(crate::files::kept_gestures()),
             gesture_controls: crate::gesture_controls::GestureControls::default(),
             canvas_info: None,
             reference: crate::reference::Reference::default(),
@@ -280,7 +280,7 @@ impl Default for Interface {
             quick_menu: crate::quick_menu::QuickMenu::default(),
             pen_picking: false,
             adjustments: crate::adjustments::Adjustments::default(),
-            gradients: procraft_core::Gradients::open(
+            gradients: prostudio_core::Gradients::open(
                 crate::files::app_dir().join("gradients.json").to_string_lossy().into_owned(),
             ),
             styled: false,
@@ -400,11 +400,11 @@ impl Interface {
     /// What an artwork dragged out of the gallery becomes (Advanced settings' Drag and Drop export).
     #[cfg_attr(not(windows), allow(dead_code))]
     pub fn drag_format(&self) -> crate::files::Format {
-        crate::files::DRAG_FORMATS.get(self.prefs.drag_format).copied().unwrap_or(crate::files::Format::Procraft)
+        crate::files::DRAG_FORMATS.get(self.prefs.drag_format).copied().unwrap_or(crate::files::Format::Prostudio)
     }
 
     /// The plugins, which say how big the interface shows.
-    pub fn plugins(&self) -> &procraft_core::Plugins {
+    pub fn plugins(&self) -> &prostudio_core::Plugins {
         &self.prefs.plugins
     }
 
@@ -466,7 +466,7 @@ impl Interface {
         let brushes_coming = self.brushes_added(session);
         // the autosave told of when it fails (once until a save works again), the palettes too
         if let Some(why) = session.take_save_failure() {
-            self.overlays.notice(procraft_core::save_failure_said(why), true);
+            self.overlays.notice(prostudio_core::save_failure_said(why), true);
         }
         // a crop or a smudge the GPU had no memory for
         if let Some(why) = session.take_failure() {
@@ -476,7 +476,7 @@ impl Interface {
             self.overlays.notice("The palettes couldn't be kept.", true);
         }
         // a mask current paints with masks' own colour
-        let on_mask = session.layers().iter().any(|l| l.current && l.kind == procraft_core::LayerType::Mask);
+        let on_mask = session.layers().iter().any(|l| l.current && l.kind == prostudio_core::LayerType::Mask);
         self.colours.follow_mask(session, on_mask);
         let paste_shown = (self.open == Some(Popover::Actions) || self.copy_paste) && ctx.input(|i| i.focused);
         if paste_shown && !self.paste_shown {
@@ -535,8 +535,8 @@ impl Interface {
         input.turns_model = self.model && !session.model_flat();
         session.set_touch_companion(match self.companion.mode {
             crate::companion::Mode::None => None,
-            crate::companion::Mode::Zoom => Some(procraft_core::CompanionMode::Zoom),
-            crate::companion::Mode::Move => Some(procraft_core::CompanionMode::Move),
+            crate::companion::Mode::Zoom => Some(prostudio_core::CompanionMode::Zoom),
+            crate::companion::Mode::Move => Some(prostudio_core::CompanionMode::Move),
         });
         self.recolor_frame(&ctx, session);
         if let Some(opacity) = session.touch_layer_opacity().filter(|_| !self.bars_hidden) {
@@ -924,7 +924,7 @@ impl Interface {
     /// Layer Opacity on for the current layer (a paint layer or a group): a drag across the canvas
     /// changes its opacity, read in the band under the top bar. The other modes end.
     fn start_layer_opacity(&mut self, session: &CanvasSession) {
-        use procraft_core::LayerType;
+        use prostudio_core::LayerType;
         let Some(layer) = session.layers().into_iter().find(|l| l.current) else { return };
         if !matches!(layer.kind, LayerType::Paint | LayerType::Group) {
             return;
@@ -1017,7 +1017,7 @@ impl Interface {
         }
         let since = at.elapsed();
         if since >= GAP {
-            self.overlays.notice(procraft_core::colour_name(rgb), false);
+            self.overlays.notice(prostudio_core::colour_name(rgb), false);
             self.named = Some((rgb, Instant::now()));
         } else {
             ctx.request_repaint_after(GAP - since);
@@ -1089,13 +1089,13 @@ impl Interface {
             self.canvas_rect.contains(at) && ctx.layer_id_at(at).is_none_or(|l| l.order == egui::Order::Background)
         };
         // Liquify's brush shows as a ring of its reach, hovering and pressed
-        if let (Some(procraft_core::Adjustment::Liquify), Some(&size)) = (shown.adjustment, shown.liquify.first()) {
+        if let (Some(prostudio_core::Adjustment::Liquify), Some(&size)) = (shown.adjustment, shown.liquify.first()) {
             let ppp = ctx.pixels_per_point();
             input.hover_shown = true;
             let at = input.hovering().map(|(x, y)| egui::pos2(x, y) / ppp).or_else(|| ctx.pointer_latest_pos());
             if let Some(at) = at.filter(|at| on_canvas(*at)) {
                 ctx.set_cursor_icon(egui::CursorIcon::None);
-                hover_ring(ctx, at, procraft_core::liquify_reach(size) * info.zoom / ppp);
+                hover_ring(ctx, at, prostudio_core::liquify_reach(size) * info.zoom / ppp);
             }
             return;
         }
@@ -1255,7 +1255,7 @@ impl Interface {
     }
 
     /// A stroke snapped to a shape: its bar shows, and the notice says what it is.
-    fn snapped(&mut self, info: procraft_core::QuickShapeInfo) {
+    fn snapped(&mut self, info: prostudio_core::QuickShapeInfo) {
         self.overlays.notice(snapped_to(info.kind), false);
         self.overlays.shape = Some(info);
         self.overlays.shape_editing = false;
@@ -1272,7 +1272,7 @@ impl Interface {
         self.feedback();
         // transforming, the transform's last change goes back, the box with it
         if self.transform.on {
-            self.transform.moved(session.transform_apply(procraft_core::TransformAction::Undo));
+            self.transform.moved(session.transform_apply(prostudio_core::TransformAction::Undo));
             return;
         }
         // a finished text's step goes back to editing that text first, as a step of its own
@@ -1377,18 +1377,18 @@ impl Interface {
     fn run_quick(&mut self, ctx: &egui::Context, session: &CanvasSession, action: QuickAction, at: egui::Pos2) {
         let current = session.layers().into_iter().find(|l| l.current);
         let id = current.as_ref().map(|l| l.id);
-        if let Some(a) = procraft_core::quick_action_adjustment(action) {
+        if let Some(a) = prostudio_core::quick_action_adjustment(action) {
             self.start_adjustment(session, a);
             return;
         }
-        use procraft_core::GuideType;
+        use prostudio_core::GuideType;
         let companion = |mode: crate::companion::Mode, now: crate::companion::Mode| {
             if now == mode { crate::companion::Mode::None } else { mode }
         };
         match action {
             QuickAction::Adjustments => self.adjustments_pressed(session),
-            QuickAction::Liquify => self.start_adjustment(session, procraft_core::Adjustment::Liquify),
-            QuickAction::Clone => self.start_adjustment(session, procraft_core::Adjustment::Clone),
+            QuickAction::Liquify => self.start_adjustment(session, prostudio_core::Adjustment::Liquify),
+            QuickAction::Clone => self.start_adjustment(session, prostudio_core::Adjustment::Clone),
             QuickAction::Guide2d => toggle_guide_kind(session, GuideType::Grid),
             QuickAction::GuideIsometric => toggle_guide_kind(session, GuideType::Isometric),
             QuickAction::GuidePerspective => toggle_guide_kind(session, GuideType::Perspective),
@@ -1670,7 +1670,7 @@ impl Interface {
     }
 
     /// Opens adjustment `a` on the current layer (anything else open ends first).
-    fn start_adjustment(&mut self, session: &CanvasSession, a: procraft_core::Adjustment) {
+    fn start_adjustment(&mut self, session: &CanvasSession, a: prostudio_core::Adjustment) {
         let why = session.why_not_adjusted(a);
         if !self.say_blocked(session, why) {
             return;
@@ -1954,7 +1954,7 @@ impl Interface {
     /// until the answer comes. What can't be imported says why.
     pub fn offer_plugin_file(&mut self, path: &std::path::Path) {
         let cant = "Can't import this plugin";
-        let Some(bytes) = procraft_core::read_plugin_file(path) else {
+        let Some(bytes) = prostudio_core::read_plugin_file(path) else {
             self.plugin_alert.tell(cant, "This file can't be read.", None);
             return;
         };
@@ -1996,7 +1996,7 @@ impl Interface {
         if warnings.is_empty() {
             return;
         }
-        let names: Vec<String> = warnings.into_iter().map(procraft_core::model_warning_name).collect();
+        let names: Vec<String> = warnings.into_iter().map(prostudio_core::model_warning_name).collect();
         self.model_warning_alert.ask(Asking {
             title: "Unsupported model features".into(),
             message: format!("Painting on this model may not go as expected because of:\n{}", names.join("\n")),
@@ -2529,7 +2529,7 @@ impl Interface {
             }
             let Some(name) = key_name(key) else { continue };
             let transforming = self.transform.on;
-            let Some(shortcut) = procraft_core::key_shortcut(
+            let Some(shortcut) = prostudio_core::key_shortcut(
                 name.into(),
                 modifiers.command,
                 modifiers.shift,
@@ -2557,7 +2557,7 @@ impl Interface {
             KeyShortcut::Eyedropper => session.set_pick_next(!session.pick_next()),
             KeyShortcut::Selection => self.toggle_selection(session),
             KeyShortcut::Transform => self.toggle_transform(session),
-            KeyShortcut::HueSaturationBrightness => self.start_adjustment(session, procraft_core::Adjustment::Hsb),
+            KeyShortcut::HueSaturationBrightness => self.start_adjustment(session, prostudio_core::Adjustment::Hsb),
             KeyShortcut::Colours => self.toggle(session, Popover::Colour),
             KeyShortcut::Actions => self.toggle(session, Popover::Actions),
             KeyShortcut::Layers => self.toggle(session, Popover::Layers),
@@ -2633,7 +2633,7 @@ fn key_name(key: Key) -> Option<&'static str> {
 }
 
 /// The drawing guide on as `kind`, or off if it already is that.
-fn toggle_guide_kind(session: &CanvasSession, kind: procraft_core::GuideType) {
+fn toggle_guide_kind(session: &CanvasSession, kind: prostudio_core::GuideType) {
     let g = session.guide();
     if g.on && g.kind == kind {
         session.set_guide_on(false);
@@ -2736,7 +2736,7 @@ fn read_insert(session: &CanvasSession, path: &std::path::Path, private: bool) -
             // nearer it than the next one's take it
             let at = at - *start.get_or_insert(at);
             while !full && added < MOST_VIDEO_FRAMES && at + 0.5 / fps + 1e-3 >= f64::from(added) / fps {
-                let image = procraft_core::ThumbnailImage { width, height, rgba: rgba.to_vec() };
+                let image = prostudio_core::ThumbnailImage { width, height, rgba: rgba.to_vec() };
                 if session.insert_image(image, private).is_some() {
                     added += 1;
                 } else {
@@ -2763,7 +2763,7 @@ fn read_insert(session: &CanvasSession, path: &std::path::Path, private: bool) -
         Ok(picture) => {
             let rgba = picture.to_rgba8();
             let image =
-                procraft_core::ThumbnailImage { width: rgba.width(), height: rgba.height(), rgba: rgba.into_raw() };
+                prostudio_core::ThumbnailImage { width: rgba.width(), height: rgba.height(), rgba: rgba.into_raw() };
             let on_model = session.model_info().is_some() && !session.model_flat();
             Inserted::Picture(if on_model {
                 session.model_picture_begin(image, true)

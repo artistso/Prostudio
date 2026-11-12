@@ -8,7 +8,7 @@ use std::time::{Duration, Instant};
 
 use egui::emath::TSTransform;
 use egui::{Color32, Id, Order, Rect, TextureHandle, pos2};
-use procraft_core::CanvasSession;
+use prostudio_core::CanvasSession;
 
 use crate::look::cubic_bezier;
 
