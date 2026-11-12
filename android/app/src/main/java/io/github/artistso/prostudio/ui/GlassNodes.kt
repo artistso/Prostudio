@@ -369,7 +369,7 @@ private fun childrenFor(
             )
         }
         GlassNode.STUDIO -> listOf(
-            NodeChild("qm", "Quick", "actions", accent = vm.quickMenuCenter != null) { vm.toggleQuickMenu(vm.screenCentre); close() },
+            NodeChild("qm", "Quick", "actions", accent = vm.quickMenuAt != null) { vm.toggleQuickMenu(vm.screenCentre); close() },
             NodeChild("help", "Help", "help", accent = vm.quickHelpOpen) { vm.quickHelpOpen = true; close() },
             NodeChild("about", "About", "studio", accent = vm.studioAboutOpen) { vm.studioAboutOpen = true; close() },
         )
@@ -383,7 +383,7 @@ private fun nodeActive(node: GlassNode, vm: CanvasViewModel): Boolean = when (no
     GlassNode.LAYERS -> vm.panel == Panel.LAYERS
     GlassNode.ACTIONS -> vm.panel == Panel.ACTIONS
     GlassNode.FRAMES -> vm.animation != null
-    GlassNode.STUDIO -> vm.quickMenuAt != null
+    GlassNode.STUDIO -> vm.quickMenuAt != null || vm.quickHelpOpen || vm.studioAboutOpen
     else -> false
 }
 
